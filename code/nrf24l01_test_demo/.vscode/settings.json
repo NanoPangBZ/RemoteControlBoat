@@ -1,0 +1,22 @@
+{
+    "files.associations": {
+        "stm32f10x.h": "c",
+        "bsp_usart.h": "c",
+        "stm32f10x_conf.h": "c",
+        "freertosconfig.h": "c",
+        "task.h": "c",
+        "cmath": "c",
+        "vofa_p.h": "c",
+        "bsp_oled12864.h": "c",
+        "font_lib.h": "c",
+        "oledfont.h": "c",
+        "cstring": "c",
+        "iosfwd": "c",
+        "memory": "c",
+        "xmemory": "c",
+        "xutility": "c",
+        "self_type.h": "c",
+        "bsp_spi.h": "c",
+        "bsp_board_led.h": "c"
+    }
+}
