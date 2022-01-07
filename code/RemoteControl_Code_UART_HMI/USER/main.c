@@ -62,10 +62,17 @@ void Debug_nRF24L01(void)
 
 void Debug_Uasrt_HMI(void)
 {
-	if(SysTick_Count %200 == 0)
+	static uint16_t Count = 0;
+	Count++;
+	if(Count %200 == 0)
 	{
-		sprintf((char*)debug_sbuffer,"Time:%d",SysTick_Count/200);
+		sprintf((char*)debug_sbuffer,"Time:%d",Count/200);
 		Usart_HMI_MsgBox(debug_sbuffer);
+		if(Count/200 > 10)
+		{
+			Usart_HMI_MsgClear();
+			Count = 0;
+		}
 	}
 }
 

@@ -15,7 +15,7 @@ static uint8_t HMI_Sbuffer[64];
 
 uint8_t Usart_HMI_Send(uint8_t*str);
 uint8_t Usart_HMI_MsgBox(uint8_t*msg);
-uint8_t Usart_HMI_GetFlow(uint8_t j);
+uint8_t Usart_HMI_MsgClear(void);   
 
 #endif
 
