@@ -37,8 +37,9 @@ void soft_delay_us(unsigned int us)
     }
 }
 
-void MemCopy(uint8_t*content,uint8_t*buf,uint8_t len)
+void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len)
 {
+    if(content != buf)  //防止重复
     for(uint8_t temp=0;temp<len;temp++)
         buf[temp] = content[temp];
 }

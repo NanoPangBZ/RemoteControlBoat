@@ -8,6 +8,8 @@
         "vofa_p.h": "c",
         "nrf24l01_micro.h": "c",
         "cmath": "c",
-        "bsp_adc.h": "c"
+        "bsp_adc.h": "c",
+        "usart_hmi_cmd.h": "c",
+        "usart_hmi_const.h": "c"
     }
 }
