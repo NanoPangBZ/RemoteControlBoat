@@ -82,12 +82,18 @@ uint8_t HMI_Send(uint8_t*buf,uint8_t len)
 {
     uint16_t retry = 0;
     while ( port_HMI_Send(buf,len) && retry++<10000);
-    if(retry == 10000)
+    if(retry > 10000)
         return 1;
     else
         return 0;
 }
 
+/*******************************************************************
+ * 功能:清空MsgBox所有消息
+ * 参数:无
+ * 返回值:无
+ * 2022/1/7   庞碧璋
+ *******************************************************************/
 uint8_t Usart_HMI_MsgClear(void)
 {
     uint8_t*addr;
@@ -99,3 +105,36 @@ uint8_t Usart_HMI_MsgClear(void)
     Add_End(HMI_Sbuffer);
     return HMI_Send(HMI_Sbuffer,28);
 }
+
+/*******************************************************************
+ * 功能:获取滑块的值
+ * 参数:滑块编号
+ * 返回值:0~100 -> 滑块值  0xff -> 超时
+ * 2022/1/8   庞碧璋
+ *******************************************************************/
+uint8_t Usart_HMI_Rocker(uint8_t channel)
+{
+    uint16_t retry = 0;
+    switch(channel)
+    {
+        case 1:
+            MemCopy("prints ym.val,1",HMI_Sbuffer,16);
+            break;
+        case 2:
+            MemCopy("prints sc.val,1",HMI_Sbuffer,16);
+            break;
+    }
+    Add_End(HMI_Sbuffer);
+    port_HMI_ClearRx();     //清空串口接收
+    HMI_Send(HMI_Sbuffer,19);
+    while(port_HMI_Recieve(HMI_Sbuffer,1) && retry++<1000); //等待串口接收到字节
+    if(retry<1000)
+    {
+        port_HMI_ClearRx(); //清空串口接收
+        return HMI_Sbuffer[0];
+    }else
+    {
+        return 0xff;
+    }
+}
+

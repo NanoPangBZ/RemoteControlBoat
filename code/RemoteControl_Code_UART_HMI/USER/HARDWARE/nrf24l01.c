@@ -12,6 +12,7 @@
 #define port_delay_ms(ms)   soft_delay_ms(ms)
 
 static void spiInit(void);
+static void Rx_Handler(void);   //接收中断
 
 /*******************************************************************
  * 功能:初始化nRF24L01,并且进入standby模式
@@ -59,6 +60,8 @@ uint8_t nRF24L01_Init(void)
     DefaultCfg.Channel = DEFAULT_Channel;
     DefaultCfg.retry = DEFAULT_RETRY;
     DefaultCfg.retry_cycle = DEFAULT_RETRY_CYCLE;
+    DefaultCfg.Rx_Length = DEFAULT_Rx_Length;
+    
     MemCopy(DEFAULT_RxAddr,DefaultCfg.RX_Addr,5);
     MemCopy(DEFAULT_TxAddr,DefaultCfg.TX_Addr,5);
     nRF24L01_Config(&DefaultCfg);
@@ -253,26 +256,43 @@ uint8_t nRF24L01_Check(void)
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
 {
     uint8_t sbuffer[5];
+
+    //复制配置
+    MemCopy((uint8_t*)Cfg,(uint8_t*)&CurrentCfg,sizeof(nRF24L01_Cfg));
+
+    //条件限制
+    if(CurrentCfg.Channel > 125)
+        CurrentCfg.Channel = 125;
+    if(CurrentCfg.Rx_Length > 32)
+        CurrentCfg.Rx_Length = 32;
+    if( CurrentCfg.retry > 15 )
+        CurrentCfg.retry = 15;
+    if( CurrentCfg.retry_cycle > 15)
+        CurrentCfg.retry_cycle = 15;
+
     CE_LOW;
     //数组倒置,使低字节在前
     for(uint8_t temp = 0;temp<5;temp++)
-        sbuffer[temp] = Cfg->TX_Addr[4-temp];
+        sbuffer[temp] = CurrentCfg.TX_Addr[4-temp];
     //设置发送地址
     //接收管道0也设置为发送地址,用于发送应答接收
     nRF24L01_Write_Buf(RX_ADDR_P0,sbuffer,5);
     nRF24L01_Write_Buf(TX_ADDR,sbuffer,5);
     //数组倒置,使低位在前
     for(uint8_t temp = 0;temp<5;temp++)
-        sbuffer[temp] = Cfg->RX_Addr[4-temp];
+        sbuffer[temp] = CurrentCfg.RX_Addr[4-temp];
     //设置接收管道地址
     nRF24L01_Write_Buf(RX_ADDR_P1,sbuffer,5);
 
     //配置自动重发  SETUP_RETR
-    nRF24L01_Write_Reg(SETUP_RETR,((Cfg->retry_cycle<<4)&0xf0) | (Cfg->retry&0x0f));
+    nRF24L01_Write_Reg(SETUP_RETR,(CurrentCfg.retry_cycle<<4) | CurrentCfg.retry );
     //配置频道      RF_CH
-    nRF24L01_Write_Reg(RF_CH,Cfg->Channel);   
+    nRF24L01_Write_Reg(RF_CH,CurrentCfg.Channel);
 
-    return nRF24L01_Write_Reg(RF_CH,Cfg->Channel);
+    //设置接收长度 接收管道1
+    nRF24L01_Write_Reg(RX_PW_P1,CurrentCfg.Rx_Length);
+
+    return nRF24L01_Write_Reg(RF_CH,CurrentCfg.Channel);
 }
 
 /*******************************************************************
@@ -297,7 +317,16 @@ uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len)
     return status;
 }
 
-//待完成
+/**************************等待完成*********************************/
+
+
+
+/*******************************************************************
+ * 功能:nRF24L01进入监听模式
+ * 参数:无
+ * 返回值:nRF24L01的status寄存器值
+ * 2022/1/10    庞碧璋
+ *******************************************************************/
 uint8_t nRF24L01_Rx_Mode(void)
 {
     uint8_t status;
@@ -318,3 +347,25 @@ uint8_t nRF24L01_Status(void)
     return nRF24L01_Read_Reg(STATUS);
 }
 
+/*******************************************************************
+ * 功能:nRF24L01中断处理函数
+ * 参数:无
+ * 返回值:nRF24L01的status寄存器值
+ * 2021/12/29   庞碧璋
+ *******************************************************************/
+void nRF24L01_InterruptHandle(void)
+{
+    //判断中断类型
+    uint8_t status;
+    status = nRF24L01_Status();
+    //接收中断
+    if(status & (0x01>>6) )
+        Rx_Handler();
+
+}
+
+void Rx_Handler(void)
+{
+    //获取当前Rx_FIFO中的数据数量
+
+}

@@ -9,7 +9,8 @@
 #define DEFAULT_Channel 0       //2400MHz频段
 #define DEFAULT_RETRY   2       //最大自动重发次数
 #define DEFAULT_RETRY_CYCLE 1   //重发间隔 单位:250us
-
+#define DEFAULT_Rx_Length   32  //StaticPayload长度
+#define nRF24L01_SbufferSize    64
 
 // spi_port
 #define  NRF24L01_SPIx                SPI2                  // SPI 端口   
@@ -47,14 +48,20 @@ static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
 };
 
+//第一个元素为有效长度
+static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1];
+
 typedef struct
 {
     uint8_t Channel;    //频道  0~125 -> 1MHz + 2.4G
     uint8_t retry;      //自动重发次数 最大16
     uint8_t retry_cycle;//自动重发时间间隔 250us单位 最大16(4000us)
+    uint8_t Rx_Length;  //静态接收长度
     uint8_t RX_Addr[5]; //接收地址    ->  发射方地址
     uint8_t TX_Addr[5]; //发射方地址  ->  目标接收地址
 }nRF24L01_Cfg;
+
+static nRF24L01_Cfg CurrentCfg;     //当前nRF24L01的配置
 
 //底层函数
 uint8_t nRF24L01_Send_Cmd(uint8_t cmd);

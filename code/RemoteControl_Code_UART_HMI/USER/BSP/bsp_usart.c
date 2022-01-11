@@ -158,6 +158,7 @@ uint8_t Usart_SendString(uint8_t USARTx,uint8_t*str)
     }
     return 1;
 }
+
 uint8_t Usart_BusyCheck(uint8_t USARTx)
 {
     if(USART_Tx_Sbuffer[USARTx-1][0] != 0)
@@ -166,9 +167,43 @@ uint8_t Usart_BusyCheck(uint8_t USARTx)
         return 0;
 }
 
+/*******************************************************************
+ * 功能:直接获取串口接收缓存区的首地址
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ * 返回值:
+ *  对应串口的接收缓存区首地址
+ * 备注:
+ *  这个函数直接返回地址,相对拷贝缓存的方式读取接收,速度更快
+ *  注意:缓存区首个字节表示当前缓存的字节数
+ *  这个函数不会自动清除缓存
+ * 2021/5   庞碧璋
+ *******************************************************************/
 uint8_t*Usart_Read(uint8_t USARTx)
 {
     return USART_Rx_Sbuffer[USARTx-1];
+}
+
+/*******************************************************************
+ * 功能:拷贝串口接收缓存区
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ *  buf:拷贝缓存
+ *  len:长度
+ * 返回值:
+ *  0:拷贝成功
+ *  1:缓存区有效数据小于len
+ * 备注:
+ *  这个函数不会自动清除缓存
+ *  MemCopy->内存拷贝函数(外部)
+ * 2021/5   庞碧璋
+ *******************************************************************/
+uint8_t Usart_RxCopy(uint8_t USARTx,uint8_t*buf,uint8_t len)
+{
+    if(len > Rx_Len(USARTx))
+        return 1;
+    MemCopy(USART_Rx_Sbuffer[USARTx-1]+1,buf,len);
+    return 0;
 }
 
 void Rx_SbufferInput(uint8_t USARTx,uint8_t dat)
@@ -194,7 +229,6 @@ int fputc (int c, FILE *fp)
 	while(USART_GetFlagStatus(USART1,USART_FLAG_TXE) == RESET);
 	return c;
 }
-
 
 /******************************ISR**************************************/
 void USART1_IRQHandler(void)

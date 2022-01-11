@@ -40,6 +40,7 @@ int main(void)
 	Cfg.Channel = 100;
 	Cfg.retry = 10;
 	Cfg.retry_cycle = 10;
+	Cfg.Rx_Length = 32;
 	MemCopy("RxAdd",Cfg.RX_Addr,5);
 	MemCopy("TxAdd",Cfg.TX_Addr,5);
 	nRF24L01_Config(&Cfg);
@@ -66,7 +67,7 @@ void Debug_Uasrt_HMI(void)
 	Count++;
 	if(Count %200 == 0)
 	{
-		sprintf((char*)debug_sbuffer,"Time:%d",Count/200);
+		sprintf((char*)debug_sbuffer,"Time:%d %d %d",Count/200,Usart_HMI_Rocker(0),Usart_HMI_Rocker(1));
 		Usart_HMI_MsgBox(debug_sbuffer);
 		if(Count/200 > 10)
 		{

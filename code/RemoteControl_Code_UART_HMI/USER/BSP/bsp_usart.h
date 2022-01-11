@@ -1,7 +1,7 @@
 #ifndef _BSP_USART_H_
 #define _BSP_USART_H_
 
-#include "stm32f10x.h"
+#include "self_stm32f10x.h"
 #include <stdio.h>
 
 /*************************************************
@@ -43,6 +43,7 @@ void USART_DMA_Config(void);
 
 //发送&接收
 uint8_t*Usart_Read(uint8_t USARTx);                             //读取串口接收缓存区,返回缓存区首地址,缓存区首地址为当前接收到的数据个数,不是数据!
+uint8_t Usart_RxCopy(uint8_t USARTx,uint8_t*buf,uint8_t len);   //拷贝串口接收到的数据
 uint8_t Usart_Send(uint8_t USARTx,uint8_t *dat,uint8_t len);    //串口DMA发送 USARTx(串口):1~3 *dat(数据首地址) len:数据长度
 uint8_t Usart_SendString(uint8_t USARTx,uint8_t*dat);           //串口DMA发送字符串
 uint8_t Usart_BusyCheck(uint8_t USARTx);                        //DMA在忙检查 0:free 1:busy

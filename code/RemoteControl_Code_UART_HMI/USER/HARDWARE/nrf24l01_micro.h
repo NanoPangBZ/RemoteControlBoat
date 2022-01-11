@@ -18,6 +18,7 @@
 #define FEATURE         0x1D    //特征寄存器
 #define EN_AA           0x01    //使能自动确认
 #define EN_RXADDR       0x02    //使能接收数据管道地址
+#define RX_PW_P1        0x12    //接收管道1的静态长度设置 1~32Byte
 
 //命令
 #define FLUSH_TX        0xE1    //清空TX_FIFO
