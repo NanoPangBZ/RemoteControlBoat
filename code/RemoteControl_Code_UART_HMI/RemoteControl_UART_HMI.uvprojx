@@ -501,6 +501,16 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>NOTE</GroupName>
+          <Files>
+            <File>
+              <FileName>note.txt</FileName>
+              <FileType>5</FileType>
+              <FilePath>.\USER\note.txt</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>::CMSIS</GroupName>
         </Group>
         <Group>

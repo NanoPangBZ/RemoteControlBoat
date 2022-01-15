@@ -138,3 +138,9 @@ uint8_t Usart_HMI_Rocker(uint8_t channel)
     }
 }
 
+uint8_t Usart_HMI_ChangePNG(uint8_t kjID,uint8_t pngID)
+{
+    uint8_t*addr;
+    addr = HMI_Sbuffer;
+    return 0;
+}

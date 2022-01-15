@@ -206,6 +206,29 @@ uint8_t Usart_RxCopy(uint8_t USARTx,uint8_t*buf,uint8_t len)
     return 0;
 }
 
+/*******************************************************************
+ * 功能:读取串口接收缓存区
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ *  buf:拷贝缓存
+ *  len:长度
+ * 返回值:
+ *  0:拷贝成功
+ *  1:缓存区有效数据小于len
+ * 备注:
+ *  这个函数会自动清除读取到的缓存
+ *  MemCopy->内存拷贝函数(外部)
+ * 2022/1   庞碧璋
+ *******************************************************************/
+uint8_t Usart_RxGet(uint8_t USARTx,uint8_t*buf,uint8_t len)
+{
+    if(len > Rx_Len(USARTx))
+        return 1;
+    MemCopy(USART_Rx_Sbuffer[USARTx-1]+1,buf,len);
+    USART_Push(USARTx,len);
+    return 0;
+}
+
 void Rx_SbufferInput(uint8_t USARTx,uint8_t dat)
 {
     //判断缓存区是否满载

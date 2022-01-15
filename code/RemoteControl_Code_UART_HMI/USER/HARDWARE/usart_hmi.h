@@ -19,6 +19,7 @@ uint8_t Usart_HMI_Send(uint8_t*str);
 uint8_t Usart_HMI_MsgBox(uint8_t*msg);
 uint8_t Usart_HMI_MsgClear(void);   
 uint8_t Usart_HMI_Rocker(uint8_t channel);
+uint8_t Usart_HMI_ChangePNG(uint8_t kjID,uint8_t pngID);
 
 #endif
 
