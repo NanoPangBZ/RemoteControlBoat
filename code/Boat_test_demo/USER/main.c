@@ -3,7 +3,10 @@
 #include ".\BSP\bsp_usart.h"
 #include ".\BSP\bsp_spi.h"
 
+#include ".\HARDWARE\nrf24l01.h"
+
 static uint32_t SysCount = 0;
+static nRF24L01_Cfg Cfg;
 
 int main(void)
 {
@@ -15,10 +18,28 @@ int main(void)
 
 	BSP_Usart_Init();	//串口初始化
 
+	nRF24L01_Init();
+
+	Cfg.Channel = 20;
+	Cfg.retry = 5;
+	Cfg.retry_cycle = 1;
+	Cfg.Rx_Length = 32;
+	MemCopy("USER",Cfg.RX_Addr,5);
+	MemCopy("BOAT",Cfg.TX_Addr,5);
+
+	nRF24L01_Config(&Cfg);
+
+	uint8_t Test[36] = {1,2,3,4,5};
+
+	for(uint8_t temp=0;temp<36;temp++)
+		Test[temp] = temp;
+
+	nRF24L01_Send(Test,36);
+
 	while(1)
 	{
-		if(SysCount %200 == 0)
-			printf("HelloWorld!\r\n");
+		soft_delay_ms(500);
+		printf("nRF24L01 STATUS REG = 0x%02X\r\n",nRF24L01_Status());
 	}
 }
 

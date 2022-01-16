@@ -10,7 +10,8 @@
                 "C:\\Keil_v5\\ARM\\PACK\\ARM\\CMSIS\\5.8.0\\CMSIS\\Core\\Include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
-                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\USER\\BSP"
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\USER\\BSP",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\USER\\HARDWARE"
             ],
             "defines": [
                 "STM32F10X_HD",
