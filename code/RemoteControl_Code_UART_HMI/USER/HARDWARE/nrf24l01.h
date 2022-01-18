@@ -33,6 +33,10 @@
 // 第8脚:IRQ
 #define  NRF24L01_IQR_GPIO           GPIOA                 // SPI MISO
 #define  NRF24L01_IQR_PIN            GPIO_Pin_8
+#define  NRF24L01_IQR_Channel        EXTI9_5_IRQn
+#define  NRF24L01_IQR_SourceGPIO    GPIO_PortSourceGPIOA
+#define  NRF24L01_IQR_PinSource     GPIO_PinSource8
+#define  NRF24L01_IQR_Line          EXTI_Line8
 
 #define NRF24L01_CE     0
 #define NRF24L01_CS     1

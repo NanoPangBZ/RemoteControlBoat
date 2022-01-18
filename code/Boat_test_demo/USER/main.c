@@ -5,6 +5,8 @@
 
 #include ".\HARDWARE\nrf24l01.h"
 
+#include "user.h"
+
 static uint32_t SysCount = 0;
 static nRF24L01_Cfg Cfg;
 

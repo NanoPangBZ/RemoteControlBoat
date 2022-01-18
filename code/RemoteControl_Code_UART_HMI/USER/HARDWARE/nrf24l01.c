@@ -54,6 +54,27 @@ uint8_t nRF24L01_Init(void)
     GPIO_InitStructure.GPIO_Pin = NRF24L01_IQR_PIN;
     GPIO_Init(NRF24L01_IQR_GPIO,&GPIO_InitStructure);
 
+    //IRQ脚中断配置
+    NVIC_InitTypeDef    NVIC_InitSrtuct;
+    EXTI_InitTypeDef    EXTI_InitStruct;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
+
+    NVIC_InitSrtuct.NVIC_IRQChannel = NRF24L01_IQR_Channel;
+    NVIC_InitSrtuct.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_InitSrtuct.NVIC_IRQChannelPreemptionPriority = 3;
+    NVIC_InitSrtuct.NVIC_IRQChannelSubPriority = 0;
+
+    NVIC_Init(&NVIC_InitSrtuct);
+
+    EXTI_InitStruct.EXTI_Line = NRF24L01_IQR_Line;
+    EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+    EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;    //上升沿
+
+    EXTI_Init(&EXTI_InitStruct);
+    GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置
+
     spiInit();
 
     //默认配置
@@ -359,11 +380,26 @@ void nRF24L01_InterruptHandle(void)
     //接收中断
     if(status & (0x01>>6) )
         Rx_Handler();
-
+    //发送未应答中断
 }
 
 void Rx_Handler(void)
 {
     //获取当前Rx_FIFO中的数据数量
 
+}
+
+
+/****************************ISR**************************/
+void EXTI9_5_IRQHandler(void)
+{
+    if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
+    {
+        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
+        printf("nRF24L01 发生中断\r\n");
+        CS_LOW;
+        printf("nRF24L01 STATUS Reg = 0x%02X\r\n",port_Send(0xff));   //打印中断消息
+        CS_HIGH;
+        nRF24L01_Write_Reg(STATUS,0xf0);    //清除所有中断
+    }
 }

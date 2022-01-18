@@ -12,8 +12,6 @@
 
 #pragma	diag_suppress	870	//屏蔽汉字警告
 
-void Debug_nRF24L01(void);
-
 uint32_t SysTick_Count = 0;
 uint8_t debug_sbuffer[64];
 
@@ -25,60 +23,37 @@ int main(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
 	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);
 
-	SysTick_Config(5*72000);	//5ms中断
+	//SysTick_Config(5*72000);	//5ms中断
 
 	BSP_Usart_Init();
-	BSP_ADC_Init();
-
-	#if 0	//nRF24L01
-	if(nRF24L01_Init())
-		printf("nRF24L01 Err!!!\r\n");
-	else
-		printf("nRF24L01 Pass\r\n");
+	nRF24L01_Init();
 
 	nRF24L01_Cfg	Cfg;
-	Cfg.Channel = 100;
+	uint8_t test[32];
+
+	Cfg.Channel = 0;
 	Cfg.retry = 10;
-	Cfg.retry_cycle = 10;
+	Cfg.retry_cycle = 1;
+	MemCopy("USER",Cfg.RX_Addr,5);
+	MemCopy("Test",Cfg.TX_Addr,5);
 	Cfg.Rx_Length = 32;
-	MemCopy("RxAdd",Cfg.RX_Addr,5);
-	MemCopy("TxAdd",Cfg.TX_Addr,5);
+
 	nRF24L01_Config(&Cfg);
-	#endif 
 
-	Usart_HMI_MsgBox("Test");
+	for(uint8_t temp=0;temp<32;temp++)
+		test[temp] = temp;
 
-	while(1);
+	while(1)
+	{
+		soft_delay_ms(500);
+		printf("发送32字节\r\n");
+		nRF24L01_Send(test,32);
+	}
 }
 
 /***************************测试代码****************************************/
-void Debug_nRF24L01(void)
-{
-	uint8_t*dat;
-	dat = Usart_Read(1);
-	if(*dat!=0)
-		printf("nRF24L01 REGIST 0x%02X = 0x%02X\r\n",*(dat+1),nRF24L01_Read_Reg(*(dat+1)));
-	USART_Push(1,1);
-}
-
-void Debug_Uasrt_HMI(void)
-{
-	static uint16_t Count = 0;
-	Count++;
-	if(Count %200 == 0)
-	{
-		sprintf((char*)debug_sbuffer,"Time:%d %d %d",Count/200,Usart_HMI_Rocker(0),Usart_HMI_Rocker(1));
-		Usart_HMI_MsgBox(debug_sbuffer);
-		if(Count/200 > 10)
-		{
-			Usart_HMI_MsgClear();
-			Count = 0;
-		}
-	}
-}
 
 void SysTick_Handler(void)
 { 
 	SysTick_Count++;
-	Debug_Uasrt_HMI();
 }
