@@ -70,7 +70,7 @@ uint8_t nRF24L01_Init(void)
     EXTI_InitStruct.EXTI_Line = NRF24L01_IQR_Line;
     EXTI_InitStruct.EXTI_LineCmd = ENABLE;
     EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Rising;    //上升沿
+    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //上升沿
 
     EXTI_Init(&EXTI_InitStruct);
     GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置
@@ -395,11 +395,11 @@ void EXTI9_5_IRQHandler(void)
 {
     if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
     {
-        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
         printf("nRF24L01 发生中断\r\n");
         CS_LOW;
         printf("nRF24L01 STATUS Reg = 0x%02X\r\n",port_Send(0xff));   //打印中断消息
         CS_HIGH;
-        nRF24L01_Write_Reg(STATUS,0xf0);    //清除所有中断
+        nRF24L01_Write_Reg(STATUS,0xe0);    //清除所有中断
+        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
     }
 }
