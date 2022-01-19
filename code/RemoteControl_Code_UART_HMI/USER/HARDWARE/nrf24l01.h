@@ -4,6 +4,11 @@
 #include "self_stm32f10x.h"
 #include ".\BSP\bsp_usart.h"
 
+//中断接口
+#define nRF24L01_Rx_ISR()
+#define nRF24L01_NoACK_ISR()
+#define nRF24L01_Tx_ISR()
+
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
 #define DEFAULT_Channel 0       //2400MHz频段
@@ -68,6 +73,7 @@ typedef struct
 static nRF24L01_Cfg CurrentCfg;     //当前nRF24L01的配置
 
 //底层函数
+
 uint8_t nRF24L01_Send_Cmd(uint8_t cmd);
 uint8_t nRF24L01_Send_CmdAndData(uint8_t cmd,uint8_t*buf,uint8_t len);
 uint8_t nRF24L01_Read_Reg(uint8_t addr);
@@ -76,6 +82,7 @@ uint8_t nRF24L01_Write_Reg(uint8_t addr,uint8_t dat);
 uint8_t nRF24L01_Write_Buf(uint8_t addr,uint8_t*buf,uint8_t len);
 
 //用户函数
+
 uint8_t nRF24L01_Init(void);
 uint8_t nRF24L01_Check(void);
 uint8_t nRF24L01_Status(void);

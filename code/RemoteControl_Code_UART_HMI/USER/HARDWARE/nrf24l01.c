@@ -13,6 +13,8 @@
 
 static void spiInit(void);
 static void Rx_Handler(void);   //接收中断
+static void NoACK_Handle(void); //未应答中断
+static void Tx_Handle(void);    //发送完成中断
 
 /*******************************************************************
  * 功能:初始化nRF24L01,并且进入standby模式
@@ -369,7 +371,7 @@ uint8_t nRF24L01_Status(void)
 /*******************************************************************
  * 功能:nRF24L01中断处理函数
  * 参数:无
- * 返回值:nRF24L01的status寄存器值
+ * 返回值:无
  * 2021/12/29   庞碧璋
  *******************************************************************/
 void nRF24L01_InterruptHandle(void)
@@ -377,10 +379,24 @@ void nRF24L01_InterruptHandle(void)
     //判断中断类型
     uint8_t status;
     status = nRF24L01_Status();
+    //未应答中断
+    if(status & (0x01<<4) )
+    {
+        NoACK_Handle();
+        nRF24L01_NoACK_ISR();   //外部处理函数
+    }
+    if(status & (0x01<<5) )
+    {
+        Tx_Handle();
+        nRF24L01_Tx_ISR();  //外部处理函数
+    }
     //接收中断
-    if(status & (0x01>>6) )
+    if(status & (0x01<<6) )
+    {
         Rx_Handler();
-    //发送未应答中断
+        nRF24L01_Rx_ISR();  //外部处理函数
+    }
+    nRF24L01_Write_Reg(STATUS,0xE0);    //清除所有中断
 }
 
 void Rx_Handler(void)
@@ -389,17 +405,22 @@ void Rx_Handler(void)
 
 }
 
+void NoACK_Handle(void)
+{
+
+}
+
+void Tx_Handle(void)
+{
+
+}
 
 /****************************ISR**************************/
 void EXTI9_5_IRQHandler(void)
 {
     if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
     {
-        printf("nRF24L01 发生中断\r\n");
-        CS_LOW;
-        printf("nRF24L01 STATUS Reg = 0x%02X\r\n",port_Send(0xff));   //打印中断消息
-        CS_HIGH;
-        nRF24L01_Write_Reg(STATUS,0xe0);    //清除所有中断
+        nRF24L01_InterruptHandle(); //中断处理
         EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
     }
 }
