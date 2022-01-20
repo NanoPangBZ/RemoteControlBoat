@@ -43,13 +43,3 @@ void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len)
     for(uint8_t temp=0;temp<len;temp++)
         buf[temp] = content[temp];
 }
-
-void Byte_To_Float(uint32_t*byte,float*buf)
-{
-    *buf = *((float*)byte);
-}
-
-void Byte_To_Short(uint16_t*byte,short*buf)
-{
-    *buf = *((short*)byte);
-}

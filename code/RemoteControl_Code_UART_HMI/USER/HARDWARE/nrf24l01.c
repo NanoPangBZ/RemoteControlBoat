@@ -369,6 +369,56 @@ uint8_t nRF24L01_Status(void)
 }
 
 /*******************************************************************
+ * 功能:读nRF24L01接收到的字节
+ * 参数:
+ *  buf:接收缓存
+ *  len:要读取的长度
+ * 返回值:
+ *  0:正常读取
+ *  1:接收到的字节小于len,读取失败
+ * 备注:这个函数会自动清除读取到的字节
+ * 2021/12/29   庞碧璋
+ *******************************************************************/
+uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len)
+{
+    if(len > nRF24L01_Sbuffer[0])
+        return 1;
+    MemCopy(nRF24L01_Sbuffer+1,buf,len);
+    nRF24L01_Push_Sbuffer(len);
+    return 0;
+}
+
+/*******************************************************************
+ * 功能:读取nRF24L01接收到的字节个数
+ * 参数:无
+ * 返回值:nRF24L01接收到的字节个数
+ * 备注:这里返回的是已经通过接收ISR载入单片机中的字节个数,不是nRF24L01
+ *  RxFIFO中的字节个数
+ * 2022/1/20    庞碧璋
+ *******************************************************************/
+uint8_t nRF24L01_Read_RxLen(void)
+{
+    return nRF24L01_Sbuffer[0];
+}
+
+void nRF24L01_Clear_Sbuffer(void)
+{
+    nRF24L01_Sbuffer[0] = 0;
+}
+
+void nRF24L01_Push_Sbuffer(uint8_t len)
+{
+    if(len >= nRF24L01_Sbuffer[0])
+    {
+        nRF24L01_Clear_Sbuffer();
+        return;
+    }
+    nRF24L01_Sbuffer[0] -= len;
+    for(uint8_t temp=0;temp<len;temp++)
+        nRF24L01_Sbuffer[temp+1] = nRF24L01_Sbuffer[temp+1+len];
+}
+
+/*******************************************************************
  * 功能:nRF24L01中断处理函数
  * 参数:无
  * 返回值:无
@@ -402,17 +452,29 @@ void nRF24L01_InterruptHandle(void)
 void Rx_Handler(void)
 {
     //获取当前Rx_FIFO中的数据数量
-
+    uint8_t len;
+    len = nRF24L01_Read_Reg(R_RX_PL_WID);   //命令 读取接收到的字节长度
+    //读有效数据
+    CS_LOW; //片选
+    port_Send(R_RX_PAYLOAD);    //发送读接收FIFO命令
+    for(uint8_t temp=0;temp<len;temp++)
+    {
+        nRF24L01_Sbuffer[ nRF24L01_Sbuffer[0] + 1 ] = port_Send(0xff);  //放在缓存区最后
+        nRF24L01_Sbuffer[0]++;
+    }
+    CS_HIGH;    //取消片选
+    //清除FIFO
+    nRF24L01_Send_Cmd(FLUSH_RX);
 }
 
 void NoACK_Handle(void)
 {
-
+    nRF24L01_Rx_Mode();
 }
 
 void Tx_Handle(void)
 {
-
+    nRF24L01_Rx_Mode();
 }
 
 /****************************ISR**************************/
@@ -424,3 +486,4 @@ void EXTI9_5_IRQHandler(void)
         EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
     }
 }
+

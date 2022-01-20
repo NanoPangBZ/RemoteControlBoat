@@ -29,7 +29,5 @@ void soft_delay_ms(unsigned int ms);
 void soft_delay_us(unsigned int us);
 
 void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len);
-void Byte_To_Float(uint32_t*byte,float*buf);
-void Byte_To_Short(uint16_t*byte,short*buf);
 
 #endif

@@ -5,9 +5,13 @@
 #include ".\BSP\bsp_usart.h"
 
 //中断接口
-#define nRF24L01_Rx_ISR()
-#define nRF24L01_NoACK_ISR()
-#define nRF24L01_Tx_ISR()
+#define nRF24L01_Rx_ISR()       nRF24L01_Recieve_Handle()
+#define nRF24L01_NoACK_ISR()    nRF24L01_NoACK_Handle()
+#define nRF24L01_Tx_ISR()       nRF24L01_Send_Handle()
+//声明这些函数
+void nRF24L01_Recieve_Handle(void);
+void nRF24L01_NoACK_Handle(void);
+void nRF24L01_Send_Handle(void);
 
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
@@ -58,7 +62,7 @@ static const Pin nRF24L01_PIN[5] = {
 };
 
 //第一个元素为有效长度
-static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1];
+static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1] = {0};
 
 typedef struct
 {
@@ -88,6 +92,10 @@ uint8_t nRF24L01_Check(void);
 uint8_t nRF24L01_Status(void);
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg);
 uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len);
+uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len);
+uint8_t nRF24L01_Read_RxLen(void);
+void nRF24L01_Clear_Sbuffer(void);
+void nRF24L01_Push_Sbuffer(uint8_t len);
 
 //待完成
 uint8_t nRF24L01_Rx_Mode(void);
