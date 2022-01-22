@@ -12,7 +12,9 @@
 #define port_delay_ms(ms)   soft_delay_ms(ms)
 
 static void spiInit(void);
-static void Rx_Handler(void);   //接收中断处理函数
+static void Rx_Handler(void);   //接收中断
+static void NoACK_Handle(void); //未应答中断
+static void Tx_Handle(void);    //发送完成中断
 
 /*******************************************************************
  * 功能:初始化nRF24L01,并且进入standby模式
@@ -53,6 +55,27 @@ uint8_t nRF24L01_Init(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_InitStructure.GPIO_Pin = NRF24L01_IQR_PIN;
     GPIO_Init(NRF24L01_IQR_GPIO,&GPIO_InitStructure);
+
+    //IRQ脚中断配置
+    NVIC_InitTypeDef    NVIC_InitSrtuct;
+    EXTI_InitTypeDef    EXTI_InitStruct;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
+
+    NVIC_InitSrtuct.NVIC_IRQChannel = NRF24L01_IQR_Channel;
+    NVIC_InitSrtuct.NVIC_IRQChannelCmd = ENABLE;
+    NVIC_InitSrtuct.NVIC_IRQChannelPreemptionPriority = 3;
+    NVIC_InitSrtuct.NVIC_IRQChannelSubPriority = 0;
+
+    NVIC_Init(&NVIC_InitSrtuct);
+
+    EXTI_InitStruct.EXTI_Line = NRF24L01_IQR_Line;
+    EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+    EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //上升沿
+
+    EXTI_Init(&EXTI_InitStruct);
+    GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置
 
     spiInit();
 
@@ -255,8 +278,6 @@ uint8_t nRF24L01_Check(void)
  *******************************************************************/
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
 {
-    uint8_t sbuffer[5];
-
     //复制配置
     MemCopy((uint8_t*)Cfg,(uint8_t*)&CurrentCfg,sizeof(nRF24L01_Cfg));
 
@@ -271,18 +292,12 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
         CurrentCfg.retry_cycle = 15;
 
     CE_LOW;
-    //数组倒置,使低字节在前
-    for(uint8_t temp = 0;temp<5;temp++)
-        sbuffer[temp] = CurrentCfg.TX_Addr[4-temp];
     //设置发送地址
     //接收管道0也设置为发送地址,用于发送应答接收
-    nRF24L01_Write_Buf(RX_ADDR_P0,sbuffer,5);
-    nRF24L01_Write_Buf(TX_ADDR,sbuffer,5);
-    //数组倒置,使低位在前
-    for(uint8_t temp = 0;temp<5;temp++)
-        sbuffer[temp] = CurrentCfg.RX_Addr[4-temp];
+    nRF24L01_Write_Buf(RX_ADDR_P0,Cfg->TX_Addr,5);
+    nRF24L01_Write_Buf(TX_ADDR,Cfg->TX_Addr,5);
     //设置接收管道地址
-    nRF24L01_Write_Buf(RX_ADDR_P1,sbuffer,5);
+    nRF24L01_Write_Buf(RX_ADDR_P1,Cfg->RX_Addr,5);
 
     //配置自动重发  SETUP_RETR
     nRF24L01_Write_Reg(SETUP_RETR,(CurrentCfg.retry_cycle<<4) | CurrentCfg.retry );
@@ -317,11 +332,6 @@ uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len)
     return status;
 }
 
-void nRF24L01_Read_RxFIFO(uint8_t*buf)
-{
-    
-}
-
 /**************************等待完成*********************************/
 
 /*******************************************************************
@@ -351,9 +361,71 @@ uint8_t nRF24L01_Status(void)
 }
 
 /*******************************************************************
+ * 功能:读nRF24L01接收到的字节
+ * 参数:
+ *  buf:接收缓存
+ *  len:要读取的长度
+ * 返回值:
+ *  0:正常读取
+ *  1:接收到的字节小于len,读取失败
+ * 备注:这个函数会自动清除读取到的字节
+ * 2021/12/29   庞碧璋
+ *******************************************************************/
+uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len)
+{
+    if(len > nRF24L01_Sbuffer[0])
+        return 1;
+    MemCopy(nRF24L01_Sbuffer+1,buf,len);
+    nRF24L01_Push_Sbuffer(len);
+    return 0;
+}
+
+/*******************************************************************
+ * 功能:读取nRF24L01接收到的字节个数
+ * 参数:无
+ * 返回值:nRF24L01接收到的字节个数
+ * 备注:这里返回的是已经通过接收ISR载入单片机中的字节个数,不是nRF24L01
+ *  RxFIFO中的字节个数
+ * 2022/1/20    庞碧璋
+ *******************************************************************/
+uint8_t nRF24L01_Read_RxLen(void)
+{
+    return nRF24L01_Sbuffer[0];
+}
+
+/*******************************************************************
+ * 功能:清除nRF24L01的接收缓存区
+ * 参数:无
+ * 返回值:无
+ * 2022/1/20    庞碧璋
+ *******************************************************************/
+void nRF24L01_Clear_Sbuffer(void)
+{
+    nRF24L01_Sbuffer[0] = 0;
+}
+
+/*******************************************************************
+ * 功能:清除nRF24L01的接收缓存区
+ * 参数:无
+ * 返回值:无
+ * 2022/1/20    庞碧璋
+ *******************************************************************/
+void nRF24L01_Push_Sbuffer(uint8_t len)
+{
+    if(len >= nRF24L01_Sbuffer[0])
+    {
+        nRF24L01_Clear_Sbuffer();
+        return;
+    }
+    nRF24L01_Sbuffer[0] -= len;
+    for(uint8_t temp=0;temp<len;temp++)
+        nRF24L01_Sbuffer[temp+1] = nRF24L01_Sbuffer[temp+1+len];
+}
+
+/*******************************************************************
  * 功能:nRF24L01中断处理函数
  * 参数:无
- * 返回值:nRF24L01的status寄存器值
+ * 返回值:无
  * 2021/12/29   庞碧璋
  *******************************************************************/
 void nRF24L01_InterruptHandle(void)
@@ -361,14 +433,61 @@ void nRF24L01_InterruptHandle(void)
     //判断中断类型
     uint8_t status;
     status = nRF24L01_Status();
+    //未应答中断
+    if(status & (0x01<<4) )
+    {
+        NoACK_Handle();
+        nRF24L01_NoACK_ISR();   //外部处理函数
+    }
+    if(status & (0x01<<5) )
+    {
+        Tx_Handle();
+        nRF24L01_Tx_ISR();  //外部处理函数
+    }
     //接收中断
-    if(status & (0x01>>6) )
+    if(status & (0x01<<6) )
+    {
         Rx_Handler();
-
+        nRF24L01_Rx_ISR();  //外部处理函数
+    }
+    nRF24L01_Write_Reg(STATUS,0xE0);    //清除所有中断
 }
 
 void Rx_Handler(void)
 {
     //获取当前Rx_FIFO中的数据数量
-
+    uint8_t len;
+    len = nRF24L01_Read_Reg(R_RX_PL_WID);   //命令 读取接收到的字节长度
+    //读有效数据
+    CS_LOW; //片选
+    port_Send(R_RX_PAYLOAD);    //发送读接收FIFO命令
+    for(uint8_t temp=0;temp<len;temp++)
+    {
+        nRF24L01_Sbuffer[ nRF24L01_Sbuffer[0] + 1 ] = port_Send(0xff);  //放在缓存区最后
+        nRF24L01_Sbuffer[0]++;
+    }
+    CS_HIGH;    //取消片选
+    //清除FIFO
+    nRF24L01_Send_Cmd(FLUSH_RX);
 }
+
+void NoACK_Handle(void)
+{
+    nRF24L01_Rx_Mode();
+}
+
+void Tx_Handle(void)
+{
+    nRF24L01_Rx_Mode();
+}
+
+/****************************ISR**************************/
+void EXTI9_5_IRQHandler(void)
+{
+    if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
+    {
+        nRF24L01_InterruptHandle(); //中断处理
+        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
+    }
+}
+

@@ -278,8 +278,6 @@ uint8_t nRF24L01_Check(void)
  *******************************************************************/
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
 {
-    uint8_t sbuffer[5];
-
     //复制配置
     MemCopy((uint8_t*)Cfg,(uint8_t*)&CurrentCfg,sizeof(nRF24L01_Cfg));
 
@@ -294,18 +292,12 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
         CurrentCfg.retry_cycle = 15;
 
     CE_LOW;
-    //数组倒置,使低字节在前
-    for(uint8_t temp = 0;temp<5;temp++)
-        sbuffer[temp] = CurrentCfg.TX_Addr[4-temp];
     //设置发送地址
     //接收管道0也设置为发送地址,用于发送应答接收
-    nRF24L01_Write_Buf(RX_ADDR_P0,sbuffer,5);
-    nRF24L01_Write_Buf(TX_ADDR,sbuffer,5);
-    //数组倒置,使低位在前
-    for(uint8_t temp = 0;temp<5;temp++)
-        sbuffer[temp] = CurrentCfg.RX_Addr[4-temp];
+    nRF24L01_Write_Buf(RX_ADDR_P0,Cfg->TX_Addr,5);
+    nRF24L01_Write_Buf(TX_ADDR,Cfg->TX_Addr,5);
     //设置接收管道地址
-    nRF24L01_Write_Buf(RX_ADDR_P1,sbuffer,5);
+    nRF24L01_Write_Buf(RX_ADDR_P1,Cfg->TX_Addr,5);
 
     //配置自动重发  SETUP_RETR
     nRF24L01_Write_Reg(SETUP_RETR,(CurrentCfg.retry_cycle<<4) | CurrentCfg.retry );
@@ -401,11 +393,23 @@ uint8_t nRF24L01_Read_RxLen(void)
     return nRF24L01_Sbuffer[0];
 }
 
+/*******************************************************************
+ * 功能:清除nRF24L01的接收缓存区
+ * 参数:无
+ * 返回值:无
+ * 2022/1/20    庞碧璋
+ *******************************************************************/
 void nRF24L01_Clear_Sbuffer(void)
 {
     nRF24L01_Sbuffer[0] = 0;
 }
 
+/*******************************************************************
+ * 功能:清除nRF24L01的接收缓存区
+ * 参数:无
+ * 返回值:无
+ * 2022/1/20    庞碧璋
+ *******************************************************************/
 void nRF24L01_Push_Sbuffer(uint8_t len)
 {
     if(len >= nRF24L01_Sbuffer[0])

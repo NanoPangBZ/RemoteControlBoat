@@ -449,9 +449,9 @@
               <FilePath>.\USER\self_stm32f10x.c</FilePath>
             </File>
             <File>
-              <FileName>user.c</FileName>
+              <FileName>nrf24_debug.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\USER\user.c</FilePath>
+              <FilePath>.\USER\nrf24_debug.c</FilePath>
             </File>
           </Files>
         </Group>

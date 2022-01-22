@@ -4,6 +4,13 @@
 #include "self_stm32f10x.h"
 #include ".\BSP\bsp_usart.h"
 
+#include "nrf24_debug.h"
+
+//中断接口
+#define nRF24L01_Rx_ISR()       nRF24L01_Rx_Handle()
+#define nRF24L01_NoACK_ISR()    nRF24L01_NoACK_Handle()
+#define nRF24L01_Tx_ISR()       nRF24L01_Tx_Handle()
+
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
 #define DEFAULT_Channel 0       //2400MHz频段
@@ -33,6 +40,10 @@
 // 第8脚:IRQ
 #define  NRF24L01_IQR_GPIO           GPIOG                 // SPI MISO
 #define  NRF24L01_IQR_PIN            GPIO_Pin_8
+#define  NRF24L01_IQR_Channel        EXTI9_5_IRQn
+#define  NRF24L01_IQR_SourceGPIO    GPIO_PortSourceGPIOG
+#define  NRF24L01_IQR_PinSource     GPIO_PinSource8
+#define  NRF24L01_IQR_Line          EXTI_Line8   
 
 #define NRF24L01_CE     0
 #define NRF24L01_CS     1
@@ -48,8 +59,9 @@ static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
 };
 
+
 //第一个元素为有效长度
-static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1];
+static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1] = {0};
 
 typedef struct
 {
@@ -61,7 +73,7 @@ typedef struct
     uint8_t TX_Addr[5]; //发射方地址  ->  目标接收地址
 }nRF24L01_Cfg;
 
-static nRF24L01_Cfg CurrentCfg;
+static nRF24L01_Cfg CurrentCfg;     //当前nRF24L01的配置
 
 //底层函数
 
@@ -79,11 +91,12 @@ uint8_t nRF24L01_Check(void);
 uint8_t nRF24L01_Status(void);
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg);
 uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len);
+uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len);
+uint8_t nRF24L01_Read_RxLen(void);
+void nRF24L01_Clear_Sbuffer(void);
+void nRF24L01_Push_Sbuffer(uint8_t len);
 
 //待完成
-
 uint8_t nRF24L01_Rx_Mode(void);
-void nRF24L01_InterruptHandle(void);
-
 #endif
 

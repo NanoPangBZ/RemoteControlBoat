@@ -408,6 +408,11 @@
               <FileType>1</FileType>
               <FilePath>.\USER\vofa_p.c</FilePath>
             </File>
+            <File>
+              <FileName>nrf24_debug.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\USER\nrf24_debug.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

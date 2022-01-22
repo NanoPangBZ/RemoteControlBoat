@@ -346,8 +346,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>.\USER\user.c</PathWithFileName>
-      <FilenameWithoutPath>user.c</FilenameWithoutPath>
+      <PathWithFileName>.\USER\nrf24_debug.c</PathWithFileName>
+      <FilenameWithoutPath>nrf24_debug.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

@@ -4,14 +4,11 @@
 #include "self_stm32f10x.h"
 #include ".\BSP\bsp_usart.h"
 
+#include "nrf24_debug.h"
 //中断接口
-#define nRF24L01_Rx_ISR()       nRF24L01_Recieve_Handle()
+#define nRF24L01_Rx_ISR()       nRF24L01_Rx_Handle()
 #define nRF24L01_NoACK_ISR()    nRF24L01_NoACK_Handle()
-#define nRF24L01_Tx_ISR()       nRF24L01_Send_Handle()
-//声明这些函数
-void nRF24L01_Recieve_Handle(void);
-void nRF24L01_NoACK_Handle(void);
-void nRF24L01_Send_Handle(void);
+#define nRF24L01_Tx_ISR()       nRF24L01_Tx_Handle()
 
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
