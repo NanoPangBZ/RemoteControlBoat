@@ -315,9 +315,12 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
     //设置接收长度
     nRF24L01_Write_Reg(RX_PW_P1,CurrentCfg.Rx_Length);
 
+    //设置地址
+    //数据管道0用于发送模式下接收应答信号
     nRF24L01_Write_Buf(RX_ADDR_P1,CurrentCfg.RX_Addr,5);
     nRF24L01_Write_Buf(RX_ADDR_P0,CurrentCfg.TX_Addr,5);
     nRF24L01_Write_Buf(TX_ADDR,CurrentCfg.TX_Addr,5);
+    //使能数据管道 0 1 已经 管道的自动应答
     nRF24L01_Write_Reg(EN_AA,0x03);
     nRF24L01_Write_Reg(EN_RXADDR,0x03);
 
