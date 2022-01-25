@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "stm32f10x.h": "c",
-        "bsp_usart.h": "c"
+        "bsp_usart.h": "c",
+        "nrf24l01_micro.h": "c"
     }
 }

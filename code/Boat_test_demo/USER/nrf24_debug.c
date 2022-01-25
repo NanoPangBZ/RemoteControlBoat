@@ -6,8 +6,11 @@ void nRF24L01_UserBoard_Test(void)
 
     if(nRF24L01_Init())
     {
-        printf("nRF24L01 Err!\r\n");
-        while(1);
+        while(1)
+        {
+            soft_delay_ms(1000);
+            printf("nRF24L01 Err!\r\n");
+        }
     }else
     {
         printf("nRF24L01 Pass\r\n");
@@ -28,7 +31,7 @@ void nRF24L01_UserBoard_Test(void)
     while(1)
     {
         soft_delay_ms(1000);
-        printf("Send 32 Byte\r\n");
+        printf("Boat Send 32 Byte\r\n");
         nRF24L01_Send(sbuffer,32);
     }
 }
@@ -39,8 +42,11 @@ void nRF24L01_BoatBoard_Test(void)
 
     if(nRF24L01_Init())
     {
-        printf("nRF24L01 Err!\r\n");
-        while(1);
+        while(1)
+        {
+            soft_delay_ms(1000);
+            printf("nRF24L01 Err!\r\n");
+        }
     }else
     {
         printf("nRF24L01 Pass\r\n");

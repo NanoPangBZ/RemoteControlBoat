@@ -17,8 +17,8 @@ void nRF24L01_UserBoard_Test(void)
     Cfg.retry = 5;
     Cfg.retry_cycle = 1;
     Cfg.Rx_Length = 32;
-    MemCopy(User_BoardAddr,Cfg.RX_Addr,5);
-    MemCopy(Boat_BoardAddr,Cfg.TX_Addr,5);
+    MemCopy(User_BoardAddr,Cfg.TX_Addr,5);
+    MemCopy(Boat_BoardAddr,Cfg.RX_Addr,5);
 
     nRF24L01_Config(&Cfg);
 
@@ -50,8 +50,8 @@ void nRF24L01_BoatBoard_Test(void)
     Cfg.retry = 5;
     Cfg.retry_cycle = 1;
     Cfg.Rx_Length = 32;
-    MemCopy(Boat_BoardAddr,Cfg.RX_Addr,5);
-    MemCopy(User_BoardAddr,Cfg.TX_Addr,5);
+    MemCopy(Boat_BoardAddr,Cfg.TX_Addr,5);
+    MemCopy(User_BoardAddr,Cfg.RX_Addr,5);
 
     nRF24L01_Config(&Cfg);
     nRF24L01_Rx_Mode();

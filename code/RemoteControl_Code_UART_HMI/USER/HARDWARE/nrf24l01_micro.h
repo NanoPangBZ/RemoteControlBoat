@@ -18,6 +18,7 @@
 #define FEATURE         0x1D    //特征寄存器
 #define EN_AA           0x01    //使能自动确认
 #define EN_RXADDR       0x02    //使能接收数据管道地址
+#define RX_PW_P0        0x11    
 #define RX_PW_P1        0x12    //接收管道1的静态长度设置 1~32Byte
 
 //命令
@@ -27,10 +28,6 @@
 #define R_RX_PAYLOAD    0x61    //读接收数据
 #define R_RX_PL_WID     0x60    //读取收到的数据字节数
 #define W_TX_PAYLOAD_NO_ACK  0x0B
-
-//MASK
-#define TX_ENPTY_MASK   0x01<<4 //FIFO_STATUS寄存器 TX_EMPTY位
-#define PWR_UP_MASK     0x01<<2 //CONFIG寄存器 PRW_UP位
 
 #endif
 

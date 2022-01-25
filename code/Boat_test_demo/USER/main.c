@@ -20,7 +20,7 @@ int main(void)
 
 	BSP_Usart_Init();
 
-	nRF24L01_UserBoard_Test();
+	nRF24L01_BoatBoard_Test();
 
 	while(1);
 

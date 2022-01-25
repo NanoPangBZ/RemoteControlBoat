@@ -31,7 +31,6 @@ uint8_t nRF24L01_Init(void)
     GPIO_InitTypeDef  GPIO_InitStructure;
     nRF24L01_Cfg    DefaultCfg;
     uint8_t err = 0;
-    uint8_t temp;
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2,ENABLE);        
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);  
@@ -72,7 +71,7 @@ uint8_t nRF24L01_Init(void)
     EXTI_InitStruct.EXTI_Line = NRF24L01_IQR_Line;
     EXTI_InitStruct.EXTI_LineCmd = ENABLE;
     EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //上升沿
+    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //下降沿
 
     EXTI_Init(&EXTI_InitStruct);
     GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置
@@ -89,13 +88,13 @@ uint8_t nRF24L01_Init(void)
     MemCopy(DEFAULT_TxAddr,DefaultCfg.TX_Addr,5);
     nRF24L01_Config(&DefaultCfg);
 
-    temp = nRF24L01_Read_Reg(CONFIG);
-    nRF24L01_Write_Reg(CONFIG,temp|0x02);   //启动,进入standby模式
-    nRF24L01_Write_Reg(FEATURE,0x07);       
-
-    soft_delay_ms(10); //等待进入standby
+    nRF24L01_Write_Reg(CONFIG,0x0f);    //启动,进入standby模式      
 
     err = nRF24L01_Check();
+
+    if(err == 0)
+        nRF24L01_Rx_Mode();
+
     return err;
 }
 
@@ -263,6 +262,8 @@ uint8_t nRF24L01_Check(void)
     return err;
 }
 
+//43.16.66.66.78
+
 /*******************************************************************
  * 功能:    配置nRF24L01
  * 参数:
@@ -291,21 +292,34 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
     if( CurrentCfg.retry_cycle > 15)
         CurrentCfg.retry_cycle = 15;
 
+    #if 0
+    printf("Channel = %d\r\n",CurrentCfg.Channel);
+    printf("Rx_Lenth = %d\r\n",CurrentCfg.Rx_Length);
+    printf("Retry = %d\r\n",CurrentCfg.retry);
+    printf("Retry_Cycle = %d\r\n",CurrentCfg.retry_cycle);
+    printf("Rx_Addr:");
+    for(uint8_t temp=0;temp<5;temp++)
+        printf("%02X ",CurrentCfg.RX_Addr[temp]);
+    printf("\r\nTx_Addr:");
+    for(uint8_t temp=0;temp<5;temp++)
+        printf("%02X ",CurrentCfg.TX_Addr[temp]);
+    #endif
+
     CE_LOW;
-    //设置发送地址
-    //接收管道0也设置为发送地址,用于发送应答接收
-    nRF24L01_Write_Buf(RX_ADDR_P0,Cfg->TX_Addr,5);
-    nRF24L01_Write_Buf(TX_ADDR,Cfg->TX_Addr,5);
-    //设置接收管道地址
-    nRF24L01_Write_Buf(RX_ADDR_P1,Cfg->RX_Addr,5);
 
     //配置自动重发  SETUP_RETR
     nRF24L01_Write_Reg(SETUP_RETR,(CurrentCfg.retry_cycle<<4) | CurrentCfg.retry );
     //配置频道      RF_CH
     nRF24L01_Write_Reg(RF_CH,CurrentCfg.Channel);
 
-    //设置接收长度 接收管道1
+    //设置接收长度
     nRF24L01_Write_Reg(RX_PW_P1,CurrentCfg.Rx_Length);
+
+    nRF24L01_Write_Buf(RX_ADDR_P1,CurrentCfg.RX_Addr,5);
+    nRF24L01_Write_Buf(RX_ADDR_P0,CurrentCfg.TX_Addr,5);
+    nRF24L01_Write_Buf(TX_ADDR,CurrentCfg.TX_Addr,5);
+    nRF24L01_Write_Reg(EN_AA,0x03);
+    nRF24L01_Write_Reg(EN_RXADDR,0x03);
 
     return nRF24L01_Write_Reg(RF_CH,CurrentCfg.Channel);
 }
@@ -316,7 +330,7 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
  *  buf:数据
  *  len:长度
  * 返回值:nRF24L01的status寄存器值
- * 备注:发送结束后不会自动进入RX_Mode
+ * 备注:发送结束后由中断自动进入接收模式(不论是否接收到应答)
  * 2022/1/2   庞碧璋
  *******************************************************************/
 uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len)
@@ -324,15 +338,13 @@ uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len)
     uint8_t status;
     CE_LOW;
     //配置为发送模式
-    nRF24L01_Send_Cmd(FLUSH_TX);        //清空TX FIFO
     nRF24L01_Write_Reg(STATUS,0x70);    //清除中断标志
+    nRF24L01_Send_Cmd(FLUSH_TX);        //清空TX FIFO
     nRF24L01_Send_CmdAndData(W_TX_PAYLOAD,buf,len);
     status = nRF24L01_Write_Reg(CONFIG,0x0E);    //0000 1110
     CE_HIGH;
     return status;
 }
-
-/**************************等待完成*********************************/
 
 /*******************************************************************
  * 功能:nRF24L01进入监听模式
@@ -344,6 +356,7 @@ uint8_t nRF24L01_Rx_Mode(void)
 {
     uint8_t status;
     CE_LOW;
+    nRF24L01_Write_Reg(STATUS,0x70);             //清除中断标志
     status = nRF24L01_Write_Reg(CONFIG,0x0F);    //0000 1111
     CE_HIGH;
     return status;
@@ -473,6 +486,7 @@ void Rx_Handler(void)
 
 void NoACK_Handle(void)
 {
+    nRF24L01_Send_Cmd(FLUSH_TX);
     nRF24L01_Rx_Mode();
 }
 
