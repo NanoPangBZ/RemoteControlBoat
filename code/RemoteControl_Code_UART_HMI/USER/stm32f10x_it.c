@@ -131,9 +131,19 @@ void PendSV_Handler(void)
   * @param  None
   * @retval None
   */
- #if 0
+
+#include "FreeRTOS.h"
+#include "task.h"
+
+extern void xPortSysTickHandler(void);
+
+#if 0
 void SysTick_Handler(void)
 {
+  if(xTaskGetSchedulerState()!=taskSCHEDULER_NOT_STARTED)   //判断系统是否已经启动
+    {
+        xPortSysTickHandler();
+    }
 }
 #endif
 

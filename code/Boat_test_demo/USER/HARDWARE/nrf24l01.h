@@ -59,7 +59,6 @@ static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
 };
 
-
 //第一个元素为有效长度
 static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1] = {0};
 
@@ -95,8 +94,7 @@ uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len);
 uint8_t nRF24L01_Read_RxLen(void);
 void nRF24L01_Clear_Sbuffer(void);
 void nRF24L01_Push_Sbuffer(uint8_t len);
-
-//待完成
 uint8_t nRF24L01_Rx_Mode(void);
+
 #endif
 

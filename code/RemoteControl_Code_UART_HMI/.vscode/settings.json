@@ -10,6 +10,7 @@
         "cmath": "c",
         "bsp_adc.h": "c",
         "usart_hmi_cmd.h": "c",
-        "usart_hmi_const.h": "c"
+        "usart_hmi_const.h": "c",
+        "freertos.h": "c"
     }
 }

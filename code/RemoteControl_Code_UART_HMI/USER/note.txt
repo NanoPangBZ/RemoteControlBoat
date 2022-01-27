@@ -11,6 +11,8 @@
 -USART_HMI:使用的型号为TJC4827X343_001，串口通讯，波特率115200，使用官方的串口指令(assic)主动解析。Debug消
  息框(下拉多文本控件)统一命名"Msg"。
 -nrf24l01外部中断要先清除nrf24l01的中断标志才能将中断挂起!否则会死循环!!
+-freeRTOS的接口只实现了xPortSysTickHandler(),xPortPendSVHandler()和vPortSVCHandler()已经由freeRTOS源码
+ 帮我们实现了
 
 便签:
 
