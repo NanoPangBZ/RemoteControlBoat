@@ -7,9 +7,9 @@
 #include "nrf24_debug.h"
 
 //中断接口
-#define nRF24L01_Rx_ISR()       nRF24L01_Rx_Handle()
-#define nRF24L01_NoACK_ISR()    nRF24L01_NoACK_Handle()
-#define nRF24L01_Tx_ISR()       nRF24L01_Tx_Handle()
+#define nRF24L01_Rx_ISR()     
+#define nRF24L01_NoACK_ISR()   
+#define nRF24L01_Tx_ISR()     
 
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"

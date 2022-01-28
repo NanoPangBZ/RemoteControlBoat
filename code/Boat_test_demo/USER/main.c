@@ -5,8 +5,6 @@
 
 #include ".\HARDWARE\nrf24l01.h"
 
-#include "nrf24_debug.h"
-
 uint32_t SysTick_Count = 0;
 
 int main(void)
@@ -17,10 +15,6 @@ int main(void)
 	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);
 
 	SysTick_Config(5*72000);	//5ms系统滴答定时器中断
-
-	BSP_Usart_Init();
-
-	nRF24L01_BoatBoard_Test();
 
 	while(1);
 
