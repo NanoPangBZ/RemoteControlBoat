@@ -3,24 +3,19 @@
         {
             "name": "Target 1",
             "includePath": [
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\USER",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\StdPeriph\\inc",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\OS\\core\\include",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\OS\\port",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\USER",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\FWLIB\\inc",
                 "C:\\Keil_v5\\ARM\\PACK\\Keil\\STM32F1xx_DFP\\2.3.0\\Device\\Include",
                 "C:\\Keil_v5\\ARM\\PACK\\ARM\\CMSIS\\5.8.0\\CMSIS\\Core\\Include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\StdPeriph\\src",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\USER\\BSP",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\USER\\HARDWARE",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\USER\\SOFTWARE",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\OS\\core",
-                "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\OS\\port\\MemMang"
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\FWLIB\\src",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\USER\\BSP",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat_test_demo\\USER\\HARDWARE"
             ],
             "defines": [
                 "USE_STDPERIPH_DRIVER",
-                "STM32F10X_MD",
+                "STM32F10X_HD",
                 "__CC_ARM",
                 "__arm__",
                 "__align(x)=",

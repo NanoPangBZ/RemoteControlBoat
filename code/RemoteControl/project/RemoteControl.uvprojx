@@ -398,6 +398,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\stm32f10x_it.c</FilePath>
             </File>
+            <File>
+              <FileName>FreeRTOSConfig.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\USER\FreeRTOSConfig.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -487,6 +492,16 @@
               <FileName>usart_hmi.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\HARDWARE\usart_hmi.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>SOFTWARE</GroupName>
+          <Files>
+            <File>
+              <FileName>user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\user.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -598,5 +613,14 @@
       </file>
     </files>
   </RTE>
+
+  <LayerInfo>
+    <Layers>
+      <Layer>
+        <LayName>RemoteControl</LayName>
+        <LayPrjMark>1</LayPrjMark>
+      </Layer>
+    </Layers>
+  </LayerInfo>
 
 </Project>

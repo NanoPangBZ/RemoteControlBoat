@@ -104,9 +104,11 @@ void UsageFault_Handler(void)
   * @param  None
   * @retval None
   */
+ #if 0
 void SVC_Handler(void)
 {
 }
+#endif
 
 /**
   * @brief  This function handles Debug Monitor exception.
@@ -122,9 +124,11 @@ void DebugMon_Handler(void)
   * @param  None
   * @retval None
   */
+ #if 0
 void PendSV_Handler(void)
 {
 }
+#endif
 
 /**
   * @brief  This function handles SysTick Handler.

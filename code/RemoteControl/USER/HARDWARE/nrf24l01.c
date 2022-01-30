@@ -74,7 +74,6 @@ uint8_t nRF24L01_Init(void)
     EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //下降沿
 
     EXTI_Init(&EXTI_InitStruct);
-    GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置
 
     spiInit();
 
@@ -93,7 +92,10 @@ uint8_t nRF24L01_Init(void)
     err = nRF24L01_Check();
 
     if(err == 0)
+    {
         nRF24L01_Rx_Mode();
+        GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置    检测无误后才使能这个中断
+    }
 
     return err;
 }
@@ -221,9 +223,9 @@ uint8_t nRF24L01_Write_Buf(uint8_t addr,uint8_t*buf,uint8_t len)
 {
     uint8_t status;
     CS_LOW;
-    status = port_Send(addr|0x02);
+    status = port_Send(addr|0x20);
     for(uint8_t temp=0;temp<len;temp++)
-        buf[temp] = port_Send(0xff);
+        port_Send(buf[temp]);
     CS_HIGH;
     return status;
 }
@@ -255,7 +257,6 @@ uint8_t nRF24L01_Check(void)
         if(TestSbuffer[temp] != TestAddr[temp])
         {
             err = 1;
-            break;
         }
     }
     nRF24L01_Write_Buf(RX_ADDR_P0,sbuffer,5);
@@ -291,19 +292,6 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
         CurrentCfg.retry = 15;
     if( CurrentCfg.retry_cycle > 15)
         CurrentCfg.retry_cycle = 15;
-
-    #if 0
-    printf("Channel = %d\r\n",CurrentCfg.Channel);
-    printf("Rx_Lenth = %d\r\n",CurrentCfg.Rx_Length);
-    printf("Retry = %d\r\n",CurrentCfg.retry);
-    printf("Retry_Cycle = %d\r\n",CurrentCfg.retry_cycle);
-    printf("Rx_Addr:");
-    for(uint8_t temp=0;temp<5;temp++)
-        printf("%02X ",CurrentCfg.RX_Addr[temp]);
-    printf("\r\nTx_Addr:");
-    for(uint8_t temp=0;temp<5;temp++)
-        printf("%02X ",CurrentCfg.TX_Addr[temp]);
-    #endif
 
     CE_LOW;
 
