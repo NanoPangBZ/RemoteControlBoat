@@ -12,9 +12,6 @@
 #define port_delay_ms(ms)   soft_delay_ms(ms)
 
 static void spiInit(void);
-static void Rx_Handler(void);   //接收中断
-static void NoACK_Handle(void); //未应答中断
-static void Tx_Handle(void);    //发送完成中断
 
 /*******************************************************************
  * 功能:初始化nRF24L01,并且进入standby模式
@@ -373,6 +370,8 @@ uint8_t nRF24L01_Status(void)
  *  0:正常读取
  *  1:接收到的字节小于len,读取失败
  * 备注:这个函数会自动清除读取到的字节
+ * 这里读取的是已经通过接收ISR载入单片机中的字节,不是nRF24L01 RxFIFO
+ * 中的字节
  * 2021/12/29   庞碧璋
  *******************************************************************/
 uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len)
@@ -385,6 +384,50 @@ uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len)
 }
 
 /*******************************************************************
+ * 功能:读nRF24L01接收到的字节
+ * 参数:
+ *  buf:接收缓存
+ * 返回值:
+ *  读取到的字节个数
+ * 备注:
+ *  这个函数不会清除接收中断
+ * 2022/1/31   庞碧璋
+ *******************************************************************/
+uint8_t nRF24L01_Read_RxFIFO(uint8_t*buf)
+{
+    //获取当前Rx_FIFO中的数据数量
+    uint8_t len;
+    len = nRF24L01_Read_Reg(R_RX_PL_WID);   //命令 读取接收到的字节长度
+    //读有效数据
+    CS_LOW; //片选
+    port_Send(R_RX_PAYLOAD);    //发送读接收FIFO命令
+    for(uint8_t temp=0;temp<len;temp++)
+        buf[temp] = port_Send(0xff);
+    CS_HIGH;    //取消片选
+    //清除FIFO
+    nRF24L01_Send_Cmd(FLUSH_RX);
+    return len;
+}
+
+/*******************************************************************
+ * 功能:将RxFIFO中的数据载入到单片机内部缓存中
+ * 参数:无
+ * 返回值:
+ *  缓存区首地址
+ * 备注:
+ *  这个函数不会清除接收中断
+ * 2022/1/31   庞碧璋
+ *******************************************************************/
+uint8_t*nRF24L01_FIFO_To_Sbuffer(void)
+{
+    uint8_t len;
+    len  = nRF24L01_Read_RxFIFO(&nRF24L01_Sbuffer[ nRF24L01_Sbuffer[0] + 1]);
+    nRF24L01_Sbuffer[0] += len;
+    nRF24L01_Send_Cmd(FLUSH_RX);
+    return nRF24L01_Sbuffer;
+}
+
+/*******************************************************************
  * 功能:读取nRF24L01接收到的字节个数
  * 参数:无
  * 返回值:nRF24L01接收到的字节个数
@@ -392,7 +435,7 @@ uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len)
  *  RxFIFO中的字节个数
  * 2022/1/20    庞碧璋
  *******************************************************************/
-uint8_t nRF24L01_Read_RxLen(void)
+uint8_t nRF24L01_Read_SbufferLen(void)
 {
     return nRF24L01_Sbuffer[0];
 }
@@ -425,6 +468,8 @@ void nRF24L01_Push_Sbuffer(uint8_t len)
     for(uint8_t temp=0;temp<len;temp++)
         nRF24L01_Sbuffer[temp+1] = nRF24L01_Sbuffer[temp+1+len];
 }
+
+/***************************中断处理************************************/
 
 /*******************************************************************
  * 功能:nRF24L01中断处理函数
@@ -459,20 +504,7 @@ void nRF24L01_InterruptHandle(void)
 
 void Rx_Handler(void)
 {
-    //获取当前Rx_FIFO中的数据数量
-    uint8_t len;
-    len = nRF24L01_Read_Reg(R_RX_PL_WID);   //命令 读取接收到的字节长度
-    //读有效数据
-    CS_LOW; //片选
-    port_Send(R_RX_PAYLOAD);    //发送读接收FIFO命令
-    for(uint8_t temp=0;temp<len;temp++)
-    {
-        nRF24L01_Sbuffer[ nRF24L01_Sbuffer[0] + 1 ] = port_Send(0xff);  //放在缓存区最后
-        nRF24L01_Sbuffer[0]++;
-    }
-    CS_HIGH;    //取消片选
-    //清除FIFO
-    nRF24L01_Send_Cmd(FLUSH_RX);
+    nRF24L01_FIFO_To_Sbuffer();
 }
 
 void NoACK_Handle(void)

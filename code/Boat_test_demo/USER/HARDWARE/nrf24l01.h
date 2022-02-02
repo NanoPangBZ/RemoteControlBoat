@@ -51,6 +51,7 @@
 #define NRF24L01_MISO   3
 #define NRF24L01_SCK    4
 
+
 static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
     {NRF24L01_CSN_PIN,NRF24L01_CSN_GPIO},
@@ -90,11 +91,21 @@ uint8_t nRF24L01_Check(void);
 uint8_t nRF24L01_Status(void);
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg);
 uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len);
+uint8_t nRF24L01_Read_RxFIFO(uint8_t*buf);
+uint8_t*nRF24L01_FIFO_To_Sbuffer(void);
 uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len);
-uint8_t nRF24L01_Read_RxLen(void);
+uint8_t nRF24L01_Read_SbufferLen(void);
 void nRF24L01_Clear_Sbuffer(void);
 void nRF24L01_Push_Sbuffer(uint8_t len);
 uint8_t nRF24L01_Rx_Mode(void);
 
+void nRF24L01_InterruptHandle(void);
+void Rx_Handler(void);   //接收中断
+void NoACK_Handle(void); //未应答中断
+void Tx_Handle(void);    //发送完成中断
+
+
+
 #endif
+
 
