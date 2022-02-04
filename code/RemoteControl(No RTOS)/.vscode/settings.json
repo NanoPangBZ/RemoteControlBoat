@@ -1,0 +1,16 @@
+{
+    "files.associations": {
+        "stm32f10x.h": "c",
+        "bsp_usart.h": "c",
+        "self_stm32f10x.h": "c",
+        "bsp_spi.h": "c",
+        "nrf24l01.h": "c",
+        "vofa_p.h": "c",
+        "nrf24l01_micro.h": "c",
+        "cmath": "c",
+        "bsp_adc.h": "c",
+        "usart_hmi_cmd.h": "c",
+        "usart_hmi_const.h": "c",
+        "freertos.h": "c"
+    }
+}

@@ -296,16 +296,17 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
     nRF24L01_Write_Reg(SETUP_RETR,(CurrentCfg.retry_cycle<<4) | CurrentCfg.retry );
     //配置频道      RF_CH
     nRF24L01_Write_Reg(RF_CH,CurrentCfg.Channel);
+
     //设置接收长度
     nRF24L01_Write_Reg(RX_PW_P1,CurrentCfg.Rx_Length);
-    //设置地址
-    //数据管道0用于发送模式下接收应答信号
+
     nRF24L01_Write_Buf(RX_ADDR_P1,CurrentCfg.RX_Addr,5);
     nRF24L01_Write_Buf(RX_ADDR_P0,CurrentCfg.TX_Addr,5);
     nRF24L01_Write_Buf(TX_ADDR,CurrentCfg.TX_Addr,5);
-    //使能数据管道 0 1 和管道的自动应答
+    nRF24L01_Write_Reg(EN_AA,0x03);
     nRF24L01_Write_Reg(EN_RXADDR,0x03);
-    return nRF24L01_Write_Reg(EN_AA,0x03);;
+
+    return nRF24L01_Write_Reg(RF_CH,CurrentCfg.Channel);
 }
 
 /*******************************************************************
@@ -482,8 +483,8 @@ extern void nRF24L01_Rx_ISR(void);
  * 备注:可以在nRF24发生中断后调用这个函数,但是不建议直接在ISR中调用!!因为
  *  接收中断的处理代码执行时间较长,应当使用软件中断标志位,在没有其他任务时
  *  调用nRF24L01_InterruptHandle()
- *  若没有在ISR中直接调用这个函数,需要在ISR中添加nRF24L01_Write_Reg(STATUS,0xE0)清除nRF24的
- *  中断标志,否则stm32会卡在中断,同时应当保留status寄存器的值,方便后续中断处理
+ *  若没有在ISR中直接调用这个函数,需要在ISR中添加nRF24L01_Write_Reg(STATUS,0xE0),否
+ *  则stm32会卡在中断,同时应当保留status寄存器的值,方便后续中断处理
  *  未应答中断:使nRF24L01进入RxMode,并且清除TxFIFO,再执行自定义的nRF24L01_NoACK_ISR()函数
  *  发生完成中断:使nRF24L01进入RxMode,再执行自定义的nRF24L01_Tx_ISR()函数
  *  接收中断:将RxFIFO中的值载入到单片机内部的Sbuffer,再执行自定义的nRF24L01_Rx_ISR()函数

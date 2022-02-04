@@ -2,9 +2,7 @@
 #define _NRF24L01_H_
 
 #include "self_stm32f10x.h"
-#include ".\BSP\bsp_usart.h"
-
-#include "nrf24_debug.h"
+#include ".\BSP\bsp_usart.h"     
 
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
@@ -18,11 +16,11 @@
 #define  NRF24L01_SPIx                SPI2                  // SPI 端口   
 
 // 第3脚:CE
-#define  NRF24L01_CE_GPIO             GPIOG                 // CE 工作模式开启， 高电平有效，发射/接收模式控制
-#define  NRF24L01_CE_PIN              GPIO_Pin_6
+#define  NRF24L01_CE_GPIO             GPIOB                 // CE 工作模式开启， 高电平有效，发射/接收模式控制
+#define  NRF24L01_CE_PIN              GPIO_Pin_11
 // 第4脚:CSN
-#define  NRF24L01_CSN_GPIO            GPIOG                 // SPI 软件片选线
-#define  NRF24L01_CSN_PIN             GPIO_Pin_7
+#define  NRF24L01_CSN_GPIO            GPIOB                 // SPI 软件片选线
+#define  NRF24L01_CSN_PIN             GPIO_Pin_12
 // 第5脚:SCK
 #define  NRF24L01_SCK_GPIO            GPIOB                 // SPI SCK
 #define  NRF24L01_SCK_PIN             GPIO_Pin_13
@@ -33,19 +31,18 @@
 #define  NRF24L01_MISO_GPIO           GPIOB                 // SPI MISO
 #define  NRF24L01_MISO_PIN            GPIO_Pin_14
 // 第8脚:IRQ
-#define  NRF24L01_IQR_GPIO           GPIOG                 // SPI MISO
+#define  NRF24L01_IQR_GPIO           GPIOA                 // SPI MISO
 #define  NRF24L01_IQR_PIN            GPIO_Pin_8
 #define  NRF24L01_IQR_Channel        EXTI9_5_IRQn
-#define  NRF24L01_IQR_SourceGPIO    GPIO_PortSourceGPIOG
+#define  NRF24L01_IQR_SourceGPIO    GPIO_PortSourceGPIOA
 #define  NRF24L01_IQR_PinSource     GPIO_PinSource8
-#define  NRF24L01_IQR_Line          EXTI_Line8   
+#define  NRF24L01_IQR_Line          EXTI_Line8
 
 #define NRF24L01_CE     0
 #define NRF24L01_CS     1
 #define NRF24L01_MOSI   2
 #define NRF24L01_MISO   3
 #define NRF24L01_SCK    4
-
 
 static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
@@ -102,5 +99,4 @@ void Tx_Handle(void);    //发送完成中断
 
 
 #endif
-
 
