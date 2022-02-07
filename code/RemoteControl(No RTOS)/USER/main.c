@@ -42,6 +42,7 @@ int main(void)
 	MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);
 	MemCopy(RxAddr,nRF24_Cfg.RX_Addr,5);
 	nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01
+	nRF24L01_Rx_Mode();
 
 	for(uint8_t temp=0;temp<32;temp++)
 	{

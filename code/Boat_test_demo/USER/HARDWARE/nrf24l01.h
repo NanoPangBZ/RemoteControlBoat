@@ -4,8 +4,6 @@
 #include "self_stm32f10x.h"
 #include ".\BSP\bsp_usart.h"
 
-#include "nrf24_debug.h"
-
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
 #define DEFAULT_Channel 0       //2400MHz频段
