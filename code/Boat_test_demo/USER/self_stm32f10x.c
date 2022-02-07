@@ -18,7 +18,7 @@ void Pin_Reversal(Pin pin)
         pin.GPIO->ODR |= pin.Pin;
 }
 
-void soft_delay_ms(unsigned int ms)
+void soft_delay_ms(volatile unsigned int ms)
 {
     while(ms!=0)
     {
@@ -27,7 +27,7 @@ void soft_delay_ms(unsigned int ms)
     }
 }
 
-void soft_delay_us(unsigned int us)
+void soft_delay_us(volatile unsigned int us)
 {
     unsigned short int temp;
     while(us!=0)

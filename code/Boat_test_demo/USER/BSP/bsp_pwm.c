@@ -4,7 +4,7 @@ static void PWM_GPIO_Init(void);
 static void PWM_TIM_Init(void);
 static void PWM_Ch_Init(void);
 
-void PWM_Init(void)
+void BSP_PWM_Init(void)
 {
     PWM_GPIO_Init();
     PWM_TIM_Init();
@@ -15,14 +15,14 @@ void PWM_Init(void)
 void PWM_GPIO_Init(void)
 {
     GPIO_InitTypeDef    GPIO_InitStruct;
-    
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
+
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
 
     GPIO_PinRemapConfig(GPIO_PartialRemap_TIM3,ENABLE);
 
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5;
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
 
     GPIO_Init(GPIOB,&GPIO_InitStruct);
@@ -34,11 +34,11 @@ void PWM_TIM_Init(void)
 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE);
 
-    TIMBase_InitStruct.TIM_ClockDivision = TIM_CKD_DIV1;    //72MHz
-    TIMBase_InitStruct.TIM_CounterMode = TIM_CounterMode_Up;    //向上计数
-    TIMBase_InitStruct.TIM_Period = 7200 - 1;               //10kHz溢出频率
-    TIMBase_InitStruct.TIM_Prescaler = 1 - 1;               //不分频
-    TIMBase_InitStruct.TIM_RepetitionCounter = 1 - 1;
+    TIMBase_InitStruct.TIM_ClockDivision = TIM_CKD_DIV1;
+    TIMBase_InitStruct.TIM_CounterMode = TIM_CounterMode_Up;
+    TIMBase_InitStruct.TIM_Period = 20000 - 1;
+    TIMBase_InitStruct.TIM_Prescaler = 72 -1 ;
+    TIMBase_InitStruct.TIM_RepetitionCounter = 0;
 
     TIM_TimeBaseInit(TIM3,&TIMBase_InitStruct);
 }
@@ -56,8 +56,9 @@ void PWM_Ch_Init(void)
     TIM_OCInitStruct.TIM_OutputState = TIM_OutputState_Enable;
     TIM_OCInitStruct.TIM_Pulse = 0;
 
-    TIM_OC3Init(TIM3,&TIM_OCInitStruct);
-    TIM_OC3PreloadConfig(TIM3,TIM_OCPreload_Enable);
+ 
+    TIM_OC2Init(TIM3,&TIM_OCInitStruct);
+    TIM_OC2PreloadConfig(TIM3,TIM_OCPreload_Enable);
 }
 
 void PWM_Out(uint8_t Channel,uint16_t CCR)

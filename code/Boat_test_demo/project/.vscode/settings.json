@@ -1,5 +1,6 @@
 {
     "files.associations": {
-        "nrf24l01.h": "c"
+        "nrf24l01.h": "c",
+        "self_stm32f10x.h": "c"
     }
 }

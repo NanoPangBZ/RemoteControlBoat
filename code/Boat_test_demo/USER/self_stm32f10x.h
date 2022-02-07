@@ -25,8 +25,8 @@ typedef struct
 void Pin_Set(Pin pin);
 void Pin_Reset(Pin pin);
 void Pin_Reversal(Pin pin);
-void soft_delay_ms(unsigned int ms);
-void soft_delay_us(unsigned int us);
+void soft_delay_ms(volatile unsigned int ms);
+void soft_delay_us(volatile unsigned int us);
 
 void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len);
 void Byte_To_Float(uint32_t*byte,float*buf);
