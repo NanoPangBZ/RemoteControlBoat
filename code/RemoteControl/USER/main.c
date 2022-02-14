@@ -16,8 +16,15 @@ static nRF24L01_Cfg nRF24_Cfg;
 static uint8_t TxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
+uint8_t SendFre = 1;
+
 //任务句柄
 TaskHandle_t FreeRTOS_Test_TaskHandle = NULL;
+TaskHandle_t RemoteControl_TaskHandle = NULL;
+TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
+
+//队列句柄
+SemaphoreHandle_t nRF24_ISRFlag = NULL;
 
 int main(void)
 {
@@ -45,41 +52,25 @@ int main(void)
 	nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01
 
 	xTaskCreate(
-		FreeRTOS_Test_Task,
+		RemoteControl_Task,
 		"Test",
-		32,
-		"HelloWorld!",
-		16,
-		&FreeRTOS_Test_TaskHandle
+		64,
+		(void*)&SendFre,
+		12,
+		&RemoteControl_TaskHandle
 	);
+	xTaskCreate(
+		nRF24L01_Intterrupt_Task,
+		"Test",
+		64,
+		NULL,
+		13,
+		&nRF24L01_Intterrupt_TaskHandle
+	);
+
+	nRF24_ISRFlag = xSemaphoreCreateBinary();
 
 	vTaskStartScheduler();
 
 	while(1);
-}
-
-/******************************************************************/
-
-extern void xPortSysTickHandler(void);		//声明port.c中的中断接口函数
-void SysTick_Handler(void)
-{
-  if(xTaskGetSchedulerState()!=taskSCHEDULER_NOT_STARTED)   //判断系统是否已经启动
-    {
-        xPortSysTickHandler();		//系统心跳函数
-    }
-}
-
-void nRF24L01_NoACK_ISR(void)
-{
-	printf("NoACK_ISR Run\r\n");
-}
-
-void nRF24L01_Tx_ISR(void)
-{
-	printf("Tx_ISR Run\r\n");
-}
-
-void nRF24L01_Rx_ISR(void)
-{
-	printf("Rx_ISR Run\r\n");
 }

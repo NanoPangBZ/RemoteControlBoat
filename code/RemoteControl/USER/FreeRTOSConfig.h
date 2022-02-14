@@ -46,8 +46,8 @@
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 72000000 )	
 #define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
 #define configMAX_PRIORITIES		( 12 )
-#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 12 * 1024 ) )        //12kB RAM
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )          //空闲任务使用的堆栈大小 512Byte(128字) 
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 16 * 1024 ) )        //12kB 堆大小
 #define configMAX_TASK_NAME_LEN		( 16 )
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0

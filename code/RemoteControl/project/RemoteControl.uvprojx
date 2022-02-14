@@ -403,6 +403,11 @@
               <FileType>5</FileType>
               <FilePath>..\USER\FreeRTOSConfig.h</FilePath>
             </File>
+            <File>
+              <FileName>isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\isr.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -502,6 +507,11 @@
               <FileName>user.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\user.c</FilePath>
+            </File>
+            <File>
+              <FileName>remote.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\remote.c</FilePath>
             </File>
           </Files>
         </Group>

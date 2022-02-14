@@ -48,7 +48,7 @@ uint8_t nRF24L01_Init(void)
     GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP ;
     GPIO_Init(NRF24L01_SCK_GPIO , &GPIO_InitStructure );
 
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
     GPIO_InitStructure.GPIO_Pin = NRF24L01_IQR_PIN;
     GPIO_Init(NRF24L01_IQR_GPIO,&GPIO_InitStructure);
 
@@ -529,5 +529,15 @@ void NoACK_Handle(void)
 void Tx_Handle(void)
 {
     nRF24L01_Rx_Mode();
+}
+
+/****************************ISR**************************/
+void EXTI9_5_IRQHandler(void)
+{
+    if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
+    {
+        nRF24L01_InterruptHandle(); //中断处理
+        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
+    }
 }
 
