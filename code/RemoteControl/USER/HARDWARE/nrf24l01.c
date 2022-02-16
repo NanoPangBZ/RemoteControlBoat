@@ -2,6 +2,7 @@
 #include "nrf24l01_micro.h"
 #include <stdio.h>
 
+//接口
 #define CE_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CE])
 #define CE_HIGH Pin_Set(nRF24L01_PIN[NRF24L01_CE])
 #define CS_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CS])
@@ -10,6 +11,7 @@
 #include "BSP\bsp_spi.h"
 #define port_Send(dat)      SPI_Replace_Byte(2,dat)
 #define port_delay_ms(ms)   soft_delay_ms(ms)
+
 
 static void spiInit(void);
 
@@ -151,8 +153,9 @@ uint8_t nRF24L01_Send_CmdAndData(uint8_t cmd,uint8_t*buf,uint8_t len)
 
 /*******************************************************************
  * 功能:读nRF24L01的寄存器
- * 参数:寄存器地址
- * 返回值:addr寄存器中的值
+ * 参数:寄存器地址 或 命令
+ * 返回值:addr寄存器中的值 或 nrf24返回的第二字节 
+ * 备注:这个函数可以发送命令,并且返回nrf24发送的第二字节
  * 2021/12/26   庞碧璋
  *******************************************************************/
 uint8_t nRF24L01_Read_Reg(uint8_t addr)
@@ -393,7 +396,7 @@ uint8_t nRF24L01_Read_RxFIFO(uint8_t*buf)
 {
     //获取当前Rx_FIFO中的数据数量
     uint8_t len;
-    len = nRF24L01_Read_Reg(R_RX_PL_WID);   //命令 读取接收到的字节长度
+    len = nRF24L01_Read_Reg(R_RX_PL_WID);   //命令 读取接收到的字节长度(因为SendCmd函数不能返回第二字节,所以这里使用ReadReg)
     //读有效数据
     CS_LOW; //片选
     port_Send(R_RX_PAYLOAD);    //发送读接收FIFO命令

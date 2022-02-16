@@ -4,13 +4,35 @@
 #include "self_stm32f10x.h"
 #include ".\BSP\bsp_usart.h"     
 
-#define DEFAULT_TxAddr  "USER"
-#define DEFAULT_RxAddr  "BOAT"
-#define DEFAULT_Channel 0       //2400MHz频段
-#define DEFAULT_RETRY   2       //最大自动重发次数
-#define DEFAULT_RETRY_CYCLE 1   //重发间隔 单位:250us
-#define DEFAULT_Rx_Length   32  //StaticPayload长度
-#define nRF24L01_SbufferSize    64
+/*************************************************
+ * nrf24l01的驱动
+ * 需要底层SPI支持
+ * 
+ * 移植注意事项:
+ * 移植需要重写以下函数和定义以下的宏
+ * spiInit() --- 内部函数,spi初始化
+ * nRF24L01_Init() --- nrf24l01硬件的初始化函数
+ * port_Send(dat) --- SPI发送函数宏
+ * port_delay_ms(ms) --- ms延时函数宏
+ * ---nrf24引脚控制宏---
+ * CE_LOW
+ * CE_HIGH
+ * CS_LOW
+ * CS_HIGH
+ * ---中断处理函数(已经写了一部分)---
+ * nRF24L01_InterruptHandle()
+ * 应该在发生外部中断时调用这个函数,不一定要在ISR中调用
+ * 在外部应该定义以下函数->这些函数会被nRF24L01_InterruptHandle()调用
+ * nRF24L01_NoACK_ISR(void);
+ * nRF24L01_Tx_ISR(void);
+ * nRF24L01_Rx_ISR(void);
+ * 
+ * 作者: 庞碧璋
+ * Github: https://github.com/CodingBugStd
+ * csdn:   https://blog.csdn.net/RampagePBZ
+ * Encoding: utf-8
+ * 最后更改时间: 2022/2/14
+*************************************************/
 
 // spi_port
 #define  NRF24L01_SPIx                SPI2                  // SPI 端口   
@@ -51,6 +73,15 @@ static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_MISO_PIN,NRF24L01_MISO_GPIO},
     {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
 };
+
+//相关配置
+#define DEFAULT_TxAddr  "USER"
+#define DEFAULT_RxAddr  "BOAT"
+#define DEFAULT_Channel 0       //2400MHz频段
+#define DEFAULT_RETRY   2       //最大自动重发次数
+#define DEFAULT_RETRY_CYCLE 1   //重发间隔 单位:250us
+#define DEFAULT_Rx_Length   32  //StaticPayload长度
+#define nRF24L01_SbufferSize    64  //接收缓冲区长度
 
 //第一个元素为有效长度
 static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1] = {0};

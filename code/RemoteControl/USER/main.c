@@ -16,12 +16,14 @@ static nRF24L01_Cfg nRF24_Cfg;
 static uint8_t TxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
-uint8_t SendFre = 1;
+//任务参数
+uint8_t SendFre = 40;	//nrf24通讯频率
 
 //任务句柄
 TaskHandle_t FreeRTOS_Test_TaskHandle = NULL;
 TaskHandle_t RemoteControl_TaskHandle = NULL;
 TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
+TaskHandle_t User_FeedBack_TaskHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t nRF24_ISRFlag = NULL;
@@ -66,6 +68,14 @@ int main(void)
 		NULL,
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
+	);
+	xTaskCreate(
+		User_FeedBack_Task,
+		"Test",
+		72,
+		NULL,
+		12,
+		&User_FeedBack_TaskHandle
 	);
 
 	nRF24_ISRFlag = xSemaphoreCreateBinary();
