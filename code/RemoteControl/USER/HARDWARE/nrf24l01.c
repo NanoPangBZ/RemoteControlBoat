@@ -515,7 +515,7 @@ void nRF24L01_InterruptHandle(void)
         Rx_Handler();
         nRF24L01_Rx_ISR();  //外部处理函数
     }
-    nRF24L01_Write_Reg(STATUS,0xE0);    //清除所有中断
+    nRF24L01_Write_Reg(STATUS,0xE0);    //清除nrf24所有中断
 }
 
 void Rx_Handler(void)

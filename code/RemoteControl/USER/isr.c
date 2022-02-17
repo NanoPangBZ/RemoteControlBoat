@@ -26,23 +26,18 @@ void EXTI9_5_IRQHandler(void)
     }
 }
 
-extern uint16_t Send_Count;
-extern uint16_t ACK_Count;
 
 void nRF24L01_NoACK_ISR(void)
 {
-    Send_Count++;
-    ACK_Count++;
-	//printf("NoACK_ISR Run\r\n");
+
 }
 
 void nRF24L01_Tx_ISR(void)
 {
-    Send_Count++;
-	//printf("Tx_ISR Run\r\n");
+
 }
 
 void nRF24L01_Rx_ISR(void)
 {
-	//printf("Rx_ISR Run\r\n");
+
 }
