@@ -50,7 +50,7 @@ void RemoteControl_Task(void*ptr)
         }
         //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
         //等待时长 1/2 任务周期
-        if(xQueueReceive(nRF24_SendStatus,&temp,delay_cycle/2/portTICK_RATE_MS) == pdFALSE)
+        if(xQueueReceive(nRF24_RecieveFlag,&temp,delay_cycle/2/portTICK_RATE_MS) == pdFALSE)
         {
             //未接收到从机软件回复
         }else
