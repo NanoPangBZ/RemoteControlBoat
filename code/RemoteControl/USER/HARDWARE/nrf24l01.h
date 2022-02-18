@@ -26,6 +26,10 @@
  * nRF24L01_NoACK_ISR(void);
  * nRF24L01_Tx_ISR(void);
  * nRF24L01_Rx_ISR(void);
+ * 还需要MemCopy()函数支持!!(内存拷贝)
+ * 
+ * 若有其它设备挂在在同一spi上,在由其它设备更换至nrf24时要重新
+ * 调用spi_init() <- 内部函数
  * 
  * 作者: 庞碧璋
  * Github: https://github.com/CodingBugStd
@@ -126,8 +130,6 @@ void nRF24L01_InterruptHandle(void);
 void Rx_Handler(void);   //接收中断
 void NoACK_Handle(void); //未应答中断
 void Tx_Handle(void);    //发送完成中断
-
-
 
 #endif
 

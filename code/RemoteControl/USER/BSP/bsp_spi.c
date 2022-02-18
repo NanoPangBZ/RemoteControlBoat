@@ -33,7 +33,7 @@ uint8_t SPI_Replace_Byte(uint8_t SPIx,uint8_t TxData)
  *  dat:    使用SPI接收时(主机模式)发送的字节首地址
  *  len:    交换的长度
  * 返回值:  无
- * 备注:    传参时可以让dat==buf,节省空间
+ * 备注:    传参时可以让dat=buf,节省空间
  * 2021/10/16   庞碧璋
  *******************************************************************/
 void SPI_Replace_NumByte(uint8_t SPIx,uint8_t*dat,uint8_t len,uint8_t*buf)

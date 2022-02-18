@@ -28,7 +28,7 @@ TaskHandle_t User_FeedBack_TaskHandle = NULL;
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
-QueueHandle_t		nRF24_SendStatus = NULL;	//nrf24发送结果队列
+QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果队列
 
 int main(void)
 {
@@ -82,7 +82,7 @@ int main(void)
 
 	nRF24_ISRFlag = xSemaphoreCreateBinary();
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();
-	nRF24_SendStatus = xQueueCreate(1,1);	
+	nRF24_SendResult = xQueueCreate(1,1);	
 
 	vTaskStartScheduler();
 

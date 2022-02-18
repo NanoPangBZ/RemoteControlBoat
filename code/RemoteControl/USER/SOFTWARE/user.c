@@ -2,7 +2,7 @@
 
 extern SemaphoreHandle_t nRF24_ISRFlag;
 extern SemaphoreHandle_t nRF24_RecieveFlag;
-extern QueueHandle_t     nRF24_SendStatus;
+extern QueueHandle_t     nRF24_SendResult;
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -21,7 +21,7 @@ void RemoteControl_Task(void*ptr)
     {
         nRF24L01_Send(sbuffer,32);
         //等待发送结果1/4任务周期 50hz -> 等待5ms
-        if(xQueueReceive(nRF24_SendStatus,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
+        if(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
         {
             //没有等待到接收结果消息
             //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
@@ -34,7 +34,7 @@ void RemoteControl_Task(void*ptr)
                 printf("nrf24 is ok./r/n");
             }
             //无限重发,直至有发送结果消息,中途会堵塞本任务,不影响其它任务
-            while(xQueueReceive(nRF24_SendStatus,&temp,1000/portTICK_RATE_MS) == pdFALSE)
+            while(xQueueReceive(nRF24_SendResult,&temp,1000/portTICK_RATE_MS) == pdFALSE)
             {
                 nRF24L01_Send(sbuffer,32);
                 printf("nrf24 wait send result timeout.\r\n");
@@ -61,6 +61,13 @@ void RemoteControl_Task(void*ptr)
     }
 }
 
+/*******************************************************************
+ * 功能:freeRTOS下的nrf24中断处理函数
+ * 参数:NULL
+ * 返回值:无
+ * 备注:延时处理由nrf24引起的硬件中断,需要isr发出nRF24_ISRFlag信号
+ * 2022/2/17   庞碧璋
+ *******************************************************************/
 void nRF24L01_Intterrupt_Task(void*ptr)
 {
     while(1)
