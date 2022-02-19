@@ -10,7 +10,7 @@ uint32_t SysTick_Count = 0;
 uint16_t PWM_Width = 0;
 uint8_t dir = 0;
 
-#if 0
+#if 1
 uint8_t RxFlag = 0;
 uint8_t sbuffer[32];
 //nRF24L01初始化结构体
@@ -28,6 +28,40 @@ int main(void)
 
 	SysTick_Config(5*72000);	//5ms系统滴答定时器中断
 
+	BSP_Usart_Init();
+	while(nRF24L01_Init())
+	{
+		soft_delay_ms(1000);
+		printf("nRF24L01 Err\r\n");
+	}
+	printf("nRF24L01 Pass\r\n");
+
+	//nRF24L01 相关配置
+	nRF24_Cfg.Channel = 50;	//2.45GHz 通讯频段
+	nRF24_Cfg.retry = 5;	//最大重发次数
+	nRF24_Cfg.retry_cycle = 1;	//重发周期
+	nRF24_Cfg.Rx_Length = 32;	//结束长度
+	MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);
+	MemCopy(RxAddr,nRF24_Cfg.RX_Addr,5);
+	nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01
+	nRF24L01_Rx_Mode();
+
+	while(1)
+	{
+		if(RxFlag)
+		{
+			nRF24L01_Read_RxSbuffer(sbuffer,32);
+			for(uint8_t temp=0;temp<32;temp++)
+			{
+				printf("%02X ",sbuffer[temp]);
+			}
+			RxFlag = 0;
+		}
+		soft_delay_ms(500);
+		printf("\r\nRunFlag\r\n");
+	}
+
+	#if 0
 	BSP_PWM_Init();
 
 	while(1)
@@ -46,6 +80,7 @@ int main(void)
 		PWM_Out(0,PWM_Width);
 		soft_delay_us(20);
 	}
+	#endif
 }
 
 void nRF24L01_NoACK_ISR(void)

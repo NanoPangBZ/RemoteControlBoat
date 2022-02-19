@@ -4,6 +4,12 @@ extern SemaphoreHandle_t nRF24_ISRFlag;
 extern SemaphoreHandle_t nRF24_RecieveFlag;
 extern QueueHandle_t     nRF24_SendResult;
 
+uint16_t SendCount = 0;
+uint16_t SendAck_Count = 0;
+uint16_t SendNoAck_Count = 0;
+uint16_t Slave_AckCoount = 0;
+uint16_t Slave_NoAckCount = 0;
+
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
  * 参数:(uint8_t*) 通讯频率 单位(hz)
@@ -20,6 +26,7 @@ void RemoteControl_Task(void*ptr)
     while(1)
     {
         nRF24L01_Send(sbuffer,32);
+        SendCount++;
         //等待发送结果1/4任务周期 50hz -> 等待5ms
         if(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
         {
@@ -44,18 +51,22 @@ void RemoteControl_Task(void*ptr)
         if(temp)
         {
             //发送结果处理
+            SendAck_Count++;
         }else
         {
             //发送结果处理
+            SendNoAck_Count++;
         }
         //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
         //等待时长 1/2 任务周期
         if(xQueueReceive(nRF24_RecieveFlag,&temp,delay_cycle/2/portTICK_RATE_MS) == pdFALSE)
         {
             //未接收到从机软件回复
+            Slave_NoAckCount++;
         }else
         {
             //处理从机软件回复
+            Slave_AckCoount++;
         }
         xTaskDelayUntil(&time,delay_cycle/portTICK_RATE_MS); 
     }
@@ -81,6 +92,12 @@ void User_FeedBack_Task(void*ptr)
 {
     while(1)
     {
+        printf("*****************************************\r\n");
+        printf("SendCount:%d\r\n",SendCount);
+        printf("SendAck_Count:%d\r\n",SendAck_Count);
+        printf("SendNoAck_Count:%d\r\n",SendNoAck_Count);
+        printf("Slave_AckCoount:%d\r\n",Slave_AckCoount);
+        printf("Slave_NoAckCount:%d\r\n",Slave_NoAckCount);
         vTaskDelay(1000/portTICK_RATE_MS);
     }
 }
