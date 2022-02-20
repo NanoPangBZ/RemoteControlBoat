@@ -44,7 +44,7 @@
 #define configUSE_IDLE_HOOK			0
 #define configUSE_TICK_HOOK			0
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 72000000 )	
-#define configTICK_RATE_HZ			( ( TickType_t ) 1000 )
+#define configTICK_RATE_HZ			( ( TickType_t ) 500 )
 #define configMAX_PRIORITIES		( 12 )
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )          //空闲任务使用的堆栈大小 512Byte(128字) 
 #define configTOTAL_HEAP_SIZE		( ( size_t ) ( 12 * 1024 ) )        //12kB 堆大小
@@ -69,6 +69,7 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelay				1
 #define INCLUDE_xTaskGetCurrentTaskHandle   1
 #define INCLUDE_xTaskGetSchedulerState  1
+#define INCLUDE_uxTaskGetStackHighWaterMark 1   //使用任务栈高水线记录 用于调试 防止任务栈溢出
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 (lowest) to 0 (1?) (highest). */

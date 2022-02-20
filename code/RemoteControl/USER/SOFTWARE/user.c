@@ -1,5 +1,7 @@
 #include "user.h"
 
+extern nRF24L01_Cfg nRF24_Cfg;
+
 extern SemaphoreHandle_t nRF24_ISRFlag;
 extern SemaphoreHandle_t nRF24_RecieveFlag;
 extern QueueHandle_t     nRF24_SendResult;
@@ -9,6 +11,9 @@ uint16_t SendAck_Count = 0;
 uint16_t SendNoAck_Count = 0;
 uint16_t Slave_AckCoount = 0;
 uint16_t Slave_NoAckCount = 0;
+
+//使用串口打印消息(带当前任务的名字,方便调试)
+#define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -27,50 +32,93 @@ void RemoteControl_Task(void*ptr)
     {
         nRF24L01_Send(sbuffer,32);
         SendCount++;
-        //等待发送结果1/4任务周期 50hz -> 等待5ms
-        if(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
+        //等待nrf24中断(发送完成中断 或 未应答中断)
+        while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
         {
-            //没有等待到接收结果消息
+            //等待中断超时
             //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
-            printf("nrf24 wait send result timeout.\r\n");
-            if(nRF24L01_Check() == 1)
+            printMsg("nrf24 wait send result timeout.\r\n");
+            vTaskDelay(500/portTICK_RATE_MS);
+            //检查硬件是否正常
+            while(nRF24L01_Check() == 1)
             {
-                printf("nrf24 is err!!\r\n");
-            }else
-            {
-                printf("nrf24 is ok./r/n");
+                printMsg("nrf24 is err!!\r\n");
+                vTaskDelay(500/portTICK_RATE_MS);
             }
-            //无限重发,直至有发送结果消息,中途会堵塞本任务,不影响其它任务
-            while(xQueueReceive(nRF24_SendResult,&temp,1000/portTICK_RATE_MS) == pdFALSE)
-            {
-                nRF24L01_Send(sbuffer,32);
-                printf("nrf24 wait send result timeout.\r\n");
-            }
+            //硬件故障排除,重新发送
+            printMsg("nrf24 is ok.\r\n");
+            nRF24L01_Config(&nRF24_Cfg);
+            printMsg("refresh nrf24 config.\r\n");
+            vTaskDelay(500/portTICK_RATE_MS);
+            printMsg("Resend.\r\n");
+            nRF24L01_Send(sbuffer,32);
             time = xTaskGetTickCount();  //获取当前系统时间
         }
+        //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式
         if(temp)
         {
-            //发送结果处理
+            //接收到硬件ACK
             SendAck_Count++;
+            //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
+            //等待时长 1/2 任务周期
+            if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle/2/portTICK_RATE_MS) == pdFALSE)
+            {
+                //未接收到从机软件回复
+                Slave_NoAckCount++;
+            }else
+            {
+                //处理从机软件回复
+                Slave_AckCoount++;
+                nRF24L01_Clear_Sbuffer();   //清理缓存区
+            }
         }else
         {
-            //发送结果处理
+            //没有接收到硬件ACK
             SendNoAck_Count++;
-        }
-        //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
-        //等待时长 1/2 任务周期
-        if(xQueueReceive(nRF24_RecieveFlag,&temp,delay_cycle/2/portTICK_RATE_MS) == pdFALSE)
-        {
-            //未接收到从机软件回复
-            Slave_NoAckCount++;
-        }else
-        {
-            //处理从机软件回复
-            Slave_AckCoount++;
         }
         xTaskDelayUntil(&time,delay_cycle/portTICK_RATE_MS); 
     }
 }
+
+#if 0
+void RemoteControl_Reply_Task(void*ptr)
+{
+    uint8_t sbuffer[32];
+    uint8_t temp;
+    uint16_t wait_time = *(uint16_t*)ptr ;
+    while(1)
+    {
+        nRF24L01_Rx_Mode();
+        while(xSemaphoreTake(nRF24_RecieveFlag,wait_time/portTICK_RATE_MS) == pdFALSE)    //等待接收结果
+        {
+            //该周期没有接收到来自遥控器的数据
+        }
+        //软件应答准备
+        //...
+        nRF24L01_Send(sbuffer,32);      //发送
+        //等待nrf24中断(发送完成中断 或 未应答中断)
+        while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
+        {
+            //等待中断超时
+            //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
+            printMsg("nrf24 wait send result timeout.\r\n");
+            //检查硬件是否正常
+            while(nRF24L01_Check() == 1)
+            {
+                printMsg("nrf24 is err!!\r\n");
+                vTaskDelay(500/portTICK_RATE_MS);
+            }
+            //硬件故障排除,重新发送
+            printMsg("nrf24 is ok.\r\n");
+            nRF24L01_Config(&nRF24_Cfg);
+            printMsg("refresh nrf24 config.\r\n");
+            vTaskDelay(500/portTICK_RATE_MS);
+            printMsg("Resend.\r\n");
+            nRF24L01_Send(sbuffer,32);
+        }
+    }
+}
+#endif
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24中断处理函数
@@ -88,11 +136,20 @@ void nRF24L01_Intterrupt_Task(void*ptr)
     }
 }
 
+
+//任务句柄
+extern TaskHandle_t RemoteControl_TaskHandle ;
+extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;
+extern TaskHandle_t User_FeedBack_TaskHandle ;
+
 void User_FeedBack_Task(void*ptr)
 {
     while(1)
     {
-        printf("*****************************************\r\n");
+        printf("******************FeedBack***********************\r\n");
+        printf("%s surplusStack:%d\r\n",pcTaskGetName(RemoteControl_TaskHandle),uxTaskGetStackHighWaterMark(RemoteControl_TaskHandle));
+        printf("%s surplusStack:%d\r\n",pcTaskGetName(nRF24L01_Intterrupt_TaskHandle),uxTaskGetStackHighWaterMark(nRF24L01_Intterrupt_TaskHandle));
+        printf("%s surplusStack:%d\r\n",pcTaskGetName(User_FeedBack_TaskHandle),uxTaskGetStackHighWaterMark(User_FeedBack_TaskHandle));
         printf("SendCount:%d\r\n",SendCount);
         printf("SendAck_Count:%d\r\n",SendAck_Count);
         printf("SendNoAck_Count:%d\r\n",SendNoAck_Count);
