@@ -5,7 +5,7 @@
 #include ".\BSP\bsp_usart.h"     
 
 /*************************************************
- * nrf24l01的驱动
+ * nrf24l01的驱动 (只支持静态接收字节长度)
  * 需要底层SPI支持
  * 
  * 移植注意事项:
@@ -79,16 +79,24 @@ static const Pin nRF24L01_PIN[5] = {
 };
 
 //相关配置
+//nRF24初始化的默认配置
 #define DEFAULT_TxAddr  "USER"
 #define DEFAULT_RxAddr  "BOAT"
 #define DEFAULT_Channel 0       //2400MHz频段
 #define DEFAULT_RETRY   2       //最大自动重发次数
 #define DEFAULT_RETRY_CYCLE 1   //重发间隔 单位:250us
-#define DEFAULT_Rx_Length   32  //StaticPayload长度
-#define nRF24L01_SbufferSize    64  //接收缓冲区长度
+#define DEFAULT_Rx_Length   32  //默认StaticPayload长度
+//其它配置
+#define NRF24_BUF_MAXLEN    64  //缓存区长度,NRF24_USE_BUF_LEN!=0 时才有用
+#define NRF24_USE_BUF_LEN   0   //非0:缓存区第一字节用于表示缓存区长度,使能这个宏可以缓存nrf24的多次接收
+#define NRF24_USE_SBUFFER   1   //非0:接收中断时将RxFIFO的值载入内部缓存nRF24L01_Sbuffer中,若NRF24_USE_BUF_LEN=0则会覆盖上次接收!
 
-//第一个元素为有效长度
-static uint8_t nRF24L01_Sbuffer[nRF24L01_SbufferSize+1] = {0};
+#if NRF24_USE_BUF_LEN
+//缓存区第一字节表示缓存区当前长度
+static uint8_t nRF24L01_Sbuffer[NRF24_BUF_MAXLEN+1] = {0};
+#elif NRF24_USE_SBUFFER
+static uint8_t nRF24L01_Sbuffer[32] = {0};
+#endif
 
 typedef struct
 {
@@ -119,12 +127,17 @@ uint8_t nRF24L01_Status(void);
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg);
 uint8_t nRF24L01_Send(uint8_t*buf,uint8_t len);
 uint8_t nRF24L01_Read_RxFIFO(uint8_t*buf);
-uint8_t*nRF24L01_FIFO_To_Sbuffer(void);
-uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len);
-uint8_t nRF24L01_Read_SbufferLen(void);
-void nRF24L01_Clear_Sbuffer(void);
-void nRF24L01_Push_Sbuffer(uint8_t len);
 uint8_t nRF24L01_Rx_Mode(void);
+#if NRF24_USE_SBUFFER
+uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len);
+uint8_t*nRF24L01_Get_RxBufAddr(void);
+uint8_t*nRF24L01_FIFO_To_Sbuffer(void);
+#if NRF24_USE_BUF_LEN
+uint8_t nRF24L01_Read_SbufferLen(void);
+void nRF24L01_Push_Sbuffer(uint8_t len);
+void nRF24L01_Clear_Sbuffer(void);
+#endif  //NRF24_USE_BUF_LEN
+#endif //NRF24_USE_SBUFFER
 
 void nRF24L01_InterruptHandle(void);
 void Rx_Handler(void);   //接收中断

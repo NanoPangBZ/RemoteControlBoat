@@ -27,6 +27,7 @@ void RemoteControl_Task(void*ptr)
     uint16_t delay_cycle = 1000 / *(uint8_t*)ptr;    //通讯频率计算
     uint8_t sbuffer[32];
     uint8_t temp;
+    uint8_t*nrf_recieve = nRF24L01_Get_RxBufAddr();
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
@@ -57,7 +58,7 @@ void RemoteControl_Task(void*ptr)
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式
         if(temp)
         {
-            //接收到硬件ACK
+            //接收到硬件ACK 说明从机的nrf24已经接收到
             SendAck_Count++;
             //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
             //等待时长 1/2 任务周期
@@ -69,11 +70,11 @@ void RemoteControl_Task(void*ptr)
             {
                 //处理从机软件回复
                 Slave_AckCoount++;
-                nRF24L01_Clear_Sbuffer();   //清理缓存区
+                
             }
         }else
         {
-            //没有接收到硬件ACK
+            //没有接收到硬件ACK 说明从机没有接收到数据
             SendNoAck_Count++;
         }
         xTaskDelayUntil(&time,delay_cycle/portTICK_RATE_MS); 
@@ -124,7 +125,7 @@ void RemoteControl_Reply_Task(void*ptr)
  * 功能:freeRTOS下的nrf24中断处理函数
  * 参数:NULL
  * 返回值:无
- * 备注:延时处理由nrf24引起的硬件中断,需要isr发出nRF24_ISRFlag信号
+ * 备注:在isr外处理nrf24的中断,需要isr发出nRF24_ISRFlag信号
  * 2022/2/17   庞碧璋
  *******************************************************************/
 void nRF24L01_Intterrupt_Task(void*ptr)
@@ -142,6 +143,12 @@ extern TaskHandle_t RemoteControl_TaskHandle ;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;
 extern TaskHandle_t User_FeedBack_TaskHandle ;
 
+/*******************************************************************
+ * 功能:通过串口定时打印运行状态
+ * 参数:NULL
+ * 返回值:无
+ * 2022/2/17   庞碧璋
+ *******************************************************************/
 void User_FeedBack_Task(void*ptr)
 {
     while(1)
