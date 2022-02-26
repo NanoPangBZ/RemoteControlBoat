@@ -7,14 +7,19 @@
                 "C:\\Keil_v5\\ARM\\PACK\\ARM\\CMSIS\\5.8.0\\CMSIS\\Core\\Include",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\FWLIB\\inc",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS\\include",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS\\portable",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\FWLIB\\src",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\BSP",
-                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE"
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\SOFTWARE"
             ],
             "defines": [
                 "USE_STDPERIPH_DRIVER",
+                "STM32F10X_HD",
                 "__CC_ARM",
                 "__arm__",
                 "__align(x)=",
