@@ -1,0 +1,6 @@
+{
+    "files.associations": {
+        "self_stm32f10x.h": "c",
+        "stm32f10x.h": "c"
+    }
+}

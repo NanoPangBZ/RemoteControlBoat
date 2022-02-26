@@ -55,7 +55,7 @@ void RemoteControl_Task(void*ptr)
             nRF24L01_Send(sbuffer,32);
             time = xTaskGetTickCount();  //获取当前系统时间
         }
-        //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式
+        //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
         if(temp)
         {
             //接收到硬件ACK 说明从机的nrf24已经接收到
@@ -70,7 +70,6 @@ void RemoteControl_Task(void*ptr)
             {
                 //处理从机软件回复
                 Slave_AckCoount++;
-                
             }
         }else
         {
@@ -136,7 +135,6 @@ void nRF24L01_Intterrupt_Task(void*ptr)
         nRF24L01_InterruptHandle();     //isr处理函数
     }
 }
-
 
 //任务句柄
 extern TaskHandle_t RemoteControl_TaskHandle ;
