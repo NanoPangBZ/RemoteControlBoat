@@ -1,3 +1,4 @@
 Load "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\project\\Objects\\RemoteControl.axf" 
-Erase Done.Programming Done.Verify OK.Application running ...
-Flash Load finished at 00:15:55
+RDDI-DAP Error
+Error: Flash Download failed  -  Target DLL has been cancelled
+Flash Load finished at 23:18:48

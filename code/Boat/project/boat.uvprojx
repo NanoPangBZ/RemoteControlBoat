@@ -134,11 +134,11 @@
             <RunIndependent>0</RunIndependent>
             <UpdateFlashBeforeDebugging>1</UpdateFlashBeforeDebugging>
             <Capability>1</Capability>
-            <DriverSelection>-1</DriverSelection>
+            <DriverSelection>4096</DriverSelection>
           </Flash1>
           <bUseTDR>1</bUseTDR>
           <Flash2>BIN\UL2CM3.DLL</Flash2>
-          <Flash3></Flash3>
+          <Flash3>"" ()</Flash3>
           <Flash4></Flash4>
           <pFcarmOut></pFcarmOut>
           <pFcarmGrp></pFcarmGrp>
@@ -533,6 +533,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\BSP\bsp_usart.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_led.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -542,6 +547,11 @@
               <FileName>nrf24l01.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\HARDWARE\nrf24l01.c</FilePath>
+            </File>
+            <File>
+              <FileName>oled12864.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\oled12864.c</FilePath>
             </File>
           </Files>
         </Group>

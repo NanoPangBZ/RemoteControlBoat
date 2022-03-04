@@ -29,7 +29,7 @@
 **********************************************************************************/
 
 
-static SPI_TypeDef* Target_SPI[2] = {SPI1,SPI2};
+static SPI_TypeDef* Target_SPI[3] = {SPI1,SPI2,SPI3};
 
 //发送和接收
 uint8_t SPI_Replace_Byte(uint8_t SPIx,uint8_t TxData);                  //直接使用SPI交换一个字节

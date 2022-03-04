@@ -8,9 +8,11 @@
  * 2021/5   作者:庞碧璋
 **************************************/
 
-static __IO uint16_t* Target_CCR[16] = {&TIM3->CCR2,&TIM5->CCR2,&TIM5->CCR3,&TIM5->CCR4,
-                                    &TIM4->CCR4,&TIM4->CCR3,&TIM4->CCR2,&TIM4->CCR1,
-                                    &TIM3->CCR1,&TIM3->CCR2,&TIM3->CCR3,&TIM3->CCR4,
+static TIM_TypeDef* Target_TIM[5] = {TIM1,TIM3,TIM4,TIM5,TIM8};
+
+static __IO uint16_t* Target_CCR[16] = {&TIM1->CCR1,&TIM1->CCR2,&TIM1->CCR3,&TIM1->CCR4,
+                                    &TIM3->CCR1,&TIM3->CCR2,&TIM5->CCR3,&TIM5->CCR4,
+                                    &TIM4->CCR1,&TIM4->CCR2,&TIM4->CCR3,&TIM4->CCR4,
                                     &TIM8->CCR1,&TIM8->CCR2,&TIM8->CCR3,&TIM8->CCR4};
 
 void BSP_PWM_Init(void);

@@ -31,11 +31,7 @@
  * 若有其它设备挂在在同一spi上,在由其它设备更换至nrf24时要重新
  * 调用spi_init() <- 内部函数
  * 
- * 作者: 庞碧璋
- * Github: https://github.com/CodingBugStd
- * csdn:   https://blog.csdn.net/RampagePBZ
- * Encoding: utf-8
- * 最后更改时间: 2022/2/14
+ *   2022/2/14  庞
 *************************************************/
 
 // spi_port
