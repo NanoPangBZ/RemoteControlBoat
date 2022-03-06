@@ -272,19 +272,19 @@ void USART1_IRQHandler(void)
 }
 
 
-void USART2_IRQHandler(void)
+void USART3_IRQHandler(void)
 {
-    if(USART_GetITStatus(USART2,USART_IT_RXNE) == SET)
+    if(USART_GetITStatus(USART3,USART_IT_RXNE) == SET)
     {
         //是否使用串口传透
         #if 1
-            Rx_SbufferInput(2,USART_ReceiveData(USART2));
+            Rx_SbufferInput(2,USART_ReceiveData(USART3));
         #else
             while(Usart_BusyCheck(1));
             USART_SendData(USART1,USART_ReceiveData(USART2));
             while(USART_GetFlagStatus(USART1,USART_FLAG_TXE) == RESET);
         #endif
-        USART_ClearITPendingBit(USART2,USART_IT_RXNE);
+        USART_ClearITPendingBit(USART3,USART_IT_RXNE);
     }
 }
 
@@ -298,12 +298,12 @@ void DMA1_Channel4_IRQHandler(void)
     }
 }
 
-void DMA1_Channel7_IRQHandler(void)
+void DMA1_Channel3_IRQHandler(void)
 {
-    if(DMA_GetITStatus(DMA1_IT_TC7) == SET)
+    if(DMA_GetITStatus(DMA1_IT_TC3) == SET)
     {
         Tx_Flag_Clear(2);
         TargetDMA_Channel[1]->CCR &= (uint16_t)(~DMA_CCR1_EN);
-        DMA_ClearITPendingBit(DMA1_IT_TC7);
+        DMA_ClearITPendingBit(DMA1_IT_TC3);
     }
 }

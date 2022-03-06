@@ -40,8 +40,6 @@ int main(void)
 	BSP_PWM_Init();
 	BSP_Usart_Init();
 
-	Usart_SendString(1,"HelloWorld!\r\n");
-
 	//OLED初始化
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
@@ -79,9 +77,6 @@ int main(void)
 	OLED12864_Refresh();
 
 	uint8_t sbuf[32];
-
-	LED_CTR(0,LED_ON);
-
 	float Gyroscope[3];
 
 	while(1)
@@ -90,7 +85,7 @@ int main(void)
 		for(uint8_t a=0;a<3;a++)
 		{
 			OLED12864_Clear_Page(a+3);
-			sprintf(sbuf,"%.1f",Gyroscope[a]);
+			sprintf((char*)sbuf,"%.1f",Gyroscope[a]);
 			OLED12864_Show_String(a+3,0,sbuf,1);
 			Vofa_Input(Gyroscope[a],a);
 		}
