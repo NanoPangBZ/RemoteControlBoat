@@ -1,13 +1,18 @@
 #include "self_stm32f10x.h"
 
-#include "BSP\bsp_usart.h"
 #include "BSP\bsp_spi.h"
 #include "BSP\bsp_pwm.h"
 #include "BSP\bsp_led.h"
+#include "BSP\bsp_usart.h"
 
-#include "HARDWARE\nrf24l01.h"
-#include "HARDWARE\oled12864.h"
+#include "HARDWARE\MPU6050\mpu6050.h"
+#include "HARDWARE\MPU6050\eMPL\inv_mpu.h"
+#include "HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.h"
+#include "HARDWARE\NRF24\nrf24l01.h"
+#include "HARDWARE\OLED\oled12864.h"
+
 #include "SOFTWARE\user.h"
+#include "SOFTWARE\vofa_p.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -23,7 +28,8 @@ TaskHandle_t	Test_TaskHandle = NULL;
 int main(void)
 {
 	uint8_t nrf_err;
-	
+	uint8_t mpu_err;
+
 	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_4);
 	//关闭JATG调试接口,开启SWD调试接口
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
@@ -32,17 +38,31 @@ int main(void)
 	//板级支持包
 	BSP_LED_Init();
 	BSP_PWM_Init();
+	BSP_Usart_Init();
+
+	Usart_SendString(1,"HelloWorld!\r\n");
 
 	//OLED初始化
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
 	OLED12864_Refresh();
+
+	//MPU_Init
+	mpu_err = MPU_Init();
+	if(mpu_err)
+	{
+		OLED12864_Show_String(2,0,"mpu err",1);
+	}else
+	{
+		mpu_dmp_init();
+		OLED12864_Show_String(2,0,"mpu pass",1);
+	}
+
 	//nrf24初始化和配置
 	nrf_err = nRF24L01_Init();
 	if(nrf_err)	//检查硬件
 	{
 		OLED12864_Show_String(1,0,"nrf err",1);
-		LED_CRT(0,LED_ON);
 	}else
 	{
 		//配置nrf24
@@ -55,9 +75,29 @@ int main(void)
 		nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01
 		OLED12864_Show_String(1,0,"nrf pass",1);
 	}
+
 	OLED12864_Refresh();
 
-	while(1);
+	uint8_t sbuf[32];
+
+	LED_CTR(0,LED_ON);
+
+	float Gyroscope[3];
+
+	while(1)
+	{
+		mpu_dmp_get_data(&Gyroscope[0],&Gyroscope[1],&Gyroscope[2]);
+		for(uint8_t a=0;a<3;a++)
+		{
+			OLED12864_Clear_Page(a+3);
+			sprintf(sbuf,"%.1f",Gyroscope[a]);
+			OLED12864_Show_String(a+3,0,sbuf,1);
+			Vofa_Input(Gyroscope[a],a);
+		}
+		Vofa_Send();
+		OLED12864_Refresh();
+		LED_CTR(0,LED_Reserval);
+	}
 #if 0
 	//串口初始化
 	BSP_Usart_Init();

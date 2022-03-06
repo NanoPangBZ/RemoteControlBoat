@@ -544,14 +544,34 @@
           <GroupName>HARDWARE</GroupName>
           <Files>
             <File>
+              <FileName>mpu6050.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\MPU6050\mpu6050.c</FilePath>
+            </File>
+            <File>
+              <FileName>mpuiic.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\MPU6050\mpuiic.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\MPU6050\eMPL\inv_mpu.c</FilePath>
+            </File>
+            <File>
+              <FileName>inv_mpu_dmp_motion_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.c</FilePath>
+            </File>
+            <File>
               <FileName>nrf24l01.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\USER\HARDWARE\nrf24l01.c</FilePath>
+              <FilePath>..\USER\HARDWARE\NRF24\nrf24l01.c</FilePath>
             </File>
             <File>
               <FileName>oled12864.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\USER\HARDWARE\oled12864.c</FilePath>
+              <FilePath>..\USER\HARDWARE\OLED\oled12864.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -562,6 +582,11 @@
               <FileName>user.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\user.c</FilePath>
+            </File>
+            <File>
+              <FileName>vofa_p.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\vofa_p.c</FilePath>
             </File>
           </Files>
         </Group>

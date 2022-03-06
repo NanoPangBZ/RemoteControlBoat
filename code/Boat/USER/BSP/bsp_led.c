@@ -4,7 +4,7 @@ void BSP_LED_Init(void)
 {
     GPIO_InitTypeDef    GPIO_InitStruct;
 
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC,ENABLE);
 
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
     GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
@@ -15,7 +15,7 @@ void BSP_LED_Init(void)
     }
 }
 
-void LED_CRT(uint8_t num,uint8_t status)
+void LED_CTR(uint8_t num,uint8_t status)
 {
     switch(status)
     {

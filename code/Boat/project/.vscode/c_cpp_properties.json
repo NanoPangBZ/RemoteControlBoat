@@ -14,7 +14,10 @@
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\FWLIB\\src",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\BSP",
-                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\MPU6050",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\MPU6050\\eMPL",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\NRF24",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\OLED",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\SOFTWARE"
             ],
             "defines": [

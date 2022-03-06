@@ -3,7 +3,7 @@
 
 #include "self_stm32f10x.h"
 
-#include "HARDWARE\nrf24l01.h"
+#include "HARDWARE\NRF24\nrf24l01.h"
 
 #include <stdio.h>
 

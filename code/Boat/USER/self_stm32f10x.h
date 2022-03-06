@@ -16,20 +16,24 @@
  * last date: 2021/10/16
 **************************************************************************************/
 
+//用于快速初始化IO口以及操作IO口
 typedef struct
 {
-    uint16_t Pin;
-    GPIO_TypeDef*GPIO;
+    uint16_t Pin;           //Pin的标号
+    GPIO_TypeDef*GPIO;      //所属的GPIO端口
 }Pin;
 
 void Pin_Set(Pin pin);
 void Pin_Reset(Pin pin);
 void Pin_Reversal(Pin pin);
-void soft_delay_ms(volatile unsigned int ms);
-void soft_delay_us(volatile unsigned int us);
-
+uint8_t Pin_Read(Pin pin);
+void soft_delay_ms(uint16_t ms);
+void soft_delay_us(uint16_t us);
 void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len);
-void Byte_To_Float(uint32_t*byte,float*buf);
-void Byte_To_Short(uint16_t*byte,short*buf);
+
+#if 0
+void startDebugTiming(void);         //开始计时
+uint16_t endDebugTiming(void);       //结束计时 返回计时时长 us
+#endif
 
 #endif
