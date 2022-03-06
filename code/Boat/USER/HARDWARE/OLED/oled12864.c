@@ -169,52 +169,10 @@ void OLED12864_Show_Char(uint8_t page,uint8_t x,uint8_t chr,uint8_t size)
 
 uint8_t  OLED12864_Show_Num(uint8_t page,uint8_t x,int num,uint8_t size)
 {
-    uint8_t chr[10];
-    uint8_t reBit;
-    uint8_t numSigned = 0;
-    if(num<0)
-    {
-        OLED12864_Show_Char(page,x,'-',size);
-        switch(size)
-        {
-            case 1:x+=6;break;
-            case 2:x+=8;break;
-            default:break;
-        }
-        numSigned = 1;
-        num =- num;
-    }
-    if(num)
-    {
-        int bit = 0;
-        while(num!=0)
-        {
-            uint16_t temp;
-            temp = num%10;
-            chr[bit] = temp + 0x30;
-            num/=10;
-            bit++;
-        }       
-        chr[bit--] = '\0';
-        reBit = bit;
-        for(int lbit = 0;bit-lbit>0;lbit++)
-        {
-            uint8_t temp;
-            temp = chr[lbit];
-            chr[lbit] = chr[bit];
-            chr[bit] = temp;
-            bit--;
-        }
-    }else
-    {
-        reBit = 1;
-        chr[0] = '0';
-        chr[1] = '\0';
-    }
-    OLED12864_Show_String(page,x,chr,size);
-    if(numSigned)
-        reBit++;
-    return reBit;
+    uint8_t sbuf[8];
+    sprintf((char*)sbuf,"%d",num);
+    OLED12864_Show_String(page,x,sbuf,size);
+    return 0;
 }
 
 uint8_t OLED12864_Show_fNum(uint8_t page,uint8_t x,double num,uint8_t size,uint8_t d_len)

@@ -2,18 +2,94 @@
 #include "nrf24l01_micro.h"
 #include <stdio.h>
 
-//接口
+#include "BSP\bsp_spi.h"
+
+/**********************************移植接口**********************************************/
 #define CE_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CE])
 #define CE_HIGH Pin_Set(nRF24L01_PIN[NRF24L01_CE])
 #define CS_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CS])
 #define CS_HIGH Pin_Set(nRF24L01_PIN[NRF24L01_CS])
+#define port_MemCopy(src,buf,len)   MemCopy(src,buf,len)    //内存拷贝 src:源地址 buf:缓存地址 len:长度
+#define port_Send(dat)              SPI_Replace_Byte(2,dat) //spi 发送/接收 单个字节
+#define port_delay_ms(ms)           soft_delay_ms(ms)       //ms延时
+//nrf需要的依赖初始化
+static void nrf_support_init(void);
 
-#include "BSP\bsp_spi.h"
-#define port_Send(dat)      SPI_Replace_Byte(2,dat)
-#define port_delay_ms(ms)   soft_delay_ms(ms)
+/*******************************************************************
+ * 功能:初始化nrf所需要的外设,移植需要重写
+ * 参数:无
+ * 返回值:无
+ * 备注:
+ * 这个函数需要初始化nrf的控制引脚、通讯引脚和外部中断
+ * 1.初始化CE 并且拉低
+ * 2.初始化CS 并且拉高
+ * 3.初始化spi
+ * 4.检查nrf是否正常,然后配置外部中断 -> nRF24L01_Check()
+ * 2022/3/7   庞碧璋
+ *******************************************************************/
+void nrf_support_init(void)
+{
+    //引脚支持
+    GPIO_InitTypeDef  GPIO_InitStructure;
 
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2,ENABLE);        
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);  
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD,ENABLE);      
+    
+    GPIO_InitStructure.GPIO_Pin   = NRF24L01_CE_PIN ;
+    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
+    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;  
+    GPIO_Init(NRF24L01_CE_GPIO, &GPIO_InitStructure);
+    CE_LOW;
+    GPIO_InitStructure.GPIO_Pin   = NRF24L01_CSN_PIN ; 
+    GPIO_Init(NRF24L01_CSN_GPIO, &GPIO_InitStructure);  
+    CS_HIGH;                                                   // 初始化后，先拉高，失能设备NRF通信，再初始化其它通信引脚  
+    GPIO_InitStructure.GPIO_Pin  = NRF24L01_SCK_PIN | NRF24L01_MISO_PIN | NRF24L01_MOSI_PIN;
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP ;
+    GPIO_Init(NRF24L01_SCK_GPIO , &GPIO_InitStructure );
+    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
+    GPIO_InitStructure.GPIO_Pin = NRF24L01_IQR_PIN;
+    GPIO_Init(NRF24L01_IQR_GPIO,&GPIO_InitStructure);
 
-static void spiInit(void);
+    //spi支持
+    CS_HIGH;                       // 失能NRF
+    NRF24L01_SPIx->CR1  = 0;       // 清0
+    NRF24L01_SPIx->CR1 |= 0<<0;    // 采样沿数, NRF要求上升沿采样   CPHA:时钟相位,0x1=在第2个时钟边沿进行数据采样， 
+    NRF24L01_SPIx->CR1 |= 0<<1;    // 时钟线闲时极性,  CPOL:时钟极性,0x1=空闲状态时，SCK保持高电平
+    NRF24L01_SPIx->CR1 |= 1<<2;    // 主从模式,       0=从，1=主
+    NRF24L01_SPIx->CR1 |= 3<<3;    // 波特率控制[5:3], 0=fPCLK/2,  1=/4倍  2=/8  3/16
+    NRF24L01_SPIx->CR1 |= 0<<7;    // LSB先行，        0=MSB,  1=LSB
+    NRF24L01_SPIx->CR1 |= 1<<8;    // 内部从器件选择,根据9位设置(失能内部NSS)
+    NRF24L01_SPIx->CR1 |= 1<<9;    // 软件从器件管理 :  0=禁止软件管理从设备， 1=使能软件从器件管理(软件NSS)
+    NRF24L01_SPIx->CR1 |= 0<<11;   // 数据帧格式,       0=8位,  1=16位    
+    NRF24L01_SPIx->CR1 |= 1<<6;    // 使能  
+
+    //外部中断支持
+    if(nRF24L01_Check() == 0)
+    {
+        NVIC_InitTypeDef    NVIC_InitSrtuct;
+        EXTI_InitTypeDef    EXTI_InitStruct;
+
+        RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
+
+        NVIC_InitSrtuct.NVIC_IRQChannel = NRF24L01_IQR_Channel;
+        NVIC_InitSrtuct.NVIC_IRQChannelCmd = ENABLE;
+        NVIC_InitSrtuct.NVIC_IRQChannelPreemptionPriority = 3;
+        NVIC_InitSrtuct.NVIC_IRQChannelSubPriority = 0;
+
+        NVIC_Init(&NVIC_InitSrtuct);
+
+        EXTI_InitStruct.EXTI_Line = NRF24L01_IQR_Line;
+        EXTI_InitStruct.EXTI_LineCmd = ENABLE;
+        EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
+        EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //下降沿
+
+        EXTI_Init(&EXTI_InitStruct);
+        GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置    检测无误后才使能这个中断
+    }
+}
+
+/***************************************以下代码移植无需更改!***********************************************/
 
 /*******************************************************************
  * 功能:初始化nRF24L01,并且进入RxMode模式
@@ -27,53 +103,14 @@ static void spiInit(void);
  *******************************************************************/
 uint8_t  nRF24L01_Init(void)
 {        
-    GPIO_InitTypeDef  GPIO_InitStructure;
     nRF24L01_Cfg    DefaultCfg;
-    uint8_t err = 0;
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_SPI2,ENABLE);        
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);  
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOD,ENABLE);      
-    
-    GPIO_InitStructure.GPIO_Pin   = NRF24L01_CE_PIN ;
-    GPIO_InitStructure.GPIO_Mode  = GPIO_Mode_Out_PP;
-    GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;  
-    GPIO_Init(NRF24L01_CE_GPIO, &GPIO_InitStructure);
-    CE_LOW;
+    nrf_support_init();
 
-    GPIO_InitStructure.GPIO_Pin   = NRF24L01_CSN_PIN ; 
-    GPIO_Init(NRF24L01_CSN_GPIO, &GPIO_InitStructure);  
-    CS_HIGH;                                                   // 初始化后，先拉高，失能设备NRF通信，再初始化其它通信引脚  
-
-    GPIO_InitStructure.GPIO_Pin  = NRF24L01_SCK_PIN | NRF24L01_MISO_PIN | NRF24L01_MOSI_PIN;
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP ;
-    GPIO_Init(NRF24L01_SCK_GPIO , &GPIO_InitStructure );
-
-    GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;
-    GPIO_InitStructure.GPIO_Pin = NRF24L01_IQR_PIN;
-    GPIO_Init(NRF24L01_IQR_GPIO,&GPIO_InitStructure);
-
-    //IRQ脚中断配置
-    NVIC_InitTypeDef    NVIC_InitSrtuct;
-    EXTI_InitTypeDef    EXTI_InitStruct;
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
-
-    NVIC_InitSrtuct.NVIC_IRQChannel = NRF24L01_IQR_Channel;
-    NVIC_InitSrtuct.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_InitSrtuct.NVIC_IRQChannelPreemptionPriority = 3;
-    NVIC_InitSrtuct.NVIC_IRQChannelSubPriority = 0;
-
-    NVIC_Init(&NVIC_InitSrtuct);
-
-    EXTI_InitStruct.EXTI_Line = NRF24L01_IQR_Line;
-    EXTI_InitStruct.EXTI_LineCmd = ENABLE;
-    EXTI_InitStruct.EXTI_Mode = EXTI_Mode_Interrupt;
-    EXTI_InitStruct.EXTI_Trigger = EXTI_Trigger_Falling;    //下降沿
-
-    EXTI_Init(&EXTI_InitStruct);
-
-    spiInit();
+    if(nRF24L01_Check())
+    {
+        return 1;
+    }
 
     //默认配置
     DefaultCfg.Channel = DEFAULT_Channel;
@@ -81,36 +118,14 @@ uint8_t  nRF24L01_Init(void)
     DefaultCfg.retry_cycle = DEFAULT_RETRY_CYCLE;
     DefaultCfg.Rx_Length = DEFAULT_Rx_Length;
     
-    MemCopy(DEFAULT_RxAddr,DefaultCfg.RX_Addr,5);
-    MemCopy(DEFAULT_TxAddr,DefaultCfg.TX_Addr,5);
+    port_MemCopy(DEFAULT_RxAddr,DefaultCfg.RX_Addr,5);
+    port_MemCopy(DEFAULT_TxAddr,DefaultCfg.TX_Addr,5);
     nRF24L01_Config(&DefaultCfg);
 
-    nRF24L01_Write_Reg(CONFIG,0x0f);    //启动,进入standby模式      
+    nRF24L01_Write_Reg(CONFIG,0x0f);    //启动,进入standby模式    pwr置1 启动  
+    nRF24L01_Rx_Mode();                 //进入监听模式
+    return 0;
 
-    err = nRF24L01_Check();
-
-    if(err == 0)
-    {
-        nRF24L01_Rx_Mode();
-        GPIO_EXTILineConfig(NRF24L01_IQR_SourceGPIO,NRF24L01_IQR_PinSource);    //中断线配置    检测无误后才使能这个中断
-    }
-
-    return err;
-}
-
-static void spiInit(void)
-{
-    CS_HIGH;                       // 失能NRF
-    NRF24L01_SPIx->CR1  = 0;       // 清0
-    NRF24L01_SPIx->CR1 |= 0<<0;    // 采样沿数, NRF要求上升沿采样   CPHA:时钟相位,0x1=在第2个时钟边沿进行数据采样， 
-    NRF24L01_SPIx->CR1 |= 0<<1;    // 时钟线闲时极性,  CPOL:时钟极性,0x1=空闲状态时，SCK保持高电平
-    NRF24L01_SPIx->CR1 |= 1<<2;    // 主从模式,       0=从，1=主
-    NRF24L01_SPIx->CR1 |= 3<<3;    // 波特率控制[5:3], 0=fPCLK/2,  1=/4倍  2=/8  3/16
-    NRF24L01_SPIx->CR1 |= 0<<7;    // LSB先行，        0=MSB,  1=LSB
-    NRF24L01_SPIx->CR1 |= 1<<8;    // 内部从器件选择,根据9位设置(失能内部NSS)
-    NRF24L01_SPIx->CR1 |= 1<<9;    // 软件从器件管理 :  0=禁止软件管理从设备， 1=使能软件从器件管理(软件NSS)
-    NRF24L01_SPIx->CR1 |= 0<<11;   // 数据帧格式,       0=8位,  1=16位    
-    NRF24L01_SPIx->CR1 |= 1<<6;    // 使能  
 }
 
 /*******************************************************************
@@ -280,7 +295,7 @@ uint8_t nRF24L01_Check(void)
 uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
 {
     //内存拷贝
-    MemCopy((uint8_t*)Cfg,(uint8_t*)&CurrentCfg,sizeof(nRF24L01_Cfg));
+    port_MemCopy((uint8_t*)Cfg,(uint8_t*)&CurrentCfg,sizeof(nRF24L01_Cfg));
 
     //条件限制
     if(CurrentCfg.Channel > 125)
@@ -387,7 +402,7 @@ uint8_t nRF24L01_Read_RxFIFO(uint8_t*buf)
 
 /****************************************接收缓存相关***********************************************/
 
-#if NRF24_USE_SBUFFER   //是否使用内部缓存
+#if NRF24_USE_SBUFFER == 1   //是否使用内部缓存
 
 /*******************************************************************
  * 功能:读nRF24L01接收到的字节
@@ -407,11 +422,11 @@ uint8_t nRF24L01_Read_RxSbuffer(uint8_t*buf,uint8_t len)
     #if NRF24_USE_BUF_LEN
     if(len > nRF24L01_Sbuffer[0])
         return 1;
-    MemCopy(nRF24L01_Sbuffer+1,buf,len);
+    port_MemCopy(nRF24L01_Sbuffer+1,buf,len);
     nRF24L01_Push_Sbuffer(len);
     return 0;
     #else
-    MemCopy(nRF24L01_Sbuffer,buf,len);
+    port_MemCopy(nRF24L01_Sbuffer,buf,len);
     return 0;
     #endif
 

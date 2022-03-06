@@ -14,3 +14,8 @@ void ElectricRegulation_Init(void)
     soft_delay_ms(500);
 }
 
+void StreetMotor_Reset(void)
+{
+    STREET_MOTOR1(90.0);
+    STREET_MOTOR2(90.0);
+}

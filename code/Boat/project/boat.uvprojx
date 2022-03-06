@@ -538,6 +538,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\BSP\bsp_led.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_timer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_timer.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

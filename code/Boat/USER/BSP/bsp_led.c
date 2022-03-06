@@ -13,6 +13,8 @@ void BSP_LED_Init(void)
         GPIO_InitStruct.GPIO_Pin = LED_Pin[temp].Pin;
         GPIO_Init(LED_Pin[temp].GPIO,&GPIO_InitStruct);
     }
+
+    LED_CTR(0,LED_OFF);
 }
 
 void LED_CTR(uint8_t num,uint8_t status)

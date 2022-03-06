@@ -3,6 +3,8 @@
         "self_stm32f10x.h": "c",
         "stm32f10x.h": "c",
         "freertos.h": "c",
-        "mpu6050.h": "c"
+        "mpu6050.h": "c",
+        "cmath": "c",
+        "nrf24l01_micro.h": "c"
     }
 }

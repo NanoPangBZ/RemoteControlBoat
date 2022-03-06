@@ -4,6 +4,7 @@
 #include "BSP\bsp_pwm.h"
 #include "BSP\bsp_led.h"
 #include "BSP\bsp_usart.h"
+#include "BSP\bsp_timer.h"
 
 #include "HARDWARE\MPU6050\mpu6050.h"
 #include "HARDWARE\MPU6050\eMPL\inv_mpu.h"
@@ -39,6 +40,7 @@ int main(void)
 	BSP_LED_Init();
 	BSP_PWM_Init();
 	BSP_Usart_Init();
+	BSP_Timer_Init();
 
 	//OLED初始化
 	OLED12864_Init();
@@ -52,8 +54,9 @@ int main(void)
 		OLED12864_Show_String(2,0,"mpu err",1);
 	}else
 	{
-		mpu_dmp_init();
 		OLED12864_Show_String(2,0,"mpu pass",1);
+		if(mpu_dmp_init())	//初始化官方的DMP固件库
+			OLED12864_Show_String(3,0,"6050 dmp err",1);
 	}
 
 	//nrf24初始化和配置
@@ -77,11 +80,19 @@ int main(void)
 	OLED12864_Refresh();
 
 	uint8_t sbuf[32];
+	uint32_t Max_time = 0;
+	uint32_t time;
 	float Gyroscope[3];
 
 	while(1)
 	{
+		startTiming();
 		mpu_dmp_get_data(&Gyroscope[0],&Gyroscope[1],&Gyroscope[2]);
+		time = stopTiming();
+		if(time > Max_time)
+			Max_time = time;
+		OLED12864_Show_Num(6,0,time,1);
+		OLED12864_Show_Num(7,0,Max_time,1);
 		for(uint8_t a=0;a<3;a++)
 		{
 			OLED12864_Clear_Page(a+3);

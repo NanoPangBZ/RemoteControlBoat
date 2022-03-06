@@ -3,6 +3,9 @@
 #include <stdio.h>
 
 
+void GyroscopeRefresh_Task(void*ptr)
+{
+}
 
 void Test_Task(void*ptr)
 {
