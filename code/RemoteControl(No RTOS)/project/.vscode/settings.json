@@ -1,6 +1,0 @@
-{
-    "files.associations": {
-        "stm32f10x.h": "c",
-        "queue.h": "c"
-    }
-}

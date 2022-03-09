@@ -1,11 +1,20 @@
 #include "user.h"
 
+//任务参数
 extern nRF24L01_Cfg nRF24_Cfg;
+extern uint8_t SendFre;
 
+//任务句柄
+extern TaskHandle_t RemoteControl_TaskHandle ;
+extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;    
+extern TaskHandle_t User_FeedBack_TaskHandle ;
+
+//队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;
 extern SemaphoreHandle_t nRF24_RecieveFlag;
 extern QueueHandle_t     nRF24_SendResult;
 
+//全局变量
 uint16_t SendCount = 0;
 uint16_t SendAck_Count = 0;
 uint16_t SendNoAck_Count = 0;
@@ -14,6 +23,38 @@ uint16_t Slave_NoAckCount = 0;
 
 //使用串口打印消息(带当前任务的名字,方便调试)
 #define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
+
+void RTOS_CreatTask_Task(void*ptr)
+{
+    nRF24_ISRFlag = xSemaphoreCreateBinary();
+	nRF24_RecieveFlag = xSemaphoreCreateBinary();
+	nRF24_SendResult = xQueueCreate(1,1);
+    xTaskCreate(
+		RemoteControl_Task,
+		"RC task",
+		144,
+		(void*)&SendFre,
+		12,
+		&RemoteControl_TaskHandle
+	);
+	xTaskCreate(
+		nRF24L01_Intterrupt_Task,
+		"NI task",
+		64,
+		NULL,
+		13,
+		&nRF24L01_Intterrupt_TaskHandle
+	);
+	xTaskCreate(
+		User_FeedBack_Task,
+		"UFB task",
+		72,
+		NULL,
+		12,
+		&User_FeedBack_TaskHandle
+	);
+    vTaskDelete(NULL);
+}
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -80,46 +121,6 @@ void RemoteControl_Task(void*ptr)
     }
 }
 
-#if 0
-void RemoteControl_Reply_Task(void*ptr)
-{
-    uint8_t sbuffer[32];
-    uint8_t temp;
-    uint16_t wait_time = *(uint16_t*)ptr ;
-    while(1)
-    {
-        nRF24L01_Rx_Mode();
-        while(xSemaphoreTake(nRF24_RecieveFlag,wait_time/portTICK_RATE_MS) == pdFALSE)    //等待接收结果
-        {
-            //该周期没有接收到来自遥控器的数据
-        }
-        //软件应答准备
-        //...
-        nRF24L01_Send(sbuffer,32);      //发送
-        //等待nrf24中断(发送完成中断 或 未应答中断)
-        while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
-        {
-            //等待中断超时
-            //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
-            printMsg("nrf24 wait send result timeout.\r\n");
-            //检查硬件是否正常
-            while(nRF24L01_Check() == 1)
-            {
-                printMsg("nrf24 is err!!\r\n");
-                vTaskDelay(500/portTICK_RATE_MS);
-            }
-            //硬件故障排除,重新发送
-            printMsg("nrf24 is ok.\r\n");
-            nRF24L01_Config(&nRF24_Cfg);
-            printMsg("refresh nrf24 config.\r\n");
-            vTaskDelay(500/portTICK_RATE_MS);
-            printMsg("Resend.\r\n");
-            nRF24L01_Send(sbuffer,32);
-        }
-    }
-}
-#endif
-
 /*******************************************************************
  * 功能:freeRTOS下的nrf24中断处理函数
  * 参数:NULL
@@ -135,11 +136,6 @@ void nRF24L01_Intterrupt_Task(void*ptr)
         nRF24L01_InterruptHandle();     //isr处理函数
     }
 }
-
-//任务句柄
-extern TaskHandle_t RemoteControl_TaskHandle ;
-extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;
-extern TaskHandle_t User_FeedBack_TaskHandle ;
 
 /*******************************************************************
  * 功能:通过串口定时打印运行状态

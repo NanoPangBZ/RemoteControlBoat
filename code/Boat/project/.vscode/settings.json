@@ -5,6 +5,9 @@
         "freertos.h": "c",
         "mpu6050.h": "c",
         "cmath": "c",
-        "nrf24l01_micro.h": "c"
+        "nrf24l01_micro.h": "c",
+        "user.h": "c",
+        "inv_mpu_dmp_motion_driver.h": "c",
+        "inv_mpu.h": "c"
     }
 }

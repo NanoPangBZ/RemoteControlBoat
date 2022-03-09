@@ -2,6 +2,7 @@
     "files.associations": {
         "stm32f10x.h": "c",
         "queue.h": "c",
-        "nrf24l01.h": "c"
+        "nrf24l01.h": "c",
+        "self_stm32f10x.h": "c"
     }
 }

@@ -2,38 +2,42 @@
 #define _NRF24L01_H_
 
 #include "self_stm32f10x.h"
-#include ".\BSP\bsp_usart.h"     
 
 /*************************************************
- * nrf24l01的驱动 (只支持静态接收字节长度)
- * 需要底层SPI支持
+ * nrf24l01的驱动
+ * nrf24l01.c
+ * nrf24l01.h
+ * nrf24l01_micro.h <- nrf寄存器地址
  * 
- * 移植注意事项:
- * 移植需要重写以下函数和定义以下的宏
- * spiInit() --- 内部函数,spi初始化
- * nRF24L01_Init() --- nrf24l01硬件的初始化函数
- * port_Send(dat) --- SPI发送函数宏
- * port_delay_ms(ms) --- ms延时函数宏
- * ---nrf24引脚控制宏---
- * CE_LOW
- * CE_HIGH
- * CS_LOW
- * CS_HIGH
- * ---中断处理函数(已经写了一部分)---
- * nRF24L01_InterruptHandle()
- * 应该在发生外部中断时调用这个函数,不一定要在ISR中调用
- * 在外部应该定义以下函数->这些函数会被nRF24L01_InterruptHandle()调用
- * nRF24L01_NoACK_ISR(void);
- * nRF24L01_Tx_ISR(void);
- * nRF24L01_Rx_ISR(void);
- * 还需要MemCopy()函数支持!!(内存拷贝)
+ * 功能:
+ * 驱动nrf24l01 1对1 半双工通讯 (只支持静态接收字节长度,长度可配置)
+ * 可使用文件内部的sbuffer来缓存多次接收(可通过宏配置)
  * 
- * 若有其它设备挂在在同一spi上,在由其它设备更换至nrf24时要重新
- * 调用spi_init() <- 内部函数
+ * 若宏NRF24_USE_SBUFFER==1,nRF24L01_InterruptHandle()会
+ * 将nrf RxFIFO中的值读入到nRF24L01_Sbuffer中
+ * 若宏NRF24_USE_BUF_LEN==0,则nRF24L01_Sbuffer会被下次接收时
+ * 调用nRF24L01_InterruptHandle()覆盖
  * 
- *   2022/2/14  庞
+ * 关于移植:
+ * 
+ * 实现nrf24l01.c中的宏和nrf_support_init()
+ * 注意!nrf的中断服务函数没有写接口,可以在外部
+ * 的中断函数中调用nRF24L01_InterruptHandle()
+ * 
+ * 如果是接收中断可能会耗费较长的时序,不建议直接
+ * 在中断服务函数中调用nRF24L01_InterruptHandle()
+ * 
+ * 如果不想使用外部中断,可以不在nrf_support_init()
+ * 中配置中断,轮询nRF24L01_InterruptHandle()即可
+ * 
+ * 作者: 庞碧璋
+ * Github: https://github.com/CodingBugStd
+ * csdn:   https://blog.csdn.net/RampagePBZ
+ * Encoding: utf-8
+ * 最后更改时间: 2022/2/14
 *************************************************/
 
+/*************************自定义宏**********************************/
 // spi_port
 #define  NRF24L01_SPIx                SPI2                  // SPI 端口   
 
@@ -53,7 +57,7 @@
 #define  NRF24L01_MISO_GPIO           GPIOB                 // SPI MISO
 #define  NRF24L01_MISO_PIN            GPIO_Pin_14
 // 第8脚:IRQ
-#define  NRF24L01_IQR_GPIO           GPIOA                 // SPI MISO
+#define  NRF24L01_IQR_GPIO           GPIOA                 // SPI IRQ
 #define  NRF24L01_IQR_PIN            GPIO_Pin_8
 #define  NRF24L01_IQR_Channel        EXTI9_5_IRQn
 #define  NRF24L01_IQR_SourceGPIO    GPIO_PortSourceGPIOA
@@ -73,6 +77,8 @@ static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_MISO_PIN,NRF24L01_MISO_GPIO},
     {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
 };
+
+/*************************************功能配置宏************************************************/
 
 //相关配置
 //nRF24初始化的默认配置
@@ -105,6 +111,8 @@ typedef struct
 }nRF24L01_Cfg;
 
 static nRF24L01_Cfg CurrentCfg;     //当前nRF24L01的配置
+
+/*************************************函数************************************************/
 
 //底层函数
 

@@ -79,7 +79,7 @@ void PWM_Ch_Init(void)
     TIM_OCInitStruct.TIM_OCNIdleState = TIM_OCNIdleState_Reset;
     TIM_OCInitStruct.TIM_OCIdleState = TIM_OCIdleState_Reset;
     TIM_OCInitStruct.TIM_OCNPolarity = TIM_OCNPolarity_Low;
-    TIM_OCInitStruct.TIM_Pulse = 3000;
+    TIM_OCInitStruct.TIM_Pulse = 1400;
 
     TIM_OC1Init(TIM1,&TIM_OCInitStruct);
     TIM_OC1PreloadConfig(TIM1,TIM_OCPreload_Enable);

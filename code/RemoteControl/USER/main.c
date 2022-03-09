@@ -1,4 +1,3 @@
-#include "stm32f10x.h"
 #include "self_stm32f10x.h"
 
 #include "BSP\bsp_usart.h"
@@ -17,9 +16,10 @@ static uint8_t TxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
-uint8_t SendFre = 40;	//nrf24通讯频率
+uint8_t SendFre = 10;	//nrf24通讯频率
 
 //任务句柄
+TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
 TaskHandle_t RemoteControl_TaskHandle = NULL;
 TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t User_FeedBack_TaskHandle = NULL;
@@ -27,7 +27,7 @@ TaskHandle_t User_FeedBack_TaskHandle = NULL;
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
-QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果队列
+QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 
 int main(void)
 {
@@ -52,36 +52,16 @@ int main(void)
 	nRF24_Cfg.Rx_Length = 32;	//结束长度
 	MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);
 	MemCopy(RxAddr,nRF24_Cfg.RX_Addr,5);
-	nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01
+	nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01	
 
 	xTaskCreate(
-		RemoteControl_Task,
+		RTOS_CreatTask_Task,
 		"RC task",
 		144,
-		(void*)&SendFre,
-		12,
-		&RemoteControl_TaskHandle
-	);
-	xTaskCreate(
-		nRF24L01_Intterrupt_Task,
-		"NI task",
-		64,
 		NULL,
-		13,
-		&nRF24L01_Intterrupt_TaskHandle
+		15,
+		&RTOS_CreatTask_TaskHandle
 	);
-	xTaskCreate(
-		User_FeedBack_Task,
-		"UFB task",
-		72,
-		NULL,
-		12,
-		&User_FeedBack_TaskHandle
-	);
-
-	nRF24_ISRFlag = xSemaphoreCreateBinary();
-	nRF24_RecieveFlag = xSemaphoreCreateBinary();
-	nRF24_SendResult = xQueueCreate(1,1);	
 
 	vTaskStartScheduler();
 
