@@ -20,7 +20,6 @@ void nRF24L01_Intterrupt_Task(void*ptr);
 void User_FeedBack_Task(void*ptr);
 void HMI_slider_Task(void*ptr);
 
-void FreeRTOS_Test_Task(void*ptr);
 
 #endif //_USER_H_
 

@@ -16,7 +16,7 @@ static uint8_t TxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
-uint8_t SendFre = 10;	//nrf24通讯频率
+uint8_t SendFre = 50;	//nrf24通讯频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
@@ -56,7 +56,7 @@ int main(void)
 
 	xTaskCreate(
 		RTOS_CreatTask_Task,
-		"RC task",
+		"CreatTask",
 		144,
 		NULL,
 		15,

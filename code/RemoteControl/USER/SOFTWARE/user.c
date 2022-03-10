@@ -65,18 +65,18 @@ void RTOS_CreatTask_Task(void*ptr)
  *******************************************************************/
 void RemoteControl_Task(void*ptr)
 {
-    uint16_t delay_cycle = 1000 / *(uint8_t*)ptr;    //通讯频率计算
+    uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;    //通讯频率计算
     uint8_t sbuffer[32];
     uint8_t temp;
-    uint8_t*nrf_recieve = nRF24L01_Get_RxBufAddr();
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
         nRF24L01_Send(sbuffer,32);
-        SendCount++;
         //等待nrf24中断(发送完成中断 或 未应答中断)
-        while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4/portTICK_RATE_MS) == pdFALSE)
+        while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4) == pdFALSE)
         {
+            vTaskSuspend(User_FeedBack_TaskHandle);    //暂时挂起串口反馈,防止冲掉调试消息
+
             //等待中断超时
             //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
             printMsg("nrf24 wait send result timeout.\r\n");
@@ -93,9 +93,13 @@ void RemoteControl_Task(void*ptr)
             printMsg("refresh nrf24 config.\r\n");
             vTaskDelay(500/portTICK_RATE_MS);
             printMsg("Resend.\r\n");
+
+            vTaskResume(User_FeedBack_TaskHandle);    //解除串口反馈任务的挂起
+
             nRF24L01_Send(sbuffer,32);
-            time = xTaskGetTickCount();  //获取当前系统时间
+            time = xTaskGetTickCount();  //重新获取当前系统时间
         }
+        SendCount++;
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
         if(temp)
         {
@@ -103,7 +107,7 @@ void RemoteControl_Task(void*ptr)
             SendAck_Count++;
             //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
             //等待时长 1/2 任务周期
-            if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle/2/portTICK_RATE_MS) == pdFALSE)
+            if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle/2) == pdFALSE)
             {
                 //未接收到从机软件回复
                 Slave_NoAckCount++;
@@ -117,7 +121,8 @@ void RemoteControl_Task(void*ptr)
             //没有接收到硬件ACK 说明从机没有接收到数据
             SendNoAck_Count++;
         }
-        xTaskDelayUntil(&time,delay_cycle/portTICK_RATE_MS); 
+        
+        xTaskDelayUntil(&time,delay_cycle); 
     }
 }
 
@@ -160,11 +165,4 @@ void User_FeedBack_Task(void*ptr)
     }
 }
 
-void FreeRTOS_Test_Task(void*ptr)
-{
-    while(1)
-    {
-        printf("%s\r\n",(char*)ptr);
-        vTaskDelay(2000/portTICK_RATE_MS);
-    }
-}
+

@@ -2,13 +2,26 @@
 #include "self_stm32f10x.h"
 #include <stdio.h>
 
+//其它参数
+extern nRF24L01_Cfg nRF24_Cfg;
+
+//任务参数
+extern uint8_t oled_fre;		//OLED刷新频率
+extern uint8_t nrf_maxDelay;	//nrf最大等待接收时长
+
+//任务句柄
+extern TaskHandle_t ReplyMaster_TaskHandle;
+extern TaskHandle_t OLED_TaskHandle;
+extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
+
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;
 extern SemaphoreHandle_t nRF24_RecieveFlag;
 extern QueueHandle_t     nRF24_SendResult;
+extern SemaphoreHandle_t USART_RecieveFlag;
 
 //全局变量
-float Gyrocope[3] = {0,0,0};
+float Gyrocope[3] = {0,0,0};    //姿态
 
 //使用串口打印消息(带当前任务的名字,方便调试)
 #define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
@@ -18,6 +31,35 @@ void RTOSCreateTask_Task(void*ptr)
     nRF24_ISRFlag = xSemaphoreCreateBinary();
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();
 	nRF24_SendResult = xQueueCreate(1,1);
+    USART_RecieveFlag = xSemaphoreCreateBinary();
+
+    xTaskCreate(
+        ReplyMaster_Task,
+        "Reply",
+        144,
+        (void*)&nrf_maxDelay,
+        12,
+        &ReplyMaster_TaskHandle
+    );
+
+    xTaskCreate(
+        OLED_Task,
+        "oled",
+        64,
+        (void*)&oled_fre,
+        11,
+        &OLED_TaskHandle
+    );
+
+    xTaskCreate(
+        nRF24L01_Intterrupt_Task,
+        "nrf interrupt",
+        64,
+        NULL,
+        15,
+        &nRF24L01_Intterrupt_TaskHandle
+    );
+
     vTaskDelete(NULL);
 }
 
@@ -28,15 +70,28 @@ void ReplyMaster_Task(void*ptr)
     uint8_t sbuf[32];
     while(1)
     {
-        if(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
+        while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
         {
-            printMsg("nrf loss Sigh\r\n");
-        }else
+            //过长时间没有接收到主机信号
+            //...
+        }
+        //处理主机发送的数据
+        nRF24L01_Read_RxSbuffer(sbuf,32);
+        //反馈回主机
+        nRF24L01_Send(sbuf,32);
+        while(xQueueReceive(nRF24_SendResult,sbuf,MaxWait) == pdFALSE)
         {
-            nRF24L01_Read_RxSbuffer(sbuf,32);
+            OLED12864_Clear_PageBlock(0,0,64);
+            OLED12864_Show_String(0,0,"nrf timeout",1);
+            //nrf发送失败,硬件检查
+            while(nRF24L01_Check())
+            {
+                OLED12864_Show_String(1,0,"nrf err",1);
+                vTaskDelay(500/portTICK_RATE_MS);
+            }
+            OLED12864_Show_String(1,0,"nrf pass",1);
+            nRF24L01_Config(&nRF24_Cfg);
             nRF24L01_Send(sbuf,32);
-            xQueueReceive(nRF24_SendResult,sbuf,MaxWait);
-            if(sbuf[0] == 1);
         }
     }
 }
@@ -58,6 +113,8 @@ void OLED_Task(void*ptr)
     TickType_t  time = xTaskGetTickCount();
     while(1)
     {
+        time = xTaskGetTickCount();
+        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/100,1);
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
     }
@@ -75,3 +132,10 @@ void Gyroscope_Task(void*ptr)
     }
 }
 
+void User_FeedBack_Task(void*ptr)
+{
+    while(1)
+    {
+        //printf("");
+    }
+}

@@ -23,17 +23,25 @@
 #pragma	diag_suppress	870	//屏蔽汉字警告
 
 //nRF24L01初始化结构体
-static nRF24L01_Cfg nRF24_Cfg;
+nRF24L01_Cfg nRF24_Cfg;
 static uint8_t RxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
+//任务参数
+uint8_t oled_fre = 24;		//OLED刷新频率
+uint8_t nrf_maxDelay = 200;	//nrf最大等待接收时长
+
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
+TaskHandle_t	ReplyMaster_TaskHandle = NULL;
+TaskHandle_t	OLED_TaskHandle = NULL;
+TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
+SemaphoreHandle_t	USART_RecieveFlag = NULL;	//串口有未处理数据标志
 
 int main(void)
 {
@@ -81,6 +89,7 @@ int main(void)
 		MemCopy(RxAddr,nRF24_Cfg.RX_Addr,5);
 		nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01
 		OLED12864_Show_String(1,0,"nrf pass",1);
+		nRF24L01_Rx_Mode();
 	}
 	OLED12864_Refresh();
 
