@@ -6,7 +6,7 @@
   <Header>### uVision Project, (C) Keil Software</Header>
 
   <PrjGuiSettings>
-    <LastAddFilePath>E:\UnderwayProject\Machine_contest\code\Boat\USER\BSP</LastAddFilePath>
+    <LastAddFilePath>E:\UnderwayProject\Machine_contest\code\Boat\USER</LastAddFilePath>
   </PrjGuiSettings>
 
   <ViewPool/>
@@ -15,7 +15,7 @@
     <View>
       <WinId>38003</WinId>
       <ViewName>Registers</ViewName>
-      <TableColWidths>178 130</TableColWidths>
+      <TableColWidths>154 154</TableColWidths>
     </View>
     <View>
       <WinId>346</WinId>
@@ -1865,9 +1865,9 @@
       <ActiveTab>0</ActiveTab>
       <Doc>
         <Name>..\USER\main.c</Name>
-        <ColumnNumber>8</ColumnNumber>
-        <TopLine>80</TopLine>
-        <CurrentLine>106</CurrentLine>
+        <ColumnNumber>10</ColumnNumber>
+        <TopLine>14</TopLine>
+        <CurrentLine>15</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>
@@ -1875,7 +1875,7 @@
       <Doc>
         <Name>..\USER\isr.c</Name>
         <ColumnNumber>3</ColumnNumber>
-        <TopLine>17</TopLine>
+        <TopLine>14</TopLine>
         <CurrentLine>15</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
@@ -1883,9 +1883,9 @@
       </Doc>
       <Doc>
         <Name>..\USER\HARDWARE\MPU6050\eMPL\inv_mpu.c</Name>
-        <ColumnNumber>79</ColumnNumber>
+        <ColumnNumber>8</ColumnNumber>
         <TopLine>2973</TopLine>
-        <CurrentLine>2997</CurrentLine>
+        <CurrentLine>2998</CurrentLine>
         <Folding>1</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>
@@ -1895,7 +1895,7 @@
         <ColumnNumber>57</ColumnNumber>
         <TopLine>201</TopLine>
         <CurrentLine>228</CurrentLine>
-        <Folding>1</Folding>
+        <Folding>0</Folding>
         <ContractedFolders></ContractedFolders>
         <PaneID>0</PaneID>
       </Doc>

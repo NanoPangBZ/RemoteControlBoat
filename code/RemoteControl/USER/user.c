@@ -65,7 +65,7 @@ void RTOS_CreatTask_Task(void*ptr)
  *******************************************************************/
 void RemoteControl_Task(void*ptr)
 {
-    uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_PERIOD_MS;    //通讯频率计算
+    uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;    //通讯频率计算
     uint8_t sbuffer[32];
     uint8_t temp;
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
@@ -80,18 +80,18 @@ void RemoteControl_Task(void*ptr)
             //等待中断超时
             //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
             printMsg("nrf24 wait send result timeout.\r\n");
-            vTaskDelay(500/portTICK_PERIOD_MS);
+            vTaskDelay(500/portTICK_RATE_MS);
             //检查硬件是否正常
             while(nRF24L01_Check() == 1)
             {
                 printMsg("nrf24 is err!!\r\n");
-                vTaskDelay(500/portTICK_PERIOD_MS);
+                vTaskDelay(500/portTICK_RATE_MS);
             }
             //硬件故障排除,重新发送
             printMsg("nrf24 is ok.\r\n");
             nRF24L01_Config(&nRF24_Cfg);
             printMsg("refresh nrf24 config.\r\n");
-            vTaskDelay(500/portTICK_PERIOD_MS);
+            vTaskDelay(500/portTICK_RATE_MS);
             printMsg("Resend.\r\n");
 
             vTaskResume(User_FeedBack_TaskHandle);    //解除串口反馈任务的挂起
@@ -156,13 +156,12 @@ void User_FeedBack_Task(void*ptr)
         printf("%s surplusStack:%d\r\n",pcTaskGetName(RemoteControl_TaskHandle),uxTaskGetStackHighWaterMark(RemoteControl_TaskHandle));
         printf("%s surplusStack:%d\r\n",pcTaskGetName(nRF24L01_Intterrupt_TaskHandle),uxTaskGetStackHighWaterMark(nRF24L01_Intterrupt_TaskHandle));
         printf("%s surplusStack:%d\r\n",pcTaskGetName(User_FeedBack_TaskHandle),uxTaskGetStackHighWaterMark(User_FeedBack_TaskHandle));
-        printf("HARD NoACK:%.2f %%\r\n",SendNoAck_Count*100.0/SendCount);
-        printf("SOFT NoACK:%.2f %%\r\n",Slave_NoAckCount*100.0/SendAck_Count);
-        SendNoAck_Count = 0;
-        SendCount = 0;
-        Slave_NoAckCount = 0;
-        SendAck_Count = 0;
-        vTaskDelay(1000/portTICK_PERIOD_MS);
+        printf("SendCount:%d\r\n",SendCount);
+        printf("SendAck_Count:%d\r\n",SendAck_Count);
+        printf("SendNoAck_Count:%d\r\n",SendNoAck_Count);
+        printf("Slave_AckCoount:%d\r\n",Slave_AckCoount);
+        printf("Slave_NoAckCount:%d\r\n",Slave_NoAckCount);
+        vTaskDelay(1000/portTICK_RATE_MS);
     }
 }
 

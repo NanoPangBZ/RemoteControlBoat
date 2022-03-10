@@ -8,13 +8,11 @@ extern nRF24L01_Cfg nRF24_Cfg;
 //任务参数
 extern uint8_t oled_fre;		//OLED刷新频率
 extern uint8_t nrf_maxDelay;	//nrf最大等待接收时长
-extern uint8_t gyroscope_fre;   //姿态刷新频率
 
 //任务句柄
 extern TaskHandle_t ReplyMaster_TaskHandle;
 extern TaskHandle_t OLED_TaskHandle;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
-extern TaskHandle_t Gyroscope_TaskHandle;
 
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;
@@ -23,7 +21,7 @@ extern QueueHandle_t     nRF24_SendResult;
 extern SemaphoreHandle_t USART_RecieveFlag;
 
 //全局变量
-BoatPack_TypeDef    BoatPack;
+float Gyrocope[3] = {0,0,0};    //姿态
 
 //使用串口打印消息(带当前任务的名字,方便调试)
 #define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
@@ -40,14 +38,14 @@ void RTOSCreateTask_Task(void*ptr)
         "Reply",
         144,
         (void*)&nrf_maxDelay,
-        14,
+        12,
         &ReplyMaster_TaskHandle
     );
 
     xTaskCreate(
         OLED_Task,
         "oled",
-        144,
+        64,
         (void*)&oled_fre,
         11,
         &OLED_TaskHandle
@@ -62,22 +60,13 @@ void RTOSCreateTask_Task(void*ptr)
         &nRF24L01_Intterrupt_TaskHandle
     );
 
-    xTaskCreate(
-        Gyroscope_Task,
-        "mpu",
-        144,
-        &gyroscope_fre,
-        12,
-        &Gyroscope_TaskHandle
-    );
-
     vTaskDelete(NULL);
 }
 
 //回复主机
 void ReplyMaster_Task(void*ptr)
 {
-    uint8_t MaxWait = *(uint8_t*)ptr / portTICK_PERIOD_MS ;
+    uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;
     uint8_t sbuf[32];
     while(1)
     {
@@ -95,11 +84,12 @@ void ReplyMaster_Task(void*ptr)
             //nrf发送失败,硬件检查
             while(nRF24L01_Check())
             {
-                vTaskDelay(500/portTICK_PERIOD_MS);
+                vTaskDelay(500/portTICK_RATE_MS);
             }
             nRF24L01_Config(&nRF24_Cfg);
             nRF24L01_Send(sbuf,32);
         }
+        LED_CTR(0,LED_Reserval);
     }
 }
 
@@ -116,20 +106,12 @@ void nRF24L01_Intterrupt_Task(void*ptr)
 //屏幕刷新
 void OLED_Task(void*ptr)
 {
-    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_PERIOD_MS ;
+    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;
     TickType_t  time = xTaskGetTickCount();
-    uint8_t sbuf[16];
     while(1)
     {
-        //time * ( ( TickType_t ) 1000 / configTICK_RATE_HZ ) / 100
-        //time / 50
-        OLED12864_Show_Num(7,0,(time*portTICK_PERIOD_MS)/100,1); //单位 0.1s
-        sprintf((char*)sbuf,"%.1f",BoatPack.Gyroscope[0]);
-        OLED12864_Show_String(3,0,sbuf,1);
-        sprintf((char*)sbuf,"%.1f",BoatPack.Gyroscope[1]);
-        OLED12864_Show_String(4,0,sbuf,1);
-        sprintf((char*)sbuf,"%.1f",BoatPack.Gyroscope[2]);
-        OLED12864_Show_String(5,0,sbuf,1);
+        time = xTaskGetTickCount();
+        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/100,1);
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
     }
@@ -138,13 +120,11 @@ void OLED_Task(void*ptr)
 //姿态更新
 void Gyroscope_Task(void*ptr)
 {
-    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_PERIOD_MS ;
+    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;
     TickType_t  time = xTaskGetTickCount();
     while(1)
     {
-        //mpu_dmp_get_data 内部自带进入和退出临界区的代码段
-        //无需担心软件i2c被打断
-        mpu_dmp_get_data(&BoatPack.Gyroscope[0],&BoatPack.Gyroscope[1],&BoatPack.Gyroscope[2]);
+        mpu_dmp_get_data(&Gyrocope[0],&Gyrocope[1],&Gyrocope[2]);
         vTaskDelayUntil(&time,Cycle);
     }
 }

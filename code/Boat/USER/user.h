@@ -9,10 +9,6 @@
 #include "HARDWARE\MPU6050\mpu6050.h"
 #include "HARDWARE\MPU6050\eMPL\inv_mpu.h"
 
-#include "SOFTWARE\self_protocol.h"
-#include "SOFTWARE\vofa_p.h"
-#include "SOFTWARE\pid.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"

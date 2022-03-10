@@ -6,7 +6,7 @@
 
 #include "HARDWARE\nrf24l01.h"
 
-#include "SOFTWARE\user.h"
+#include "user.h"
 
 #pragma	diag_suppress	870	//屏蔽汉字警告
 

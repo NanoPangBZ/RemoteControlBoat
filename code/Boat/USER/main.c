@@ -12,7 +12,7 @@
 #include "HARDWARE\NRF24\nrf24l01.h"
 #include "HARDWARE\OLED\oled12864.h"
 
-#include "SOFTWARE\user.h"
+#include "user.h"
 #include "SOFTWARE\vofa_p.h"
 
 #include "FreeRTOS.h"

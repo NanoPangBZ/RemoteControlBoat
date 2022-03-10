@@ -389,6 +389,16 @@
               <FilePath>..\USER\main.c</FilePath>
             </File>
             <File>
+              <FileName>user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\user.c</FilePath>
+            </File>
+            <File>
+              <FileName>isr.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\isr.c</FilePath>
+            </File>
+            <File>
               <FileName>self_stm32f10x.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\self_stm32f10x.c</FilePath>
@@ -403,10 +413,50 @@
               <FileType>5</FileType>
               <FilePath>..\USER\FreeRTOSConfig.h</FilePath>
             </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>BSP</GroupName>
+          <Files>
             <File>
-              <FileName>isr.c</FileName>
+              <FileName>bsp_adc.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\USER\isr.c</FilePath>
+              <FilePath>..\USER\BSP\bsp_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_spi.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_usart.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_usart.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>HARDWARE</GroupName>
+          <Files>
+            <File>
+              <FileName>nrf24l01.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\nrf24l01.c</FilePath>
+            </File>
+            <File>
+              <FileName>usart_hmi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\usart_hmi.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>SOFTWARE</GroupName>
+          <Files>
+            <File>
+              <FileName>remote.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\remote.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -462,56 +512,6 @@
               <FileName>stm32f10x_usart.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\StdPeriph\src\stm32f10x_usart.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>BSP</GroupName>
-          <Files>
-            <File>
-              <FileName>bsp_adc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\BSP\bsp_adc.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_spi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\BSP\bsp_spi.c</FilePath>
-            </File>
-            <File>
-              <FileName>bsp_usart.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\BSP\bsp_usart.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>HARDWARE</GroupName>
-          <Files>
-            <File>
-              <FileName>nrf24l01.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\HARDWARE\nrf24l01.c</FilePath>
-            </File>
-            <File>
-              <FileName>usart_hmi.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\HARDWARE\usart_hmi.c</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>SOFTWARE</GroupName>
-          <Files>
-            <File>
-              <FileName>user.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\SOFTWARE\user.c</FilePath>
-            </File>
-            <File>
-              <FileName>remote.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\USER\SOFTWARE\remote.c</FilePath>
             </File>
           </Files>
         </Group>

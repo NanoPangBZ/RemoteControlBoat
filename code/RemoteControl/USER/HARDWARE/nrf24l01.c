@@ -122,6 +122,8 @@ uint8_t  nRF24L01_Init(void)
     port_MemCopy(DEFAULT_TxAddr,DefaultCfg.TX_Addr,5);
     nRF24L01_Config(&DefaultCfg);
 
+    nRF24L01_Write_Reg(0x06,0x0f);  //7dBm发射功率
+
     nRF24L01_Write_Reg(CONFIG,0x0f);    //启动,进入standby模式    pwr置1 启动  
     nRF24L01_Rx_Mode();                 //进入监听模式
     return 0;
