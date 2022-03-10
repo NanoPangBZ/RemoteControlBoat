@@ -34,9 +34,12 @@ void EXTI9_5_IRQHandler(void)
     BaseType_t xHigherPriorityTaskWoken = pdFALSE;   //用于判断这个发出的信号量是否会引起其他高优先级的任务解除阻塞
     if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
     {
-        xSemaphoreGiveFromISR(nRF24_ISRFlag,&xHigherPriorityTaskWoken);
-        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);          //挂起中断
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);       //判断是否需要进行上下文切换(任务调度)
+        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);//挂起中断
+        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+        {
+            xSemaphoreGiveFromISR(nRF24_ISRFlag,&xHigherPriorityTaskWoken);          
+            portYIELD_FROM_ISR(xHigherPriorityTaskWoken);       //判断是否需要进行上下文切换(任务调度)
+        }
     }
 }
 
