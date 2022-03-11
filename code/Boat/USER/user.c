@@ -80,18 +80,22 @@ void ReplyMaster_Task(void*ptr)
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();
     uint8_t resualt;
+    uint8_t timeout = 0;
     while(1)
     {
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
         {
             //过长时间没有接收到主机信号
             //...
+            timeout++;
             OLED12864_Clear_Page(0);
             OLED12864_Show_String(0,0,"Signal Loss",1);
+            OLED12864_Show_Num(0,67,timeout,1);
             nRF24L01_Init();
             nRF24L01_Config(&nRF24_Cfg);
             nRF24L01_Rx_Mode();
         }
+        timeout = 0;
         OLED12864_Show_String(0,0,"Signal Right",1);
         //处理主机发送的数据
         //..

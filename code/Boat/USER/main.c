@@ -30,7 +30,7 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 //任务参数
 uint8_t oled_fre = 24;		//OLED刷新频率
 uint8_t nrf_maxDelay = 200;	//nrf最大等待接收时长
-uint8_t mpu_fre = 50;		//mpu更新频率
+uint8_t mpu_fre = 160;		//mpu更新频率
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;

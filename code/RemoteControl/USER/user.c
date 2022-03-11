@@ -175,6 +175,8 @@ void User_FeedBack_Task(void*ptr)
         {
             Vofa_Input(BoatGyroscope[temp],temp);
         }
+        if(Slave_AckCoount != 0)
+        Vofa_Input(Slave_AckCoount / (float)SendAck_Count ,3);
         Vofa_Send();
     }
 }
