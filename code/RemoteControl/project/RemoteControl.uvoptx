@@ -350,8 +350,8 @@
       <tvExp>0</tvExp>
       <tvExpOptDlg>0</tvExpOptDlg>
       <bDave2>0</bDave2>
-      <PathWithFileName>..\USER\SOFTWARE\remote.c</PathWithFileName>
-      <FilenameWithoutPath>remote.c</FilenameWithoutPath>
+      <PathWithFileName>..\USER\SOFTWARE\vofa_p.c</PathWithFileName>
+      <FilenameWithoutPath>vofa_p.c</FilenameWithoutPath>
       <RteFlg>0</RteFlg>
       <bShared>0</bShared>
     </File>

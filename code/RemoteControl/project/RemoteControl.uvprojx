@@ -454,9 +454,9 @@
           <GroupName>SOFTWARE</GroupName>
           <Files>
             <File>
-              <FileName>remote.c</FileName>
+              <FileName>vofa_p.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\USER\SOFTWARE\remote.c</FilePath>
+              <FilePath>..\USER\SOFTWARE\vofa_p.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -46,6 +46,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
 	);
+    #if 1
 	xTaskCreate(
 		User_FeedBack_Task,
 		"UFB task",
@@ -54,6 +55,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		12,
 		&User_FeedBack_TaskHandle
 	);
+    #endif
     vTaskDelete(NULL);
 }
 
@@ -115,8 +117,7 @@ void RemoteControl_Task(void*ptr)
             }else
             {
                 //处理从机软件回复
-                MemCopy(sbuffer,BoatGyroscope,12);
-                
+                MemCopy((uint8_t*)sbuffer,(uint8_t*)BoatGyroscope,12);
                 Slave_AckCoount++;
             }
         }else
@@ -153,8 +154,10 @@ void nRF24L01_Intterrupt_Task(void*ptr)
  *******************************************************************/
 void User_FeedBack_Task(void*ptr)
 {
+    TickType_t time = xTaskGetTickCount();
     while(1)
     {
+        #if 0
         printf("******************FeedBack***********************\r\n");
         printf("%s surplusStack:%d\r\n",pcTaskGetName(RemoteControl_TaskHandle),uxTaskGetStackHighWaterMark(RemoteControl_TaskHandle));
         printf("%s surplusStack:%d\r\n",pcTaskGetName(nRF24L01_Intterrupt_TaskHandle),uxTaskGetStackHighWaterMark(nRF24L01_Intterrupt_TaskHandle));
@@ -165,6 +168,14 @@ void User_FeedBack_Task(void*ptr)
         printf("Slave_AckCoount:%d\r\n",Slave_AckCoount);
         printf("Slave_NoAckCount:%d\r\n",Slave_NoAckCount);
         vTaskDelay(1000/portTICK_RATE_MS);
+        #endif
+        //vTaskDelay(20/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&time,10/portTICK_PERIOD_MS);
+        for(uint8_t temp=0;temp<3;temp++)
+        {
+            Vofa_Input(BoatGyroscope[temp],temp);
+        }
+        Vofa_Send();
     }
 }
 

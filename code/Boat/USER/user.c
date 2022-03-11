@@ -79,6 +79,7 @@ void ReplyMaster_Task(void*ptr)
 {
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();
+    uint8_t resualt;
     while(1)
     {
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
@@ -97,16 +98,7 @@ void ReplyMaster_Task(void*ptr)
         //反馈回主机
         MemCopy((uint8_t*)Gyrocope,sbuf,12);
         nRF24L01_Send(sbuf,32);
-        while(xQueueReceive(nRF24_SendResult,sbuf,MaxWait) == pdFALSE)
-        {
-            //nrf发送失败,硬件检查
-            while(nRF24L01_Check())
-            {
-                vTaskDelay(500/portTICK_RATE_MS);
-            }
-            nRF24L01_Config(&nRF24_Cfg);
-            nRF24L01_Send(sbuf,32);
-        }
+        xQueueReceive(nRF24_SendResult,&resualt,MaxWait);
         LED_CTR(0,LED_Reserval);
     }
 }
