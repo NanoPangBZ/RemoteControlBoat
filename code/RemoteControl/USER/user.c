@@ -15,6 +15,7 @@ extern SemaphoreHandle_t nRF24_RecieveFlag;
 extern QueueHandle_t     nRF24_SendResult;
 
 //全局变量
+float BoatGyroscope[3];
 uint16_t SendCount = 0;
 uint16_t SendAck_Count = 0;
 uint16_t SendNoAck_Count = 0;
@@ -32,7 +33,7 @@ void RTOS_CreatTask_Task(void*ptr)
     xTaskCreate(
 		RemoteControl_Task,
 		"RC task",
-		144,
+		256,
 		(void*)&SendFre,
 		12,
 		&RemoteControl_TaskHandle
@@ -66,7 +67,7 @@ void RTOS_CreatTask_Task(void*ptr)
 void RemoteControl_Task(void*ptr)
 {
     uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;    //通讯频率计算
-    uint8_t sbuffer[32];
+    uint8_t*sbuffer = nRF24L01_Get_RxBufAddr();
     uint8_t temp;
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
@@ -114,6 +115,8 @@ void RemoteControl_Task(void*ptr)
             }else
             {
                 //处理从机软件回复
+                MemCopy(sbuffer,BoatGyroscope,12);
+                
                 Slave_AckCoount++;
             }
         }else

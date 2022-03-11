@@ -8,11 +8,13 @@ extern nRF24L01_Cfg nRF24_Cfg;
 //任务参数
 extern uint8_t oled_fre;		//OLED刷新频率
 extern uint8_t nrf_maxDelay;	//nrf最大等待接收时长
+extern uint8_t mpu_fre;         //mpu姿态更新频率
 
 //任务句柄
 extern TaskHandle_t ReplyMaster_TaskHandle;
 extern TaskHandle_t OLED_TaskHandle;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
+extern TaskHandle_t MPU_TaskHandle;
 
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;
@@ -43,11 +45,20 @@ void RTOSCreateTask_Task(void*ptr)
     );
 
     xTaskCreate(
+        MPU_Task,
+        "mpu",
+        512,
+        (void*)&mpu_fre,
+        11,
+        &MPU_TaskHandle
+    );
+
+    xTaskCreate(
         OLED_Task,
         "oled",
-        64,
+        128,
         (void*)&oled_fre,
-        11,
+        10,
         &OLED_TaskHandle
     );
 
@@ -67,22 +78,24 @@ void RTOSCreateTask_Task(void*ptr)
 void ReplyMaster_Task(void*ptr)
 {
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;
-    uint8_t sbuf[32];
+    uint8_t*sbuf = nRF24L01_Get_RxBufAddr();
     while(1)
     {
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
         {
             //过长时间没有接收到主机信号
             //...
-            OLED12864_Clear_Page(1);
-            OLED12864_Show_String(1,0,"Signal Loss",1);
+            OLED12864_Clear_Page(0);
+            OLED12864_Show_String(0,0,"Signal Loss",1);
+            nRF24L01_Init();
             nRF24L01_Config(&nRF24_Cfg);
             nRF24L01_Rx_Mode();
         }
-        OLED12864_Show_String(1,0,"Signal Right",1);
+        OLED12864_Show_String(0,0,"Signal Right",1);
         //处理主机发送的数据
-        nRF24L01_Read_RxSbuffer(sbuf,32);
+        //..
         //反馈回主机
+        MemCopy((uint8_t*)Gyrocope,sbuf,12);
         nRF24L01_Send(sbuf,32);
         while(xQueueReceive(nRF24_SendResult,sbuf,MaxWait) == pdFALSE)
         {
@@ -123,13 +136,20 @@ void OLED_Task(void*ptr)
 }
 
 //姿态更新
-void Gyroscope_Task(void*ptr)
+void MPU_Task(void*ptr)
 {
     uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;
     TickType_t  time = xTaskGetTickCount();
+    uint8_t sbuf[32];
     while(1)
     {
         mpu_dmp_get_data(&Gyrocope[0],&Gyrocope[1],&Gyrocope[2]);
+        for(uint8_t temp=0;temp<3;temp++)
+        {
+            OLED12864_Clear_Page(1+temp);
+            sprintf((char*)sbuf,"%.1f",Gyrocope[temp]);
+            OLED12864_Show_String(1+temp,0,sbuf,1);
+        }
         vTaskDelayUntil(&time,Cycle);
     }
 }

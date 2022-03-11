@@ -30,12 +30,14 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 //任务参数
 uint8_t oled_fre = 24;		//OLED刷新频率
 uint8_t nrf_maxDelay = 200;	//nrf最大等待接收时长
+uint8_t mpu_fre = 25;		//mpu更新频率
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
 TaskHandle_t	ReplyMaster_TaskHandle = NULL;
 TaskHandle_t	OLED_TaskHandle = NULL;
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
+TaskHandle_t	MPU_TaskHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志

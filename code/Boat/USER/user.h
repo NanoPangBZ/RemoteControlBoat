@@ -15,7 +15,7 @@
 #include "queue.h"
 
 void RTOSCreateTask_Task(void*ptr);
-void Gyroscope_Task(void*ptr);
+void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
 void nRF24L01_Intterrupt_Task(void*ptr);
 void OLED_Task(void*ptr);
