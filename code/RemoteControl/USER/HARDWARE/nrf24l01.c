@@ -311,6 +311,10 @@ uint8_t nRF24L01_Config(nRF24L01_Cfg*Cfg)
 
     CE_LOW;
 
+    nRF24L01_Write_Reg(STATUS,0xE0);    //清除nrf24所有中断
+    nRF24L01_Send_Cmd(FLUSH_RX);
+    nRF24L01_Send_Cmd(FLUSH_TX);
+
     //配置自动重发  SETUP_RETR
     nRF24L01_Write_Reg(SETUP_RETR,(CurrentCfg.retry_cycle<<4) | CurrentCfg.retry );
     //配置频道      RF_CH

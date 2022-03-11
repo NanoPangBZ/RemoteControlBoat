@@ -74,7 +74,12 @@ void ReplyMaster_Task(void*ptr)
         {
             //过长时间没有接收到主机信号
             //...
+            OLED12864_Clear_Page(1);
+            OLED12864_Show_String(1,0,"Signal Loss",1);
+            nRF24L01_Config(&nRF24_Cfg);
+            nRF24L01_Rx_Mode();
         }
+        OLED12864_Show_String(1,0,"Signal Right",1);
         //处理主机发送的数据
         nRF24L01_Read_RxSbuffer(sbuf,32);
         //反馈回主机

@@ -12,13 +12,13 @@
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\FWLIB\\src",
-                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\BSP",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\MPU6050",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\MPU6050\\eMPL",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\NRF24",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\OLED",
-                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\SOFTWARE"
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\SOFTWARE",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS"
             ],
             "defines": [
                 "USE_STDPERIPH_DRIVER",
