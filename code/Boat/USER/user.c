@@ -78,31 +78,46 @@ void RTOSCreateTask_Task(void*ptr)
 void ReplyMaster_Task(void*ptr)
 {
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;
-    uint8_t*sbuf = nRF24L01_Get_RxBufAddr();
-    uint8_t resualt;
-    uint8_t timeout = 0;
+    uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
+    uint8_t resualt;        //发射结果接收
+    uint8_t timeout = 0;    //信号丢失计数
+    uint8_t signal = 1;     //信号丢失标志             
     while(1)
     {
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
         {
             //过长时间没有接收到主机信号
+            //紧急停止代码
             //...
+            //使用oled反馈情况,统计信号丢失情况
+            if(signal == 0)
+            {
+                timeout = 0;
+                signal = 1;
+                OLED12864_Clear_Page(0);
+                OLED12864_Show_String(0,0,"Signal Loss",1);
+            }
             timeout++;
-            OLED12864_Clear_Page(0);
-            OLED12864_Show_String(0,0,"Signal Loss",1);
             OLED12864_Show_Num(0,67,timeout,1);
-            nRF24L01_Init();
-            nRF24L01_Config(&nRF24_Cfg);
-            nRF24L01_Rx_Mode();
+            //有可能是本机nrf挂了,重启nrf
+            taskENTER_CRITICAL();
+            nRF24L01_Restart();
+            taskEXIT_CRITICAL();
+
         }
-        timeout = 0;
-        OLED12864_Show_String(0,0,"Signal Right",1);
+        //是否需要更新oled显示的连接情况
+        if(signal == 1)
+        {
+            signal = 0;
+            OLED12864_Clear_Page(0);
+            OLED12864_Show_String(0,0,"Signal Right",1);
+        }
         //处理主机发送的数据
         //..
         //反馈回主机
         MemCopy((uint8_t*)Gyrocope,sbuf,12);
         nRF24L01_Send(sbuf,32);
-        xQueueReceive(nRF24_SendResult,&resualt,MaxWait);
+        xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待发送结果
         LED_CTR(0,LED_Reserval);
     }
 }
@@ -137,13 +152,18 @@ void MPU_Task(void*ptr)
     uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;
     TickType_t  time = xTaskGetTickCount();
     uint8_t sbuf[32];
+    float fsbuf[3];
     while(1)
     {
-        mpu_dmp_get_data(&Gyrocope[0],&Gyrocope[1],&Gyrocope[2]);
+        mpu_dmp_get_data(&fsbuf[0],&fsbuf[1],&fsbuf[2]);
+        //进入临界区,防止拷贝未完成时Gyrocope被访问
+        taskENTER_CRITICAL();
+        MemCopy((uint8_t*)fsbuf,(uint8_t*)Gyrocope,12);
+        taskEXIT_CRITICAL();
         for(uint8_t temp=0;temp<3;temp++)
         {
             OLED12864_Clear_Page(1+temp);
-            sprintf((char*)sbuf,"%.1f",Gyrocope[temp]);
+            sprintf((char*)sbuf,"%.1f",fsbuf[temp]);
             OLED12864_Show_String(1+temp,0,sbuf,1);
         }
         vTaskDelayUntil(&time,Cycle);

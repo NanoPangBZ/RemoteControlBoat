@@ -3,6 +3,7 @@
 
 #include "BSP\bsp_led.h"
 #include "BSP\bsp_usart.h"
+#include "BSP\bsp_timer.h"
 
 #include "HARDWARE\OLED\oled12864.h"
 #include "HARDWARE\NRF24\nrf24l01.h"

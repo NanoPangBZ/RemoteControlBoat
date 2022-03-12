@@ -23,10 +23,12 @@ typedef struct
     GPIO_TypeDef*GPIO;      //所属的GPIO端口
 }Pin;
 
-void Pin_Set(Pin pin);
-void Pin_Reset(Pin pin);
+//以下宏的pin应当为Pin结构体
+#define Pin_Set(pin)    pin.GPIO->ODR |= pin.Pin
+#define Pin_Reset(pin)  pin.GPIO->ODR &= ~pin.Pin
+#define Pin_Read(pin)   (pin.GPIO->IDR & pin.Pin)?1:0
+
 void Pin_Reversal(Pin pin);
-uint8_t Pin_Read(Pin pin);
 void soft_delay_ms(uint16_t ms);
 void soft_delay_us(uint16_t us);
 void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len);

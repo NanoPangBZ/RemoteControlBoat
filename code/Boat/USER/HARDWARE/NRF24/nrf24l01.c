@@ -89,6 +89,22 @@ void nrf_support_init(void)
     }
 }
 
+//自定义函数 - 重启nrf
+void nRF24L01_Restart(void)
+{
+    __NVIC_DisableIRQ(NRF24L01_IQR_Channel);    //关闭对应外部中断
+    EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
+    CS_LOW;
+    CE_LOW;
+    NRF24L01_SPIx->CR1 &= ~(uint16_t)(1<<6);    // 失能nrf
+    nrf_support_init();     //重新初始化
+
+    nRF24L01_Config(&CurrentCfg);
+    nRF24L01_Write_Reg(0x06,0x0f);  //7dBm发射功率
+    nRF24L01_Write_Reg(CONFIG,0x0f);    //启动,进入standby模式    pwr置1 启动  
+    nRF24L01_Rx_Mode();                 //进入监听模式
+}
+
 /***************************************以下代码移植无需更改!***********************************************/
 
 /*******************************************************************
