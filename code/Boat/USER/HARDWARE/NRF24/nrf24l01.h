@@ -70,14 +70,6 @@
 #define NRF24L01_MISO   3
 #define NRF24L01_SCK    4
 
-static const Pin nRF24L01_PIN[5] = {
-    {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
-    {NRF24L01_CSN_PIN,NRF24L01_CSN_GPIO},
-    {NRF24L01_MOSI_PIN,NRF24L01_MOSI_GPIO},
-    {NRF24L01_MISO_PIN,NRF24L01_MISO_GPIO},
-    {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
-};
-
 /*************************************功能配置宏************************************************/
 
 //相关配置
@@ -92,13 +84,6 @@ static const Pin nRF24L01_PIN[5] = {
 #define NRF24_BUF_MAXLEN    64  //缓存区长度,NRF24_USE_BUF_LEN!=0 时才有用
 #define NRF24_USE_BUF_LEN   0   //非0:缓存区第一字节用于表示缓存区长度,使能这个宏可以缓存nrf24的多次接收
 #define NRF24_USE_SBUFFER   1   //非0:接收中断时将RxFIFO的值载入内部缓存nRF24L01_Sbuffer中,若NRF24_USE_BUF_LEN=0则会覆盖上次接收!
-
-#if NRF24_USE_BUF_LEN
-//缓存区第一字节表示缓存区当前长度
-static uint8_t nRF24L01_Sbuffer[NRF24_BUF_MAXLEN+1] = {0};
-#elif NRF24_USE_SBUFFER
-static uint8_t nRF24L01_Sbuffer[32] = {0};
-#endif
 
 typedef struct
 {

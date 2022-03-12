@@ -4,6 +4,15 @@
 
 #include "BSP\bsp_spi.h"
 
+/**********************************自定义静态变量**********************************************/
+static const Pin nRF24L01_PIN[5] = {
+    {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
+    {NRF24L01_CSN_PIN,NRF24L01_CSN_GPIO},
+    {NRF24L01_MOSI_PIN,NRF24L01_MOSI_GPIO},
+    {NRF24L01_MISO_PIN,NRF24L01_MISO_GPIO},
+    {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
+};
+
 /**********************************移植接口**********************************************/
 #define CE_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CE])
 #define CE_HIGH Pin_Set(nRF24L01_PIN[NRF24L01_CE])
@@ -106,6 +115,13 @@ void nRF24L01_Restart(void)
 }
 
 /***************************************以下代码移植无需更改!***********************************************/
+
+#if NRF24_USE_BUF_LEN
+//缓存区第一字节表示缓存区当前长度
+static uint8_t nRF24L01_Sbuffer[NRF24_BUF_MAXLEN+1] = {0};
+#elif NRF24_USE_SBUFFER
+static uint8_t nRF24L01_Sbuffer[32] = {0};
+#endif
 
 /*******************************************************************
  * 功能:初始化nRF24L01,并且进入RxMode模式

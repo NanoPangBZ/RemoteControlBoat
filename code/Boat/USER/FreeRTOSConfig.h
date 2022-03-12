@@ -52,7 +52,8 @@
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
-//#define configSUPPORT_DYNAMIC_ALLOCATION   1
+#define configSUPPORT_DYNAMIC_ALLOCATION   1    //使能动态分配
+#define configUSE_MUTEXES           1   //使用互斥信号量
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0
@@ -69,8 +70,8 @@ to exclude the API function. */
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay				1
 
-#define INCLUDE_xTaskGetSchedulerState      1
-#define INCLUDE_xTaskGetCurrentTaskHandle   1
+#define INCLUDE_xTaskGetSchedulerState      1   //开启查看调度器运行状态API函数
+#define INCLUDE_xTaskGetCurrentTaskHandle   1   //开启获取当前任务句柄API函数
 
 /* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
 (lowest) to 0 (1?) (highest). */
@@ -86,6 +87,7 @@ configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
 NVIC value of 255. */
 #define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	15
 
+//移植接口
 #define xPortPendSVHandler 	PendSV_Handler
 #define vPortSVCHandler 	SVC_Handler
 

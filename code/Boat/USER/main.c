@@ -1,19 +1,6 @@
 #include "self_stm32f10x.h"
 
-#include "BSP\bsp_spi.h"
-#include "BSP\bsp_pwm.h"
-#include "BSP\bsp_led.h"
-#include "BSP\bsp_usart.h"
-#include "BSP\bsp_timer.h"
-
-#include "HARDWARE\MPU6050\mpu6050.h"
-#include "HARDWARE\MPU6050\eMPL\inv_mpu.h"
-#include "HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.h"
-#include "HARDWARE\NRF24\nrf24l01.h"
-#include "HARDWARE\OLED\oled12864.h"
-
 #include "user.h"
-#include "SOFTWARE\vofa_p.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
@@ -38,12 +25,14 @@ TaskHandle_t	ReplyMaster_TaskHandle = NULL;
 TaskHandle_t	OLED_TaskHandle = NULL;
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t	MPU_TaskHandle = NULL;
+TaskHandle_t	KeyInput_TaskHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 SemaphoreHandle_t	USART_RecieveFlag = NULL;	//串口有未处理数据标志
+SemaphoreHandle_t	mpuDat_occFlag = NULL;		//mpu数据占用标志(互斥信号量)
 
 int main(void)
 {
@@ -58,6 +47,7 @@ int main(void)
 	BSP_LED_Init();
 	BSP_Usart_Init();
 	BSP_Timer_Init();
+	BSP_Key_Init();
 
 	//OLED初始化
 	OLED12864_Init();

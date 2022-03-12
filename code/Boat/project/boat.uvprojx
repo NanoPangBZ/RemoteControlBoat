@@ -493,6 +493,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\BSP\bsp_timer.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_key.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

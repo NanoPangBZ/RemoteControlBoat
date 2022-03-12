@@ -17,16 +17,14 @@ extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
 extern TaskHandle_t MPU_TaskHandle;
 
 //队列 信号
-extern SemaphoreHandle_t nRF24_ISRFlag;
-extern SemaphoreHandle_t nRF24_RecieveFlag;
-extern QueueHandle_t     nRF24_SendResult;
-extern SemaphoreHandle_t USART_RecieveFlag;
+extern SemaphoreHandle_t nRF24_ISRFlag;         //nRF外部中断标志
+extern SemaphoreHandle_t nRF24_RecieveFlag;     //nRF接收中断标志
+extern QueueHandle_t     nRF24_SendResult;      //nRF发送结果队列(长度1)
+extern SemaphoreHandle_t USART_RecieveFlag;     //串口有未处理数据标志位
+extern SemaphoreHandle_t mpuDat_occFlag;		//mpu数据占用标志(互斥信号量)
 
 //全局变量
-float Gyrocope[3] = {0,0,0};    //姿态
-
-//使用串口打印消息(带当前任务的名字,方便调试)
-#define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
+float mpu_data[3] = {0,0,0};    //姿态
 
 void RTOSCreateTask_Task(void*ptr)
 {
@@ -34,13 +32,14 @@ void RTOSCreateTask_Task(void*ptr)
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();
 	nRF24_SendResult = xQueueCreate(1,1);
     USART_RecieveFlag = xSemaphoreCreateBinary();
+    mpuDat_occFlag = xSemaphoreCreateMutex();
 
     xTaskCreate(
         ReplyMaster_Task,
         "Reply",
         144,
         (void*)&nrf_maxDelay,
-        12,
+        11,
         &ReplyMaster_TaskHandle
     );
 
@@ -49,7 +48,7 @@ void RTOSCreateTask_Task(void*ptr)
         "mpu",
         512,
         (void*)&mpu_fre,
-        11,
+        10,
         &MPU_TaskHandle
     );
 
@@ -58,7 +57,7 @@ void RTOSCreateTask_Task(void*ptr)
         "oled",
         128,
         (void*)&oled_fre,
-        10,
+        9,
         &OLED_TaskHandle
     );
 
@@ -67,7 +66,7 @@ void RTOSCreateTask_Task(void*ptr)
         "nrf interrupt",
         64,
         NULL,
-        15,
+        14,
         &nRF24L01_Intterrupt_TaskHandle
     );
 
@@ -81,7 +80,7 @@ void ReplyMaster_Task(void*ptr)
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
     uint8_t resualt;        //发射结果接收
     uint8_t timeout = 0;    //信号丢失计数
-    uint8_t signal = 1;     //信号丢失标志             
+    uint8_t signal = 1;     //信号丢失标志
     while(1)
     {
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
@@ -114,8 +113,12 @@ void ReplyMaster_Task(void*ptr)
         }
         //处理主机发送的数据
         //..
-        //反馈回主机
-        MemCopy((uint8_t*)Gyrocope,sbuf,12);
+        //回复主机
+        if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
+        {
+            MemCopy((uint8_t*)mpu_data,sbuf,12);
+            xSemaphoreGive(mpuDat_occFlag);     //释放资源
+        }
         nRF24L01_Send(sbuf,32);
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待发送结果
         LED_CTR(0,LED_Reserval);
@@ -155,11 +158,16 @@ void MPU_Task(void*ptr)
     float fsbuf[3];
     while(1)
     {
+        //进入临界区,防止软件iic时序错误
+        //taskENTER_CRITICAL();
         mpu_dmp_get_data(&fsbuf[0],&fsbuf[1],&fsbuf[2]);
-        //进入临界区,防止拷贝未完成时Gyrocope被访问
-        taskENTER_CRITICAL();
-        MemCopy((uint8_t*)fsbuf,(uint8_t*)Gyrocope,12);
-        taskEXIT_CRITICAL();
+        //taskEXIT_CRITICAL();
+        //更新陀螺仪数据
+        if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
+        {
+            MemCopy((uint8_t*)fsbuf,(uint8_t*)mpu_data,12);
+            xSemaphoreGive(mpuDat_occFlag); //释放资源
+        }
         for(uint8_t temp=0;temp<3;temp++)
         {
             OLED12864_Clear_Page(1+temp);
@@ -170,10 +178,12 @@ void MPU_Task(void*ptr)
     }
 }
 
-void User_FeedBack_Task(void*ptr)
+void KeyInput_Task(void*ptr)
 {
+    TickType_t time = xTaskGetTickCount();
+    uint8_t key = 0x00;
     while(1)
     {
-        //printf("");
+        vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);
     }
 }
