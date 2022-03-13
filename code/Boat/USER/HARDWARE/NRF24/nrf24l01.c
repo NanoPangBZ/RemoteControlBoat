@@ -106,6 +106,9 @@ void nRF24L01_Restart(void)
     CS_LOW;
     CE_LOW;
     NRF24L01_SPIx->CR1 &= ~(uint16_t)(1<<6);    // 失能nrf
+    for(uint8_t temp=0;temp<5;temp++)
+        Pin_Reset(nRF24L01_PIN[temp]);
+
     nrf_support_init();     //重新初始化
 
     nRF24L01_Config(&CurrentCfg);

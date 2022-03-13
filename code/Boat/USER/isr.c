@@ -82,7 +82,7 @@ void DMA1_Channel4_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC4) == SET)
     {
         Tx_Flag_Clear(1);
-        TargetDMA_Channel[0]->CCR &= (uint16_t)(~DMA_CCR1_EN);
+        DMA1_Channel4->CCR &= (uint16_t)(~DMA_CCR1_EN);
         DMA_ClearITPendingBit(DMA1_IT_TC4);
     }
 }
@@ -92,7 +92,7 @@ void DMA1_Channel3_IRQHandler(void)
     if(DMA_GetITStatus(DMA1_IT_TC3) == SET)
     {
         Tx_Flag_Clear(2);
-        TargetDMA_Channel[1]->CCR &= (uint16_t)(~DMA_CCR1_EN);
+        DMA1_Channel3->CCR &= (uint16_t)(~DMA_CCR1_EN);
         DMA_ClearITPendingBit(DMA1_IT_TC3);
     }
 }

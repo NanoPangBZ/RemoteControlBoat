@@ -1,6 +1,22 @@
 #include "oled12864.h"
 #include "font_lib.h"
 
+/************************************************
+ * OLED12864缓存
+ * [paeg][x]
+ * 一个元素保函8像素点信息
+ * 在屏幕上,Bit0~Bit7自上向下排列 高位在下
+************************************************/
+static uint8_t OLED12864_Sbuffer[8][128];
+//OLED_初始化指令
+static const uint8_t OLED12864_InitCmd[28] = {
+    0xae,0x00,0x10,0x40,0x81,0xcf,
+    0xa1,0xc8,0xa6,0xa8,0x3f,0xd3,
+    0x00,0xd5,0x80,0xd9,0xf1,0xda,
+    0x12,0xdb,0x40,0x20,0x02,0x8d,
+    0x14,0xa4,0xa6,0xaf
+};
+
 static void spi_init(void);
 
 void OLED12864_Init(void)

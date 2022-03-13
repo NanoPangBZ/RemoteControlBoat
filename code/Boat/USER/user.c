@@ -15,6 +15,7 @@ extern TaskHandle_t ReplyMaster_TaskHandle;
 extern TaskHandle_t OLED_TaskHandle;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
 extern TaskHandle_t MPU_TaskHandle;
+extern TaskHandle_t KeyInput_TaskHandle;
 
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;         //nRF外部中断标志
@@ -25,6 +26,7 @@ extern SemaphoreHandle_t mpuDat_occFlag;		//mpu数据占用标志(互斥信号�
 
 //全局变量
 float mpu_data[3] = {0,0,0};    //姿态
+uint8_t oled_page = 0;          //表示当前oled应该显示的页面
 
 void RTOSCreateTask_Task(void*ptr)
 {
@@ -37,7 +39,7 @@ void RTOSCreateTask_Task(void*ptr)
     xTaskCreate(
         ReplyMaster_Task,
         "Reply",
-        144,
+        256,
         (void*)&nrf_maxDelay,
         11,
         &ReplyMaster_TaskHandle
@@ -55,7 +57,7 @@ void RTOSCreateTask_Task(void*ptr)
     xTaskCreate(
         OLED_Task,
         "oled",
-        128,
+        256,
         (void*)&oled_fre,
         9,
         &OLED_TaskHandle
@@ -70,13 +72,22 @@ void RTOSCreateTask_Task(void*ptr)
         &nRF24L01_Intterrupt_TaskHandle
     );
 
+    xTaskCreate(
+        KeyInput_Task,
+        "key",
+        64,
+        NULL,
+        9,
+        &KeyInput_TaskHandle
+    );
+
     vTaskDelete(NULL);
 }
 
 //回复主机
 void ReplyMaster_Task(void*ptr)
 {
-    uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;
+    uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //频率换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
     uint8_t resualt;        //发射结果接收
     uint8_t timeout = 0;    //信号丢失计数
@@ -138,7 +149,7 @@ void nRF24L01_Intterrupt_Task(void*ptr)
 //屏幕刷新
 void OLED_Task(void*ptr)
 {
-    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;
+    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;     //频率换算成心跳周期
     TickType_t  time = xTaskGetTickCount();
     while(1)
     {
@@ -152,7 +163,7 @@ void OLED_Task(void*ptr)
 //姿态更新
 void MPU_Task(void*ptr)
 {
-    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;
+    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS; //频率换算成心跳周期
     TickType_t  time = xTaskGetTickCount();
     uint8_t sbuf[32];
     float fsbuf[3];
@@ -181,9 +192,19 @@ void MPU_Task(void*ptr)
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
-    uint8_t key = 0x00;
+    static uint8_t oled_status = 1;
     while(1)
     {
+        if(Key_Read(0) == Key_Press)
+        {
+            vTaskSuspend(OLED_TaskHandle);
+            OLED12864_Clear();
+            OLED12864_Refresh();
+        }
+        if(Key_Read(1) == Key_Press)
+        {
+            vTaskResume(OLED_TaskHandle);
+        }
         vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);
     }
 }

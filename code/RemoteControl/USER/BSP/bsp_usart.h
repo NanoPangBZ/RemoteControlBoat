@@ -22,16 +22,6 @@
 #define Rx_SbufferSize  32
 #define Tx_SbufferSize  64
 
-//每行第一个元素表示该缓存区存放的数据个数
-static uint8_t USART_Rx_Sbuffer[2][Rx_SbufferSize + 1] = {{0},{0}};
-static uint8_t USART_Tx_Sbuffer[2][Tx_SbufferSize + 1] = {{0},{0}};
-//获取缓存区数据长度    只能在bsp_usart文件内使用! 缓存区对外不可见!
-#define Tx_Len(USARTx)  USART_Tx_Sbuffer[USARTx-1][0]
-#define Rx_Len(USARTx)  USART_Rx_Sbuffer[USARTx-1][0]
-
-static USART_TypeDef* Target_Usart[2] = {USART1,USART2};
-static DMA_Channel_TypeDef* TargetDMA_Channel[2] = {DMA1_Channel4,DMA1_Channel7};
-
 //初始化
 void BSP_Usart_Init(void);
 void USART_GPIO_Init(void);

@@ -2,9 +2,9 @@
 
 static const Pin KEY_Pin[4] = {
     {GPIO_Pin_2,GPIOE},
+    {GPIO_Pin_5,GPIOE},
     {GPIO_Pin_3,GPIOE},
-    {GPIO_Pin_4,GPIOE},
-    {GPIO_Pin_5,GPIOE}
+    {GPIO_Pin_4,GPIOE}
 };
 
 void BSP_Key_Init(void)
@@ -21,5 +21,8 @@ void BSP_Key_Init(void)
 
 uint8_t Key_Read(uint8_t key)
 {
-    return Pin_Read(KEY_Pin[key]) ? Key_Press : Key_Release;
+    if(Pin_Read(KEY_Pin[key]))
+        return 0;
+    else
+        return 1;
 }
