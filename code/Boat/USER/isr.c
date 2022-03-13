@@ -12,6 +12,8 @@
 #include "semphr.h"
 #include "queue.h"
 
+//任务句柄
+extern TaskHandle_t     nRF24L01_Intterrupt_TaskHandle;
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;
 extern SemaphoreHandle_t nRF24_RecieveFlag;
@@ -31,15 +33,21 @@ void SysTick_Handler(void)
 
 void EXTI9_5_IRQHandler(void)
 {
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;   //用于判断这个发出的信号量是否会引起其他高优先级的任务解除阻塞
+    static BaseType_t xHigherPriorityTaskWoken = pdFALSE;   //用于判断这个发出的信号量是否会引起其他高优先级的任务解除阻塞
     if(EXTI_GetITStatus(NRF24L01_IQR_Line) == SET)
     {
-        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);//挂起中断
-        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+        if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED && nRF24L01_Intterrupt_TaskHandle != NULL)
         {
-            xSemaphoreGiveFromISR(nRF24_ISRFlag,&xHigherPriorityTaskWoken);          
+            xSemaphoreGiveFromISR(nRF24_ISRFlag,&xHigherPriorityTaskWoken); 
+            LED_CTR(0,LED_Reserval);    
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);       //判断是否需要进行上下文切换(任务调度)
+        }else
+        {
+            nRF24L01_Write_Reg(0x07,0xE0);
+            nRF24L01_Send_Cmd(0xE1);
+            nRF24L01_Send_Cmd(0xE2);
         }
+        EXTI_ClearITPendingBit(NRF24L01_IQR_Line);//挂起中断
     }
 }
 

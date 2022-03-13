@@ -101,6 +101,7 @@ static nRF24L01_Cfg CurrentCfg;     //当前nRF24L01的配置
 
 //自定义函数
 void nRF24L01_Restart(void);    //重启
+void nrf_support_disable(void);
 
 //底层函数
 

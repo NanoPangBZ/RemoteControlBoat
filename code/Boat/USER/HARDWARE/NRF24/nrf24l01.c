@@ -98,21 +98,30 @@ void nrf_support_init(void)
     }
 }
 
-//自定义函数 - 重启nrf
-void nRF24L01_Restart(void)
+void nrf_support_disable(void)
 {
     __NVIC_DisableIRQ(NRF24L01_IQR_Channel);    //关闭对应外部中断
     EXTI_ClearITPendingBit(NRF24L01_IQR_Line);  //挂起中断
     CS_LOW;
     CE_LOW;
-    NRF24L01_SPIx->CR1 &= ~(uint16_t)(1<<6);    // 失能nrf
+    NRF24L01_SPIx->CR1 &= ~(uint16_t)(1<<6);    // 失能spi
     for(uint8_t temp=0;temp<5;temp++)
         Pin_Reset(nRF24L01_PIN[temp]);
+    soft_delay_us(500);
+}
 
+//自定义函数 - 重启nrf - 用于nrf热插拔
+void nRF24L01_Restart(void)
+{
+    nrf_support_disable();  //关闭支持外设
     nrf_support_init();     //重新初始化
 
-    nRF24L01_Config(&CurrentCfg);
+    nRF24L01_Write_Reg(CONFIG,0xf0);    //关闭电源,屏蔽中断
+    nRF24L01_Config(&CurrentCfg);   //重新配置nrf
     nRF24L01_Write_Reg(0x06,0x0f);  //7dBm发射功率
+    nRF24L01_Send_Cmd(FLUSH_RX);
+    nRF24L01_Send_Cmd(FLUSH_TX);
+    nRF24L01_Write_Reg(STATUS,0xE0);    //清除nrf24所有中断
     nRF24L01_Write_Reg(CONFIG,0x0f);    //启动,进入standby模式    pwr置1 启动  
     nRF24L01_Rx_Mode();                 //进入监听模式
 }

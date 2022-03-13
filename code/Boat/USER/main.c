@@ -16,7 +16,7 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t oled_fre = 24;				//OLED刷新频率
-uint8_t nrf_maxDelay = 200;			//nrf最大等待接收时长
+uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
 
 //任务句柄
@@ -33,6 +33,7 @@ SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进�
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 SemaphoreHandle_t	USART_RecieveFlag = NULL;	//串口有未处理数据标志
 SemaphoreHandle_t	mpuDat_occFlag = NULL;		//mpu数据占用标志(互斥信号量)
+SemaphoreHandle_t	usartTx_occFlag = NULL;		//串口发送占用标志(互斥信号量)
 
 int main(void)
 {

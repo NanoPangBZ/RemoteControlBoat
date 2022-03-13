@@ -28,6 +28,7 @@ extern SemaphoreHandle_t mpuDat_occFlag;		//mpu数据占用标志(互斥信号�
 float mpu_data[3] = {0,0,0};    //姿态
 uint8_t oled_page = 0;          //表示当前oled应该显示的页面
 
+
 void RTOSCreateTask_Task(void*ptr)
 {
     nRF24_ISRFlag = xSemaphoreCreateBinary();
@@ -57,7 +58,7 @@ void RTOSCreateTask_Task(void*ptr)
     xTaskCreate(
         OLED_Task,
         "oled",
-        256,
+        128,
         (void*)&oled_fre,
         9,
         &OLED_TaskHandle
@@ -66,7 +67,7 @@ void RTOSCreateTask_Task(void*ptr)
     xTaskCreate(
         nRF24L01_Intterrupt_Task,
         "nrf interrupt",
-        64,
+        128,
         NULL,
         14,
         &nRF24L01_Intterrupt_TaskHandle
@@ -87,10 +88,10 @@ void RTOSCreateTask_Task(void*ptr)
 //回复主机
 void ReplyMaster_Task(void*ptr)
 {
-    uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //频率换算成心跳周期
+    uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
     uint8_t resualt;        //发射结果接收
-    uint8_t timeout = 0;    //信号丢失计数
+    uint16_t timeout = 0;   //信号丢失计数
     uint8_t signal = 1;     //信号丢失标志
     while(1)
     {
@@ -108,19 +109,18 @@ void ReplyMaster_Task(void*ptr)
                 OLED12864_Show_String(0,0,"Signal Loss",1);
             }
             timeout++;
-            OLED12864_Show_Num(0,67,timeout,1);
+            OLED12864_Show_Num(0,86,timeout/5,1);
             //有可能是本机nrf挂了,重启nrf
             taskENTER_CRITICAL();
             nRF24L01_Restart();
             taskEXIT_CRITICAL();
-
         }
         //是否需要更新oled显示的连接情况
         if(signal == 1)
         {
             signal = 0;
             OLED12864_Clear_Page(0);
-            OLED12864_Show_String(0,0,"Signal Right",1);
+            OLED12864_Show_String(0,0,"Recieved Signal",1);
         }
         //处理主机发送的数据
         //..
@@ -132,7 +132,6 @@ void ReplyMaster_Task(void*ptr)
         }
         nRF24L01_Send(sbuf,32);
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待发送结果
-        LED_CTR(0,LED_Reserval);
     }
 }
 
@@ -141,7 +140,7 @@ void nRF24L01_Intterrupt_Task(void*ptr)
 {
     while(1)
     {
-        xSemaphoreTake(nRF24_ISRFlag,portMAX_DELAY);    //无限期等待
+        xSemaphoreTake(nRF24_ISRFlag,portMAX_DELAY);
         nRF24L01_InterruptHandle();     //isr处理函数
     }
 }
@@ -154,7 +153,7 @@ void OLED_Task(void*ptr)
     while(1)
     {
         time = xTaskGetTickCount();
-        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/100,1);
+        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
     }
@@ -192,7 +191,7 @@ void MPU_Task(void*ptr)
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
-    static uint8_t oled_status = 1;
+    //static uint8_t oled_status = 1;
     while(1)
     {
         if(Key_Read(0) == Key_Press)
