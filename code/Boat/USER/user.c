@@ -132,6 +132,7 @@ void ReplyMaster_Task(void*ptr)
         }
         nRF24L01_Send(sbuf,32);
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待发送结果
+        LED_CTR(1,LED_Reserval);
     }
 }
 

@@ -3,8 +3,9 @@
 
 #include "self_stm32f10x.h"
 
-static Pin LED_Pin[1] = {
-    {GPIO_Pin_12,GPIOC}
+static Pin LED_Pin[2] = {
+    {GPIO_Pin_12,GPIOC},
+    {GPIO_Pin_2,GPIOA}
 };
 
 #define LED_ON          0

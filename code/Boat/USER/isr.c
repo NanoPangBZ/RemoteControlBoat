@@ -38,8 +38,7 @@ void EXTI9_5_IRQHandler(void)
     {
         if(xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED && nRF24L01_Intterrupt_TaskHandle != NULL)
         {
-            xSemaphoreGiveFromISR(nRF24_ISRFlag,&xHigherPriorityTaskWoken); 
-            LED_CTR(0,LED_Reserval);    
+            xSemaphoreGiveFromISR(nRF24_ISRFlag,&xHigherPriorityTaskWoken);   
             portYIELD_FROM_ISR(xHigherPriorityTaskWoken);       //判断是否需要进行上下文切换(任务调度)
         }else
         {

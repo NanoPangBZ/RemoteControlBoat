@@ -49,6 +49,7 @@ int main(void)
 	BSP_Usart_Init();
 	BSP_Timer_Init();
 	BSP_Key_Init();
+	BSP_PWM_Init();
 
 	//OLED初始化
 	OLED12864_Init();
