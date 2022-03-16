@@ -21,26 +21,28 @@ extern TaskHandle_t KeyInput_TaskHandle;
 extern SemaphoreHandle_t nRF24_ISRFlag;         //nRF外部中断标志
 extern SemaphoreHandle_t nRF24_RecieveFlag;     //nRF接收中断标志
 extern QueueHandle_t     nRF24_SendResult;      //nRF发送结果队列(长度1)
-extern SemaphoreHandle_t USART_RecieveFlag;     //串口有未处理数据标志位
 extern SemaphoreHandle_t mpuDat_occFlag;		//mpu数据占用标志(互斥信号量)
+extern SemaphoreHandle_t sysStatus_occFlag;     //系统状态变量占用标志(互斥信号量)
 
 //全局变量
-float mpu_data[3] = {0,0,0};    //姿态
-uint8_t oled_page = 0;          //表示当前oled应该显示的页面
-
+float mpu_data[3] = {0,0,0};    //姿态 -> mpuDat_occFlag保护
+sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 
 void RTOSCreateTask_Task(void*ptr)
 {
+    sysStatus.nrf_signal = 0;
+    sysStatus.oled_page = 0;
+
     nRF24_ISRFlag = xSemaphoreCreateBinary();
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();
 	nRF24_SendResult = xQueueCreate(1,1);
-    USART_RecieveFlag = xSemaphoreCreateBinary();
     mpuDat_occFlag = xSemaphoreCreateMutex();
+    sysStatus_occFlag = xSemaphoreCreateMutex();
 
     xTaskCreate(
         ReplyMaster_Task,
         "Reply",
-        256,
+        128,
         (void*)&nrf_maxDelay,
         11,
         &ReplyMaster_TaskHandle
@@ -49,7 +51,7 @@ void RTOSCreateTask_Task(void*ptr)
     xTaskCreate(
         MPU_Task,
         "mpu",
-        512,
+        256,
         (void*)&mpu_fre,
         10,
         &MPU_TaskHandle
@@ -58,7 +60,7 @@ void RTOSCreateTask_Task(void*ptr)
     xTaskCreate(
         OLED_Task,
         "oled",
-        128,
+        256,
         (void*)&oled_fre,
         9,
         &OLED_TaskHandle
@@ -91,7 +93,6 @@ void ReplyMaster_Task(void*ptr)
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
     uint8_t resualt;        //发射结果接收
-    uint16_t timeout = 0;   //信号丢失计数
     uint8_t signal = 1;     //信号丢失标志
     while(1)
     {
@@ -100,27 +101,19 @@ void ReplyMaster_Task(void*ptr)
             //过长时间没有接收到主机信号
             //紧急停止代码
             //...
-            //使用oled反馈情况,统计信号丢失情况
-            if(signal == 0)
+            //更新至系统状态
+            if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
             {
-                timeout = 0;
-                signal = 1;
-                OLED12864_Clear_Page(0);
-                OLED12864_Show_String(0,0,"Signal Loss",1);
+                sysStatus.nrf_signal += 1;
+                xSemaphoreGive(sysStatus_occFlag);  //释放资源
             }
-            timeout++;
-            OLED12864_Show_Num(0,86,timeout/5,1);
+            signal = 1;
+            vTaskSuspend(nRF24L01_Intterrupt_TaskHandle);   //挂起中断服务
             //有可能是本机nrf挂了,重启nrf
             taskENTER_CRITICAL();
             nRF24L01_Restart();
             taskEXIT_CRITICAL();
-        }
-        //是否需要更新oled显示的连接情况
-        if(signal == 1)
-        {
-            signal = 0;
-            OLED12864_Clear_Page(0);
-            OLED12864_Show_String(0,0,"Recieved Signal",1);
+            vTaskResume(nRF24L01_Intterrupt_TaskHandle);
         }
         //处理主机发送的数据
         //..
@@ -132,7 +125,18 @@ void ReplyMaster_Task(void*ptr)
         }
         nRF24L01_Send(sbuf,32);
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待发送结果
-        LED_CTR(1,LED_Reserval);
+        //判断是否需要系统状态标志
+        //能运行到这里说明信号没有丢失
+        if(signal == 1)
+        {
+            if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
+            {
+                sysStatus.nrf_signal = 0;
+                xSemaphoreGive(sysStatus_occFlag);  //释放资源
+                signal = 0;
+            }
+        }
+        LED_CTR(0,LED_Reserval);
     }
 }
 
@@ -151,10 +155,46 @@ void OLED_Task(void*ptr)
 {
     uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;     //频率换算成心跳周期
     TickType_t  time = xTaskGetTickCount();
+    float gyroscope[3];
+    sysStatus_Type temp = {0,0};
+    uint8_t sbuf[32];
     while(1)
     {
         time = xTaskGetTickCount();
-        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
+        if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
+        {
+            temp = sysStatus;
+            xSemaphoreGive(sysStatus_occFlag);  //释放资源
+        }
+        switch (temp.oled_page)
+        {
+        case 0:
+            //将陀螺仪数据载入gyroscope 并且更新oled的姿态显示
+            if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
+            {
+                MemCopy((uint8_t*)mpu_data,(uint8_t*)gyroscope,12);
+                xSemaphoreGive(mpuDat_occFlag); //释放资源
+                OLED12864_Clear_Page(1);
+                OLED12864_Clear_Page(2);
+                OLED12864_Clear_Page(3);
+                sprintf((char*)sbuf,"x:%.1f",gyroscope[0]);
+                OLED12864_Show_String(1,0,sbuf,1);
+                sprintf((char*)sbuf,"y:%.1f",gyroscope[1]);
+                OLED12864_Show_String(2,0,sbuf,1);
+                sprintf((char*)sbuf,"z:%.1f",gyroscope[2]);
+                OLED12864_Show_String(3,0,sbuf,1);
+            }
+            OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
+            break;
+        }
+        OLED12864_Clear_Page(0);
+        if(temp.nrf_signal != 0)
+        {
+            sprintf((char*)sbuf,"loss:%d",temp.nrf_signal);
+        }else{
+            sprintf((char*)sbuf,"connect");
+        }
+        OLED12864_Show_String(0,0,sbuf,1);
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
     }
@@ -165,7 +205,6 @@ void MPU_Task(void*ptr)
 {
     uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS; //频率换算成心跳周期
     TickType_t  time = xTaskGetTickCount();
-    uint8_t sbuf[32];
     float fsbuf[3];
     while(1)
     {
@@ -179,20 +218,14 @@ void MPU_Task(void*ptr)
             MemCopy((uint8_t*)fsbuf,(uint8_t*)mpu_data,12);
             xSemaphoreGive(mpuDat_occFlag); //释放资源
         }
-        for(uint8_t temp=0;temp<3;temp++)
-        {
-            OLED12864_Clear_Page(1+temp);
-            sprintf((char*)sbuf,"%.1f",fsbuf[temp]);
-            OLED12864_Show_String(1+temp,0,sbuf,1);
-        }
         vTaskDelayUntil(&time,Cycle);
     }
 }
 
+//按键输入响应
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
-    //static uint8_t oled_status = 1;
     while(1)
     {
         if(Key_Read(0) == Key_Press)
@@ -205,6 +238,27 @@ void KeyInput_Task(void*ptr)
         {
             vTaskResume(OLED_TaskHandle);
         }
-        vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
     }
 }
+
+#if 0
+
+//电调控制任务 可重入
+//ptr -> uint8_t*
+//ptr[0] -> PWM通道号 见bsp_pwm.c中的Target_CCR[]数组
+//ptr[1] -> 单周期脉宽增量(单位us)
+//ptr[2] -> 任务的频率
+void ER_Task(void*ptr)
+{
+    uint8_t*buf = (uint8_t*)ptr;
+    uint8_t channle = buf[0];
+    uint8_t inc = buf[1];
+    uint8_t cycle = 1000 / buf[2] /portTICK_PERIOD_MS;
+    uint16_t target_width = PWM_Read(channle);
+    while(1)
+    {
+        
+    }
+}
+#endif

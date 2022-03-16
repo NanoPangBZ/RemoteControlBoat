@@ -26,14 +26,17 @@ TaskHandle_t	OLED_TaskHandle = NULL;
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t	MPU_TaskHandle = NULL;
 TaskHandle_t	KeyInput_TaskHandle = NULL;
+TaskHandle_t	ER_TaskHandle1 = NULL;		//电调任务句柄
+TaskHandle_t	ER_TaskHandle2 = NULL;		//电调任务句柄
+TaskHandle_t	ER_TaskHandle3 = NULL;		//电调任务句柄
+TaskHandle_t	ER_TaskHandle4 = NULL;		//电调任务句柄
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
-SemaphoreHandle_t	USART_RecieveFlag = NULL;	//串口有未处理数据标志
 SemaphoreHandle_t	mpuDat_occFlag = NULL;		//mpu数据占用标志(互斥信号量)
-SemaphoreHandle_t	usartTx_occFlag = NULL;		//串口发送占用标志(互斥信号量)
+SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互斥信号量)
 
 int main(void)
 {
@@ -45,11 +48,11 @@ int main(void)
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO,ENABLE);
 	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);
 
+	BSP_PWM_Init();
 	BSP_LED_Init();
 	BSP_Usart_Init();
 	BSP_Timer_Init();
 	BSP_Key_Init();
-	BSP_PWM_Init();
 
 	//OLED初始化
 	OLED12864_Init();

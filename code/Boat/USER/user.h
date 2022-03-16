@@ -21,6 +21,12 @@
 #include "semphr.h"
 #include "queue.h"
 
+typedef struct
+{
+    uint8_t oled_page;  //当前oled的页
+    uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
+}sysStatus_Type;
+
 void RTOSCreateTask_Task(void*ptr);
 void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
