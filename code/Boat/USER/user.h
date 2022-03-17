@@ -34,7 +34,7 @@ typedef struct
     uint8_t channel;    //pwm管道 见bsp_pwm.c中的Target_CCR[]数组
     uint8_t MaxInc;     //单任务周期脉宽最大增量 -> us单位
     uint8_t cycle;      //任务执行周期 -> ms单位
-    QueueHandle_t*recieveCmd;   //命令控制队列地址
+    QueueHandle_t*recieveCmd;   //命令控制队列地址,用于电调任务接收控制信号
 }ER_Type;
 
 //电调控制类型

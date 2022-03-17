@@ -191,40 +191,45 @@ void KeyInput_Task(void*ptr)
         if(Key_Read(0) == Key_Press)
         {
             ctr.dat = 1400;
-            xQueueSend(ER_CmdQueue[0],&ctr,0);
+            xQueueSend(ER_CmdQueue[3],&ctr,0);
         }else
         if(Key_Read(1) == Key_Press)
         {
             ctr.dat = 1650;
-            xQueueSend(ER_CmdQueue[0],&ctr,0);
+            xQueueSend(ER_CmdQueue[3],&ctr,0);
         }else
         if(Key_Read(2) == Key_Press)
         {
             ctr.dat = 1150;
-            xQueueSend(ER_CmdQueue[0],&ctr,0);
+            xQueueSend(ER_CmdQueue[3],&ctr,0);
         }else
         if(Key_Read(3) == Key_Press)
         {
             ctr.dat = 1900;
-            xQueueSend(ER_CmdQueue[0],&ctr,0);
+            xQueueSend(ER_CmdQueue[3],&ctr,0);
         }
         vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
     }
 }
 
+#if 0
 void Motor_Task(void*ptr)
 {
-    
+
 }
+#endif
 
 //电调任务 可重入
 void ER_Task(void*ptr)
 {
-    ER_Type ERT = *(ER_Type*)ptr;
-    ERctr_Type ctr = {0,0};
-    TickType_t  time = xTaskGetTickCount();
-    uint16_t target_width = 1400;
+    ER_Type ERT;
+    ERctr_Type ctr;
+    TickType_t  time;
+    uint16_t target_width;
     uint16_t width;
+    ERT = *(ER_Type*)ptr;
+    target_width = 1400;
+    time = xTaskGetTickCount();
     while(1)
     {
         //查看是否有新的指令

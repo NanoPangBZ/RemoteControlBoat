@@ -18,6 +18,7 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 uint8_t oled_fre = 24;				//OLED刷新频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
+ER_Type	ER_is[4];					//电调控制任务参数
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
@@ -115,32 +116,56 @@ int main(void)
 
 void RTOSCreateTask_Task(void*ptr)
 {
-	ER_Type	ER_is;
-
+	//全局变量赋值
     sysStatus.nrf_signal = 0;
     sysStatus.oled_page = 0;
 
-    nRF24_ISRFlag = xSemaphoreCreateBinary();
-	nRF24_RecieveFlag = xSemaphoreCreateBinary();
-	nRF24_SendResult = xQueueCreate(1,1);
-    mpuDat_occFlag = xSemaphoreCreateMutex();
-    sysStatus_occFlag = xSemaphoreCreateMutex();
+    nRF24_ISRFlag = xSemaphoreCreateBinary();		//nrf外部中断标志,由isr给出
+	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//nrf发生接收中断标志
+	nRF24_SendResult = xQueueCreate(1,1);			//nrf发送结果标志
+    mpuDat_occFlag = xSemaphoreCreateMutex();		//mpu_data[3] 保护
+    sysStatus_occFlag = xSemaphoreCreateMutex();	//sysStatus 保护
 
-	ER_CmdQueue[0] = xQueueCreate(3,sizeof(ERctr_Type));
-	ER_is.channel = 11;	//Target_CCR[11] T8C4
+	#if 0
+	//建立4个电调控制任务
 	ER_is.cycle = 20;
 	ER_is.MaxInc = 10;
-	ER_is.recieveCmd = &ER_CmdQueue[0];
+	for(uint8_t temp = 0;temp<4;temp++)
+	{
+		//配置参数
+		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));
+		ER_is.channel = 8 + temp;	//Target_CCR[8~11] T8 C1~C4
+		ER_is.recieveCmd = &ER_CmdQueue[temp];
+		//创建任务
+		xTaskCreate(
+			ER_Task,
+			"ER",
+			64,
+			(void*)&ER_is,
+			2+temp,
+			&ER_TaskHandle[temp]
+		);
+	}	
+	#endif
 
-	xTaskCreate(
-        ER_Task,
-        "ER",
-        64,
-        (void*)&ER_is,
-        5,
-        &ER_TaskHandle[0]
-    );
-
+	for(uint8_t temp=0;temp<4;temp++)
+	{
+		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));
+		ER_is[temp].channel = 8+temp;	//Target_CCR[8~11] T8C1~T8C4
+		ER_is[temp].cycle = 20;
+		ER_is[temp].MaxInc = 10;
+		ER_is[temp].recieveCmd = &ER_CmdQueue[temp];
+		xTaskCreate(
+        	ER_Task,
+        	"ER",
+        	64,
+        	(void*)&ER_is[temp],
+        	5,
+        	&ER_TaskHandle[temp]
+    	);
+	}
+	
+	//建立nrf回复主机任务
     xTaskCreate(
         ReplyMaster_Task,
         "Reply",
@@ -149,7 +174,7 @@ void RTOSCreateTask_Task(void*ptr)
         11,
         &ReplyMaster_TaskHandle
     );
-
+	//建立陀螺仪任务
     xTaskCreate(
         MPU_Task,
         "mpu",
@@ -158,7 +183,7 @@ void RTOSCreateTask_Task(void*ptr)
         10,
         &MPU_TaskHandle
     );
-
+	//建立oled显示任务
     xTaskCreate(
         OLED_Task,
         "oled",
@@ -167,7 +192,7 @@ void RTOSCreateTask_Task(void*ptr)
         9,
         &OLED_TaskHandle
     );
-
+	//建立nrf中断处理任务
     xTaskCreate(
         nRF24L01_Intterrupt_Task,
         "nrf interrupt",
@@ -176,7 +201,7 @@ void RTOSCreateTask_Task(void*ptr)
         14,
         &nRF24L01_Intterrupt_TaskHandle
     );
-
+	//建立按键输入任务
     xTaskCreate(
         KeyInput_Task,
         "key",
@@ -185,6 +210,6 @@ void RTOSCreateTask_Task(void*ptr)
         9,
         &KeyInput_TaskHandle
     );
-
+	//删除自身
     vTaskDelete(NULL);
 }
