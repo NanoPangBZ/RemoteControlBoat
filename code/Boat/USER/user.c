@@ -16,6 +16,7 @@ extern TaskHandle_t OLED_TaskHandle;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
 extern TaskHandle_t MPU_TaskHandle;
 extern TaskHandle_t KeyInput_TaskHandle;
+extern TaskHandle_t	ER_TaskHandle[4];
 
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;         //nRF外部中断标志
@@ -23,69 +24,11 @@ extern SemaphoreHandle_t nRF24_RecieveFlag;     //nRF接收中断标志
 extern QueueHandle_t     nRF24_SendResult;      //nRF发送结果队列(长度1)
 extern SemaphoreHandle_t mpuDat_occFlag;		//mpu数据占用标志(互斥信号量)
 extern SemaphoreHandle_t sysStatus_occFlag;     //系统状态变量占用标志(互斥信号量)
+extern QueueHandle_t	 ER_CmdQueue[4];
 
 //全局变量
-float mpu_data[3] = {0,0,0};    //姿态 -> mpuDat_occFlag保护
-sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
-
-void RTOSCreateTask_Task(void*ptr)
-{
-    sysStatus.nrf_signal = 0;
-    sysStatus.oled_page = 0;
-
-    nRF24_ISRFlag = xSemaphoreCreateBinary();
-	nRF24_RecieveFlag = xSemaphoreCreateBinary();
-	nRF24_SendResult = xQueueCreate(1,1);
-    mpuDat_occFlag = xSemaphoreCreateMutex();
-    sysStatus_occFlag = xSemaphoreCreateMutex();
-
-    xTaskCreate(
-        ReplyMaster_Task,
-        "Reply",
-        128,
-        (void*)&nrf_maxDelay,
-        11,
-        &ReplyMaster_TaskHandle
-    );
-
-    xTaskCreate(
-        MPU_Task,
-        "mpu",
-        256,
-        (void*)&mpu_fre,
-        10,
-        &MPU_TaskHandle
-    );
-
-    xTaskCreate(
-        OLED_Task,
-        "oled",
-        256,
-        (void*)&oled_fre,
-        9,
-        &OLED_TaskHandle
-    );
-
-    xTaskCreate(
-        nRF24L01_Intterrupt_Task,
-        "nrf interrupt",
-        128,
-        NULL,
-        14,
-        &nRF24L01_Intterrupt_TaskHandle
-    );
-
-    xTaskCreate(
-        KeyInput_Task,
-        "key",
-        64,
-        NULL,
-        9,
-        &KeyInput_TaskHandle
-    );
-
-    vTaskDelete(NULL);
-}
+extern float mpu_data[3];               //姿态 -> mpuDat_occFlag保护
+extern sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 
 //回复主机
 void ReplyMaster_Task(void*ptr)
@@ -195,6 +138,9 @@ void OLED_Task(void*ptr)
             sprintf((char*)sbuf,"connect");
         }
         OLED12864_Show_String(0,0,sbuf,1);
+        //test
+        OLED12864_Show_Num(4,0,PWM_Read(11),1);
+        //
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
     }
@@ -228,6 +174,7 @@ void KeyInput_Task(void*ptr)
     TickType_t time = xTaskGetTickCount();
     while(1)
     {
+        #if 0   //开关OLED
         if(Key_Read(0) == Key_Press)
         {
             vTaskSuspend(OLED_TaskHandle);
@@ -238,27 +185,77 @@ void KeyInput_Task(void*ptr)
         {
             vTaskResume(OLED_TaskHandle);
         }
+        #endif
+        ERctr_Type  ctr;
+        ctr.type = 1;
+        if(Key_Read(0) == Key_Press)
+        {
+            ctr.dat = 1400;
+            xQueueSend(ER_CmdQueue[0],&ctr,0);
+        }else
+        if(Key_Read(1) == Key_Press)
+        {
+            ctr.dat = 1650;
+            xQueueSend(ER_CmdQueue[0],&ctr,0);
+        }else
+        if(Key_Read(2) == Key_Press)
+        {
+            ctr.dat = 1150;
+            xQueueSend(ER_CmdQueue[0],&ctr,0);
+        }else
+        if(Key_Read(3) == Key_Press)
+        {
+            ctr.dat = 1900;
+            xQueueSend(ER_CmdQueue[0],&ctr,0);
+        }
         vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
     }
 }
 
-#if 0
+void Motor_Task(void*ptr)
+{
+    
+}
 
-//电调控制任务 可重入
-//ptr -> uint8_t*
-//ptr[0] -> PWM通道号 见bsp_pwm.c中的Target_CCR[]数组
-//ptr[1] -> 单周期脉宽增量(单位us)
-//ptr[2] -> 任务的频率
+//电调任务 可重入
 void ER_Task(void*ptr)
 {
-    uint8_t*buf = (uint8_t*)ptr;
-    uint8_t channle = buf[0];
-    uint8_t inc = buf[1];
-    uint8_t cycle = 1000 / buf[2] /portTICK_PERIOD_MS;
-    uint16_t target_width = PWM_Read(channle);
+    ER_Type ERT = *(ER_Type*)ptr;
+    ERctr_Type ctr = {0,0};
+    TickType_t  time = xTaskGetTickCount();
+    uint16_t target_width = 1400;
+    uint16_t width;
     while(1)
     {
-        
+        //查看是否有新的指令
+        while(xQueueReceive(*ERT.recieveCmd,&ctr,0) == pdTRUE)
+        {
+            switch (ctr.type)
+            {
+            case 1: target_width = ctr.dat; break;
+            case 2: ERT.MaxInc = ctr.dat; break;
+            case 3: ERT.cycle = ctr.dat;break;
+            }
+            LED_CTR(1,LED_Reserval);
+        }
+        //更新PWM输出
+        width = PWM_Read(ERT.channel);
+        if(width > target_width)
+        {
+            if(width - target_width > ERT.MaxInc)
+                width -= ERT.MaxInc;
+            else
+                width = target_width;
+        }else if(width < target_width)
+        {
+            if(target_width - width > ERT.MaxInc)
+                width += ERT.MaxInc;
+            else
+                width = target_width;
+        }
+        PWM_Out(ERT.channel,width);
+        vTaskDelayUntil(&time,ERT.cycle/portTICK_PERIOD_MS);
     }
 }
-#endif
+
+

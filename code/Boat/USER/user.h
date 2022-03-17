@@ -21,19 +21,35 @@
 #include "semphr.h"
 #include "queue.h"
 
+//系统状态
 typedef struct
 {
     uint8_t oled_page;  //当前oled的页
     uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
 }sysStatus_Type;
 
-void RTOSCreateTask_Task(void*ptr);
+//电调任务初始化参数
+typedef struct
+{
+    uint8_t channel;    //pwm管道 见bsp_pwm.c中的Target_CCR[]数组
+    uint8_t MaxInc;     //单任务周期脉宽最大增量 -> us单位
+    uint8_t cycle;      //任务执行周期 -> ms单位
+    QueueHandle_t*recieveCmd;   //命令控制队列地址
+}ER_Type;
+
+//电调控制类型
+typedef struct
+{
+    uint8_t type;   //0:保留 1:脉宽 2:增量 3:任务周期
+    uint16_t dat;
+}ERctr_Type;
+
 void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
 void nRF24L01_Intterrupt_Task(void*ptr);
 void OLED_Task(void*ptr);
 void KeyInput_Task(void*ptr);
-
+void ER_Task(void*ptr);
 
 #endif  //_USER_H_
 
