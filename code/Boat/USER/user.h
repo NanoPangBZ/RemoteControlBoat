@@ -41,14 +41,14 @@ typedef struct
 typedef struct
 {
     uint8_t channel[2]; //pwm管道 见bsp_pwm.c中的Target_CCR[]数组
-    uint8_t dir;        //是否需要反向
-    QueueHandle_t*recieveCmd;   //命令控制队列地址,用于直流电机任务接收控制信号
+    uint16_t max_inc ;  //最大增量
+    QueueHandle_t*recieveCmd;   //队列句柄的地址,用于直流电机任务接收控制信号
 }DCMotor_Type;
 
 //直流电机控制类型
 typedef struct
 {
-    uint8_t type;   //0:保留 1:目标速度 2:刹车 3:增量
+    uint8_t type;   //0:保留 1:目标速度 2:刹车 3:增量 4:inc
     int dat;
 }DCMotorCtr_Type;
 

@@ -16,6 +16,7 @@ extern QueueHandle_t     nRF24_SendResult;      //nRF发送结果队列(长度1)
 extern SemaphoreHandle_t mpuDat_occFlag;		//mpu数据占用标志(互斥信号量)
 extern SemaphoreHandle_t sysStatus_occFlag;     //系统状态变量占用标志(互斥信号量)
 extern QueueHandle_t	 ER_CmdQueue[4];
+extern QueueHandle_t    DCMotor_CmdQueue[2];
 
 //全局变量
 extern float mpu_data[3];               //姿态 -> mpuDat_occFlag保护
@@ -130,7 +131,12 @@ void OLED_Task(void*ptr)
         }
         OLED12864_Show_String(0,0,sbuf,1);
         //test
-        OLED12864_Show_Num(4,0,PWM_Read(11),1);
+        OLED12864_Clear_Page(4);
+        OLED12864_Clear_Page(5);
+        OLED12864_Clear_Page(6);
+        OLED12864_Show_Num(4,0,PWM_Read(0),1);
+        OLED12864_Show_Num(5,0,PWM_Read(1),1);
+        OLED12864_Show_Num(6,0,PWM_Read(11),1);
         //
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
@@ -163,29 +169,32 @@ void MPU_Task(void*ptr)
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
-    ERctr_Type  ctr;
+    ERctr_Type  er_ctr;
+    DCMotorCtr_Type ctr;
+    er_ctr.type = 1;
+    er_ctr.dat = 1400;
+    ctr.type = 4;
     while(1)
     {
-        ctr.type = 1;
         if(Key_Read(0) == Key_Press)
         {
-            ctr.dat = 1400;
-            xQueueSend(ER_CmdQueue[3],&ctr,0);
+            ctr.dat = 100;
+            xQueueSend(DCMotor_CmdQueue[0],&ctr,0);
         }else
         if(Key_Read(1) == Key_Press)
         {
-            ctr.dat = 1650;
-            xQueueSend(ER_CmdQueue[3],&ctr,0);
+            ctr.dat = -100;
+            xQueueSend(DCMotor_CmdQueue[0],&ctr,0);
         }else
         if(Key_Read(2) == Key_Press)
         {
-            ctr.dat = 1150;
-            xQueueSend(ER_CmdQueue[3],&ctr,0);
+            er_ctr.dat += 10;
+            xQueueSend(ER_CmdQueue[3],&er_ctr,0);
         }else
         if(Key_Read(3) == Key_Press)
         {
-            ctr.dat = 1900;
-            xQueueSend(ER_CmdQueue[3],&ctr,0);
+            er_ctr.dat -= 10;
+            xQueueSend(ER_CmdQueue[3],&er_ctr,0);
         }
         vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
     }
@@ -194,21 +203,38 @@ void KeyInput_Task(void*ptr)
 //电机控制任务 可重入
 void Motor_Task(void*ptr)
 {
-
+    DCMotor_Type DCMT = *(DCMotor_Type*)ptr;
+    DCMotorCtr_Type ctr;
+    TickType_t  time = xTaskGetTickCount();
+    int target_speed = 0;
+    while(1)
+    {
+        xQueueReceive(*DCMT.recieveCmd,&ctr,portMAX_DELAY);
+        switch ( ctr.type )
+        {
+        case 1:target_speed = ctr.dat;break;
+        case 2:break;
+        case 3:DCMT.max_inc = ctr.dat;break;
+        case 4:target_speed += ctr.dat;break;
+        }
+        if(target_speed > 3600)
+            target_speed = 3600;
+        if(target_speed < -3600)
+            target_speed = -3600;
+        PWM_Out(DCMT.channel[0],(uint16_t)(3600+target_speed) );
+        PWM_Out(DCMT.channel[1],(uint16_t)(3600-target_speed) );
+    }
 }
 
 
 //电调任务 可重入
 void ER_Task(void*ptr)
 {
-    ER_Type ERT;
+    ER_Type ERT = *(ER_Type*)ptr ;
     ERctr_Type ctr;
-    TickType_t  time;
-    uint16_t target_width;
+    TickType_t  time = xTaskGetTickCount();
+    uint16_t target_width = 1400 ;
     uint16_t width;
-    ERT = *(ER_Type*)ptr;
-    target_width = 1400;
-    time = xTaskGetTickCount();
     while(1)
     {
         //查看是否有新的指令
@@ -220,7 +246,6 @@ void ER_Task(void*ptr)
             case 2: ERT.MaxInc = ctr.dat; break;
             case 3: ERT.cycle = ctr.dat;break;
             }
-            LED_CTR(1,LED_Reserval);
         }
         //更新PWM输出
         width = PWM_Read(ERT.channel);

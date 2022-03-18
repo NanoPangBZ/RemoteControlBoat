@@ -128,13 +128,22 @@ void RTOSCreateTask_Task(void*ptr)
 	nRF24_SendResult = xQueueCreate(1,1);			//nrf发送结果标志
     mpuDat_occFlag = xSemaphoreCreateMutex();		//mpu_data[3] 保护
     sysStatus_occFlag = xSemaphoreCreateMutex();	//sysStatus 保护
+
 	//建立2个直流电机控制任务
 	for(uint8_t temp=0;temp<2;temp++)
 	{
 		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));
 		DCMotor_is[temp].recieveCmd = &DCMotor_CmdQueue[temp];
-		DCMotor_is[temp].channel[0] = 1;
-		DCMotor_is[temp].channel[1] = 2;
+		DCMotor_is[temp].channel[0] = temp*2;
+		DCMotor_is[temp].channel[1] = temp*2+1;
+		xTaskCreate(
+			Motor_Task,
+			"MT",
+			64,
+			(void*)&DCMotor_is[temp],
+			5,
+			&DCMotor_TaskHandle[temp]
+		);
 	}
 	//建立4个电调控制任务
 	for(uint8_t temp=0;temp<4;temp++)
