@@ -21,14 +21,7 @@
 #include "semphr.h"
 #include "queue.h"
 
-//系统状态
-typedef struct
-{
-    uint8_t oled_page;  //当前oled的页
-    uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
-}sysStatus_Type;
-
-//电调任务初始化参数
+//电调任务参数
 typedef struct
 {
     uint8_t channel;    //pwm管道 见bsp_pwm.c中的Target_CCR[]数组
@@ -44,12 +37,37 @@ typedef struct
     uint16_t dat;
 }ERctr_Type;
 
+//直流电机任务参数
+typedef struct
+{
+    uint8_t channel[2]; //pwm管道 见bsp_pwm.c中的Target_CCR[]数组
+    uint8_t dir;        //是否需要反向
+    QueueHandle_t*recieveCmd;   //命令控制队列地址,用于直流电机任务接收控制信号
+}DCMotor_Type;
+
+//直流电机控制类型
+typedef struct
+{
+    uint8_t type;   //0:保留 1:目标速度 2:刹车 3:增量
+    int dat;
+}DCMotorCtr_Type;
+
+//系统状态
+typedef struct
+{
+    uint8_t oled_page;  //当前oled的页
+    uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
+    ERctr_Type ER_Ctr;
+}sysStatus_Type;
+
+
 void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
 void nRF24L01_Intterrupt_Task(void*ptr);
 void OLED_Task(void*ptr);
 void KeyInput_Task(void*ptr);
 void ER_Task(void*ptr);
+void Motor_Task(void*ptr);
 
 #endif  //_USER_H_
 

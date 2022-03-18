@@ -18,7 +18,8 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 uint8_t oled_fre = 24;				//OLED刷新频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
-ER_Type	ER_is[4];					//电调控制任务参数
+ER_Type	ER_is[4];					//电调任务参数
+DCMotor_Type DCMotor_is[2];			//直流电机任务参数
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
@@ -28,12 +29,14 @@ TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t	MPU_TaskHandle = NULL;
 TaskHandle_t	KeyInput_TaskHandle = NULL;
 TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄 0:main_l 1:main_r 2:sec_l 3:sec_r
+TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
-QueueHandle_t		ER_CmdQueue[4] = {NULL,NULL,NULL};	//电调控制命令 0:main_l 1:main_r 2:sec_l 3:sec_r
+QueueHandle_t		ER_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//电调控制命令 0:main_l 1:main_r 2:sec_l 3:sec_r
+QueueHandle_t		DCMotor_CmdQueue[2] = {NULL,NULL};		//直流电机控制命令
 SemaphoreHandle_t	mpuDat_occFlag = NULL;		//mpu数据占用标志(互斥信号量)
 SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互斥信号量)
 
@@ -119,42 +122,28 @@ void RTOSCreateTask_Task(void*ptr)
 	//全局变量赋值
     sysStatus.nrf_signal = 0;
     sysStatus.oled_page = 0;
-
+	//建立 队列 信号量
     nRF24_ISRFlag = xSemaphoreCreateBinary();		//nrf外部中断标志,由isr给出
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//nrf发生接收中断标志
 	nRF24_SendResult = xQueueCreate(1,1);			//nrf发送结果标志
     mpuDat_occFlag = xSemaphoreCreateMutex();		//mpu_data[3] 保护
     sysStatus_occFlag = xSemaphoreCreateMutex();	//sysStatus 保护
-
-	#if 0
-	//建立4个电调控制任务
-	ER_is.cycle = 20;
-	ER_is.MaxInc = 10;
-	for(uint8_t temp = 0;temp<4;temp++)
+	//建立2个直流电机控制任务
+	for(uint8_t temp=0;temp<2;temp++)
 	{
-		//配置参数
-		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));
-		ER_is.channel = 8 + temp;	//Target_CCR[8~11] T8 C1~C4
-		ER_is.recieveCmd = &ER_CmdQueue[temp];
-		//创建任务
-		xTaskCreate(
-			ER_Task,
-			"ER",
-			64,
-			(void*)&ER_is,
-			2+temp,
-			&ER_TaskHandle[temp]
-		);
-	}	
-	#endif
-
+		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));
+		DCMotor_is[temp].recieveCmd = &DCMotor_CmdQueue[temp];
+		DCMotor_is[temp].channel[0] = 1;
+		DCMotor_is[temp].channel[1] = 2;
+	}
+	//建立4个电调控制任务
 	for(uint8_t temp=0;temp<4;temp++)
 	{
 		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));
+		ER_is[temp].recieveCmd = &ER_CmdQueue[temp];
 		ER_is[temp].channel = 8+temp;	//Target_CCR[8~11] T8C1~T8C4
 		ER_is[temp].cycle = 20;
 		ER_is[temp].MaxInc = 10;
-		ER_is[temp].recieveCmd = &ER_CmdQueue[temp];
 		xTaskCreate(
         	ER_Task,
         	"ER",
@@ -164,7 +153,6 @@ void RTOSCreateTask_Task(void*ptr)
         	&ER_TaskHandle[temp]
     	);
 	}
-	
 	//建立nrf回复主机任务
     xTaskCreate(
         ReplyMaster_Task,

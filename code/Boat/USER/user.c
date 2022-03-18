@@ -5,18 +5,9 @@
 //其它参数
 extern nRF24L01_Cfg nRF24_Cfg;
 
-//任务参数
-extern uint8_t oled_fre;		//OLED刷新频率
-extern uint8_t nrf_maxDelay;	//nrf最大等待接收时长
-extern uint8_t mpu_fre;         //mpu姿态更新频率
-
 //任务句柄
-extern TaskHandle_t ReplyMaster_TaskHandle;
 extern TaskHandle_t OLED_TaskHandle;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
-extern TaskHandle_t MPU_TaskHandle;
-extern TaskHandle_t KeyInput_TaskHandle;
-extern TaskHandle_t	ER_TaskHandle[4];
 
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;         //nRF外部中断标志
@@ -172,21 +163,9 @@ void MPU_Task(void*ptr)
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
+    ERctr_Type  ctr;
     while(1)
     {
-        #if 0   //开关OLED
-        if(Key_Read(0) == Key_Press)
-        {
-            vTaskSuspend(OLED_TaskHandle);
-            OLED12864_Clear();
-            OLED12864_Refresh();
-        }
-        if(Key_Read(1) == Key_Press)
-        {
-            vTaskResume(OLED_TaskHandle);
-        }
-        #endif
-        ERctr_Type  ctr;
         ctr.type = 1;
         if(Key_Read(0) == Key_Press)
         {
@@ -212,12 +191,12 @@ void KeyInput_Task(void*ptr)
     }
 }
 
-#if 0
+//电机控制任务 可重入
 void Motor_Task(void*ptr)
 {
 
 }
-#endif
+
 
 //电调任务 可重入
 void ER_Task(void*ptr)
