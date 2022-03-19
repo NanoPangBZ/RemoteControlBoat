@@ -15,6 +15,7 @@
 #include "HARDWARE\NRF24\nrf24l01.h"
 #include "HARDWARE\OLED\oled12864.h"
 #include "HARDWARE\MOTOR\a4950.h"
+#include "HARDWARE\MOTOR\street_motor.h"
 
 #include "SOFTWARE\vofa_p.h"
 
@@ -58,15 +59,20 @@ typedef struct
 }DCMotorCtr_Type;
 
 /**************************舵机相关类型*****************************************/
-//舵机任务参数  -> 与电调任务参数一致
-typedef ER_Type StreetMotor_Type;   //舵机任务参数
+//舵机任务参数
+typedef struct
+{
+    uint8_t street_motor_id;    //舵机标号 见HARDWARE\MOTOR\street_motor.c street_motor_pwm_ch[]数组
+    uint8_t cycle;              //任务执行周期 -> ms单位
+    float angle_inc;          //单任务周期角度增量
+    QueueHandle_t*queueAddr;    //队列句柄的地址,用于电调任务接收控制信号
+}StreetMotor_Type;
 
 //舵机控制类型
 typedef struct
 {
     uint8_t type;       //0:保留 1:基于当前角度增加 2:单周期增量 3:设置目标角度 4:直接设置角度
-    float angle;        //目标角度
-    uint8_t width_inc;  //单周期脉宽增量
+    float dat;        //目标角度
 }StreetMotorCtr_Type;
 
 /**************************蜂鸣器相关类型*****************************************/

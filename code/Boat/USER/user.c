@@ -188,6 +188,8 @@ void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
     DCMotorCtr_Type ctr;
+    StreetMotorCtr_Type s_str;
+    s_str.type = 1;
     ctr.type = 4;
     while(1)
     {
@@ -203,13 +205,15 @@ void KeyInput_Task(void*ptr)
         }else
         if(Key_Read(2) == Key_Press)
         {
-
+            s_str.dat = +5.0f;
+            xQueueSend(STMotor_CmdQueue[0],&s_str,0);
         }else
         if(Key_Read(3) == Key_Press)
         {
-
+            s_str.dat = -5.0f;
+            xQueueSend(STMotor_CmdQueue[0],&s_str,0);
         }
-        vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
     }
 }
 
@@ -299,37 +303,34 @@ void StreetMotor_Task(void*ptr)
     StreetMotor_Type SMT = *(StreetMotor_Type*)ptr;
     StreetMotorCtr_Type ctr;
     TickType_t  time = xTaskGetTickCount();
-    uint16_t target_width = 1400;
-    uint16_t width;
+    float target_angle = 90.0;
+    float angle = 90.0;
     while(1)
     {
         while(xQueueReceive(*SMT.queueAddr,&ctr,0) == pdPASS)
         {
             switch (ctr.type)
             {
-            case 1:target_width += 5.56f * ctr.angle; break;
-            case 2:SMT.max_inc = ctr.width_inc; break;
-            case 3:target_width = 5.56f * ctr.angle; break;
-            case 4:target_width = 5.56f * ctr.angle;
-                PWM_Out(SMT.channel,target_width);
+            case 1:target_angle += ctr.dat; break;
+            case 2:SMT.angle_inc = ctr.dat; break;
+            case 3:target_angle = ctr.dat; break;
+            case 4:target_angle = angle = ctr.dat;
+                StreetMotor_Set(SMT.street_motor_id,target_angle);
                 break;
             }
         }
-        width = PWM_Read(SMT.channel);
-        if(width < target_width)
+        if(angle < target_angle)
         {
-            if(target_width - width > SMT.max_inc)
-                width += SMT.max_inc;
-            else
-                width = target_width;
-            PWM_Out(SMT.channel,width);
-        }else if(width > target_width)
+            angle += SMT.angle_inc;
+            if(angle > target_angle)
+                angle = target_angle;
+            StreetMotor_Set(SMT.street_motor_id,target_angle);
+        }else if(angle > target_angle)
         {
-            if(width - target_width > SMT.max_inc)
-                width -= SMT.max_inc;
-            else
-                width = target_width;
-            PWM_Out(SMT.channel,width);
+            angle -= SMT.angle_inc;
+            if(angle < target_angle)
+                angle = target_angle;
+            StreetMotor_Set(SMT.street_motor_id,target_angle);
         }
         vTaskDelayUntil(&time,SMT.cycle/portTICK_PERIOD_MS);
     }

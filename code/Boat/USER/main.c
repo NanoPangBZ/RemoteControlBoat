@@ -140,9 +140,9 @@ void RTOSCreateTask_Task(void*ptr)
 	{
 		STMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
 		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
-		STMotor_is[temp].channel = 4 + temp;	////PWM通道 bsp_pwm.c Target_CCR[4~5]
+		STMotor_is[temp].street_motor_id = temp;	//舵机编号
 		STMotor_is[temp].cycle = 20;
-		STMotor_is[temp].max_inc = 100;
+		STMotor_is[temp].angle_inc = 0.5f;
 		xTaskCreate(
 			StreetMotor_Task,
 			"SM",
@@ -173,7 +173,7 @@ void RTOSCreateTask_Task(void*ptr)
 	{
 		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));		//创建命令接收队列
 		ER_is[temp].queueAddr = &ER_CmdQueue[temp];					//设置命令接收队列地址
-		ER_is[temp].channel = 8+temp;	//PWM通道 Target_CCR[8~11] T8C1~T8C4
+		ER_is[temp].channel = 8+temp;	//PWM通道 Target_CCR[8~11] T8C1~T8C4 见bsp_pwm.c
 		ER_is[temp].cycle = 20;
 		ER_is[temp].max_inc = 10;
 		xTaskCreate(
