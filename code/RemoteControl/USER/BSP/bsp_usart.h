@@ -19,9 +19,6 @@
  * last date:   2021/10/1
 *************************************************/
 
-#define Rx_SbufferSize  32
-#define Tx_SbufferSize  64
-
 //初始化
 void BSP_Usart_Init(void);
 void USART_GPIO_Init(void);

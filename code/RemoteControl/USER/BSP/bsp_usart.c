@@ -1,5 +1,7 @@
 #include "bsp_usart.h"
 
+#define Rx_SbufferSize  32
+#define Tx_SbufferSize  64
 //每行第一个元素表示该缓存区存放的数据个数
 static uint8_t USART_Rx_Sbuffer[2][Rx_SbufferSize + 1] = {{0},{0}};
 static uint8_t USART_Tx_Sbuffer[2][Tx_SbufferSize + 1] = {{0},{0}};

@@ -498,6 +498,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\BSP\bsp_key.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_beep.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_beep.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -532,6 +537,11 @@
               <FileName>oled12864.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\HARDWARE\OLED\oled12864.c</FilePath>
+            </File>
+            <File>
+              <FileName>a4950.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\MOTOR\a4950.c</FilePath>
             </File>
           </Files>
         </Group>

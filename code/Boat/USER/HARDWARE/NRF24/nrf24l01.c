@@ -98,6 +98,7 @@ void nrf_support_init(void)
     }
 }
 
+//自定义函数 - 用于nrf热插拔
 void nrf_support_disable(void)
 {
     __NVIC_DisableIRQ(NRF24L01_IQR_Channel);    //关闭对应外部中断
@@ -577,6 +578,13 @@ extern void nRF24L01_NoACK_ISR(void);
 extern void nRF24L01_Tx_ISR(void);
 extern void nRF24L01_Rx_ISR(void);
 
+/***************************************************************************
+ * 这三个函数可以按需更改
+ ***************************************************************************/
+static void Rx_Handler(void);   //接收中断
+static void NoACK_Handle(void); //未应答中断
+static void Tx_Handle(void);    //发送完成中断
+
 /*******************************************************************
  * 功能:nRF24L01中断处理函数
  * 参数:无
@@ -586,9 +594,14 @@ extern void nRF24L01_Rx_ISR(void);
  *  调用nRF24L01_InterruptHandle()
  *  若没有在ISR中直接调用这个函数,需要在ISR中添加nRF24L01_Write_Reg(STATUS,0xE0)清除nRF24的
  *  中断标志,否则stm32会卡在中断,同时应当保留status寄存器的值,方便后续中断处理
- *  未应答中断:使nRF24L01进入RxMode,并且清除TxFIFO,再执行自定义的nRF24L01_NoACK_ISR()函数
- *  发生完成中断:使nRF24L01进入RxMode,再执行自定义的nRF24L01_Tx_ISR()函数
- *  接收中断:将RxFIFO中的值载入到单片机内部的Sbuffer,再执行自定义的nRF24L01_Rx_ISR()函数
+ * nRF24L01_InterruptHandle中断处理过程
+ *  未应答中断:
+ *      使nRF24L01进入RxMode,并且清除TxFIFO,再执行自定义的nRF24L01_NoACK_ISR()函数
+ *  发生完成中断:
+ *      使nRF24L01进入RxMode,再执行自定义的nRF24L01_Tx_ISR()函数
+ *  接收中断:
+ *      (NRF24_USE_SBUFFER==1)将RxFIFO中的值载入到单片机内部的Sbuffer,再执行自定义
+ *      的nRF24L01_Rx_ISR()函数
  * 2021/12/29   庞碧璋
  *******************************************************************/
 void nRF24L01_InterruptHandle(void)

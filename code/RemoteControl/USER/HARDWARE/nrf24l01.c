@@ -4,6 +4,15 @@
 
 #include "BSP\bsp_spi.h"
 
+/**********************************自定义静态变量**********************************************/
+static const Pin nRF24L01_PIN[5] = {
+    {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
+    {NRF24L01_CSN_PIN,NRF24L01_CSN_GPIO},
+    {NRF24L01_MOSI_PIN,NRF24L01_MOSI_GPIO},
+    {NRF24L01_MISO_PIN,NRF24L01_MISO_GPIO},
+    {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
+};
+
 /**********************************移植接口**********************************************/
 #define CE_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CE])
 #define CE_HIGH Pin_Set(nRF24L01_PIN[NRF24L01_CE])

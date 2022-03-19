@@ -70,14 +70,6 @@
 #define NRF24L01_MISO   3
 #define NRF24L01_SCK    4
 
-static const Pin nRF24L01_PIN[5] = {
-    {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
-    {NRF24L01_CSN_PIN,NRF24L01_CSN_GPIO},
-    {NRF24L01_MOSI_PIN,NRF24L01_MOSI_GPIO},
-    {NRF24L01_MISO_PIN,NRF24L01_MISO_GPIO},
-    {NRF24L01_SCK_PIN,NRF24L01_SCK_GPIO}
-};
-
 /*************************************功能配置宏************************************************/
 
 //相关配置

@@ -20,6 +20,7 @@ uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
 ER_Type	ER_is[4];					//电调任务参数
 DCMotor_Type DCMotor_is[2];			//直流电机任务参数
+StreetMotor_Type STMotor_is[3];		//舵机任务参数
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
@@ -28,15 +29,19 @@ TaskHandle_t	OLED_TaskHandle = NULL;
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t	MPU_TaskHandle = NULL;
 TaskHandle_t	KeyInput_TaskHandle = NULL;
+TaskHandle_t	Beep_TaskHandle = NULL;
 TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄 0:main_l 1:main_r 2:sec_l 3:sec_r
 TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄
+TaskHandle_t	StreetMotor_TaskHandle[3] = {NULL,NULL};	//舵机任务句柄
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
-QueueHandle_t		ER_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//电调控制命令 0:main_l 1:main_r 2:sec_l 3:sec_r
-QueueHandle_t		DCMotor_CmdQueue[2] = {NULL,NULL};		//直流电机控制命令
+QueueHandle_t		ER_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//电调任务命令接收队列
+QueueHandle_t		DCMotor_CmdQueue[2] = {NULL,NULL};		//直流电机任务命令接收队列
+QueueHandle_t		STMotor_CmdQueue[3] = {NULL,NULL,NULL};	//舵机任务命令接收队列
+QueueHandle_t		Beep_CmdQueue = NULL;		//蜂鸣器命令队列
 SemaphoreHandle_t	mpuDat_occFlag = NULL;		//mpu数据占用标志(互斥信号量)
 SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互斥信号量)
 
@@ -59,8 +64,9 @@ int main(void)
 	BSP_PWM_Init();
 	BSP_LED_Init();
 	BSP_Usart_Init();
-	BSP_Timer_Init();
+	//BSP_Timer_Init();
 	BSP_Key_Init();
+	BSP_Beep_Init();
 
 	//OLED初始化
 	OLED12864_Init();
@@ -105,7 +111,7 @@ int main(void)
 		xTaskCreate(
 			RTOSCreateTask_Task,
 			"init",
-			128,
+			256,
 			NULL,
 			15,
 			&RTOSCreateTask_TaskHandle
@@ -128,14 +134,31 @@ void RTOSCreateTask_Task(void*ptr)
 	nRF24_SendResult = xQueueCreate(1,1);			//nrf发送结果标志
     mpuDat_occFlag = xSemaphoreCreateMutex();		//mpu_data[3] 保护
     sysStatus_occFlag = xSemaphoreCreateMutex();	//sysStatus 保护
-
+	Beep_CmdQueue = xQueueCreate(3,sizeof(BeepCtr_Type));
+	//建立2个舵机控制任务
+	for(uint8_t temp=0;temp<2;temp++)
+	{
+		STMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
+		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
+		STMotor_is[temp].channel = 4 + temp;	////PWM通道 bsp_pwm.c Target_CCR[4~5]
+		STMotor_is[temp].cycle = 20;
+		STMotor_is[temp].max_inc = 100;
+		xTaskCreate(
+			StreetMotor_Task,
+			"SM",
+			64,
+			(void*)&STMotor_is[temp],
+			5,
+			&StreetMotor_TaskHandle[temp]
+		);
+	}
 	//建立2个直流电机控制任务
 	for(uint8_t temp=0;temp<2;temp++)
 	{
-		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));
-		DCMotor_is[temp].recieveCmd = &DCMotor_CmdQueue[temp];
-		DCMotor_is[temp].channel[0] = temp*2;
-		DCMotor_is[temp].channel[1] = temp*2+1;
+		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));	//创建命令接收队列
+		DCMotor_is[temp].queueAddr = &DCMotor_CmdQueue[temp];				//设置命令接收队列地址
+		DCMotor_is[temp].cycle = 20;	//50Hz执行频率
+		DCMotor_is[temp].a4950_id = temp;		//a4950(电机)标号(0、1) 见HARDWARE\MOTOR\a9450.c 
 		xTaskCreate(
 			Motor_Task,
 			"MT",
@@ -148,15 +171,15 @@ void RTOSCreateTask_Task(void*ptr)
 	//建立4个电调控制任务
 	for(uint8_t temp=0;temp<4;temp++)
 	{
-		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));
-		ER_is[temp].recieveCmd = &ER_CmdQueue[temp];
-		ER_is[temp].channel = 8+temp;	//Target_CCR[8~11] T8C1~T8C4
+		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));		//创建命令接收队列
+		ER_is[temp].queueAddr = &ER_CmdQueue[temp];					//设置命令接收队列地址
+		ER_is[temp].channel = 8+temp;	//PWM通道 Target_CCR[8~11] T8C1~T8C4
 		ER_is[temp].cycle = 20;
-		ER_is[temp].MaxInc = 10;
+		ER_is[temp].max_inc = 10;
 		xTaskCreate(
         	ER_Task,
         	"ER",
-        	64,
+        	72,
         	(void*)&ER_is[temp],
         	5,
         	&ER_TaskHandle[temp]
@@ -207,6 +230,26 @@ void RTOSCreateTask_Task(void*ptr)
         9,
         &KeyInput_TaskHandle
     );
+	xTaskCreate(
+		Beep_Task,
+		"Beep",
+		48,
+		NULL,
+		4,
+		&Beep_TaskHandle
+	);
+	//鸣响,表示开始运行
+	Beep_ON(Mu_Fre[0]);
+	soft_delay_ms(200);
+	Beep_OFF();
+	soft_delay_ms(100);
+	Beep_ON(Mu_Fre[1]);
+	soft_delay_ms(200);
+	Beep_OFF();
+	soft_delay_ms(100);
+	Beep_ON(Mu_Fre[2]);
+	soft_delay_ms(200);
+	Beep_OFF();
 	//删除自身
     vTaskDelete(NULL);
 }

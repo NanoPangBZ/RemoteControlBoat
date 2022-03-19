@@ -8,7 +8,7 @@
  * 2022/3/7   庞碧璋
  *******************************************************************/
 
-#define timingTimer TIM2
+#define timingTimer TIM3
 
 void BSP_Timer_Init(void);
 void startTiming(void);

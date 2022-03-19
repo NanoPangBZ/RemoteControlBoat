@@ -1,16 +1,17 @@
 #include "bsp_usart.h"
 
-//每行第一个元素表示该缓存区存放的数据个数
-static uint8_t USART_Rx_Sbuffer[2][Rx_SbufferSize + 1] = {{0},{0}};
-static uint8_t USART_Tx_Sbuffer[2][Tx_SbufferSize + 1] = {{0},{0}};
-//获取缓存区数据长度    只能在bsp_usart文件内使用! 缓存区对外不可见!
-#define Tx_Len(USARTx)  USART_Tx_Sbuffer[USARTx-1][0]
-#define Rx_Len(USARTx)  USART_Rx_Sbuffer[USARTx-1][0]
-//获取最后一字节
-#define Last_Byte(addr) *(addr+*addr)
-
+//配置
+#define USART_COUNT     2   //使用的串口数量
+#define Rx_SbufferSize  32  //每个串口接收缓存大小
+#define Tx_SbufferSize  32  //每个串口发送缓存大小
+//目标串口以及对应的DMA通道
 static USART_TypeDef* Target_Usart[2] = {USART1,USART3};
 static DMA_Channel_TypeDef* TargetDMA_Channel[2] = {DMA1_Channel4,DMA1_Channel3};
+//每行第一个元素表示缓存区存放的数据个数
+static uint8_t USART_Rx_Sbuffer[USART_COUNT][Rx_SbufferSize + 1] = {{0},{0}};
+static uint8_t USART_Tx_Sbuffer[USART_COUNT][Tx_SbufferSize + 1] = {{0},{0}};
+#define Tx_Len(USART)  USART_Tx_Sbuffer[USART-1][0]
+#define Rx_Len(USART)  USART_Rx_Sbuffer[USART-1][0]
 
 void BSP_Usart_Init(void)
 {
@@ -18,7 +19,7 @@ void BSP_Usart_Init(void)
     USART_Config();
     USART_NVIC_Config();
     USART_DMA_Config();
-    for(uint8_t temp=0;temp<2;temp++)
+    for(uint8_t temp=0;temp<USART_COUNT;temp++)
         USART_Cmd(Target_Usart[temp],ENABLE);
 }
 
@@ -97,10 +98,11 @@ void USART_DMA_Config(void)
     DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
     DMA_InitStruct.DMA_Priority = DMA_Priority_Medium;
 
-    for(uint8_t temp=0;temp<2;temp++)
+    //配置每个串口的发送DMA 注意:有部分串口不支持DMA
+    for(uint8_t temp=0;temp<USART_COUNT;temp++)
     {
         DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&Target_Usart[temp]->DR;
-        DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)&USART_Tx_Sbuffer[temp][1];
+        DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)&USART_Tx_Sbuffer[temp][1];   //设置发送地址
 
         DMA_Init(TargetDMA_Channel[temp],&DMA_InitStruct);
         USART_DMACmd(Target_Usart[temp],USART_DMAReq_Tx,ENABLE);
@@ -118,10 +120,18 @@ void USART_DMA_Config(void)
     NVIC_InitStruct.NVIC_IRQChannel = DMA1_Channel3_IRQn;
     NVIC_Init(&NVIC_InitStruct);
 
-    for(uint8_t temp=0;temp<2;temp++)
+    for(uint8_t temp=0;temp<USART_COUNT;temp++)
         DMA_ITConfig(TargetDMA_Channel[temp],DMA_IT_TC,ENABLE);
 }
 
+/*******************************************************************
+ * 功能:清除部分串口接收缓存区
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ *  len:清除的长度
+ * 返回值:无
+ * 2021/5   庞碧璋
+ *******************************************************************/
 void USART_Push(uint8_t USARTx,uint8_t len)
 {
     if(USART_Rx_Sbuffer[USARTx-1][0] > len)
@@ -135,11 +145,29 @@ void USART_Push(uint8_t USARTx,uint8_t len)
     USART_Clear(USARTx);
 }
 
+/*******************************************************************
+ * 功能:清除串口接收缓存区
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ * 返回值:无
+ * 2021/5   庞碧璋
+ *******************************************************************/
 void USART_Clear(uint8_t USARTx)
 {
     USART_Rx_Sbuffer[USARTx-1][0] = 0;
 }
 
+/*******************************************************************
+ * 功能:串口发送多个字节,使用了DMA
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ *  dat:数据地址
+ *  len:数据长度
+ * 返回值:
+ *  0:DMA空闲
+ *  1:DMA在忙
+ * 2021/5   庞碧璋
+ *******************************************************************/
 uint8_t Usart_Send(uint8_t USARTx,uint8_t *dat,uint8_t len)
 {
     if(Usart_BusyCheck(USARTx)==0)
@@ -155,6 +183,16 @@ uint8_t Usart_Send(uint8_t USARTx,uint8_t *dat,uint8_t len)
     return 1;
 }
 
+/*******************************************************************
+ * 功能:使用串口DMA发送字符串
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ *  str:字符串
+ * 返回值:
+ *  0:DMA空闲
+ *  1:DMA在忙
+ * 2021/5   庞碧璋
+ *******************************************************************/
 uint8_t Usart_SendString(uint8_t USARTx,uint8_t*str)
 {
     if(Usart_BusyCheck(USARTx) == 0)
@@ -172,6 +210,15 @@ uint8_t Usart_SendString(uint8_t USARTx,uint8_t*str)
     return 1;
 }
 
+/*******************************************************************
+ * 功能:串口DMA在忙检查
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ * 返回值:
+ *  0:空闲
+ *  1:在忙
+ * 2021/5   庞碧璋
+ *******************************************************************/
 uint8_t Usart_BusyCheck(uint8_t USARTx)
 {
     if(USART_Tx_Sbuffer[USARTx-1][0] != 0)
@@ -253,6 +300,15 @@ void Rx_SbufferInput(uint8_t USARTx,uint8_t dat)
         USART_Rx_Sbuffer[USARTx-1][0] = Rx_SbufferSize + 1;
 }
 
+/*******************************************************************
+ * 功能:清除串口DMA在忙标志
+ * 参数:
+ *  USARTx:对应串口号 1,2,3,4
+ * 返回值:无
+ * 备注:
+ * 这个函数应当由DMA发送完成中断调用!!
+ * 2021/5   庞碧璋
+ *******************************************************************/
 void Tx_Flag_Clear(uint8_t USARTx)
 {
     USART_Tx_Sbuffer[USARTx-1][0] = 0;
@@ -266,4 +322,27 @@ int fputc (int c, FILE *fp)
 	return c;
 }
 
+#if 0
+
+void DMA1_Channel4_IRQHandler(void)
+{
+    if(DMA_GetITStatus(DMA1_IT_TC4) == SET)
+    {
+        Tx_Flag_Clear(1);
+        DMA1_Channel4->CCR &= (uint16_t)(~DMA_CCR1_EN);
+        DMA_ClearITPendingBit(DMA1_IT_TC4);
+    }
+}
+
+void DMA1_Channel3_IRQHandler(void)
+{
+    if(DMA_GetITStatus(DMA1_IT_TC3) == SET)
+    {
+        Tx_Flag_Clear(2);
+        DMA1_Channel3->CCR &= (uint16_t)(~DMA_CCR1_EN);
+        DMA_ClearITPendingBit(DMA1_IT_TC3);
+    }
+}
+
+#endif
 

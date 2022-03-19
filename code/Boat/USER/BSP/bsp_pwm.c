@@ -88,9 +88,6 @@ void PWM_Ch_Init(void)
     TIM_OCInitStruct.TIM_OCPolarity = TIM_OCPolarity_High;          //有效电平
     TIM_OCInitStruct.TIM_OutputNState = TIM_OutputNState_Disable;   //不开启互补通道
     TIM_OCInitStruct.TIM_OutputState = TIM_OutputState_Enable;
-    TIM_OCInitStruct.TIM_OCNIdleState = TIM_OCNIdleState_Reset;
-    TIM_OCInitStruct.TIM_OCIdleState = TIM_OCIdleState_Reset;
-    TIM_OCInitStruct.TIM_OCNPolarity = TIM_OCNPolarity_Low;
 
     //TIM1 直流减速电机
     TIM_OCInitStruct.TIM_Pulse = 3600 - 1;

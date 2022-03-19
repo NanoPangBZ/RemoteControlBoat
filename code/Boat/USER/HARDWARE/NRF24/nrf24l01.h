@@ -133,9 +133,6 @@ void nRF24L01_Clear_Sbuffer(void);
 #endif //NRF24_USE_SBUFFER
 
 void nRF24L01_InterruptHandle(void);
-void Rx_Handler(void);   //接收中断
-void NoACK_Handle(void); //未应答中断
-void Tx_Handle(void);    //发送完成中断
 
 #endif
 

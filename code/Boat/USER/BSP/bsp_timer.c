@@ -14,7 +14,7 @@ void BSP_Timer_Init(void)
     TIM_TimeBaseInitTypeDef TIM_InitStruct;
     NVIC_InitTypeDef    NVIC_InitStruct;
 
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2,ENABLE);
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3,ENABLE);
 
     TIM_InitStruct.TIM_ClockDivision = TIM_CKD_DIV1;    //不分频
     TIM_InitStruct.TIM_CounterMode = TIM_CounterMode_Up;//向上计数
@@ -24,7 +24,7 @@ void BSP_Timer_Init(void)
 
     TIM_TimeBaseInit(timingTimer,&TIM_InitStruct);
 
-    NVIC_InitStruct.NVIC_IRQChannel = TIM2_IRQn;
+    NVIC_InitStruct.NVIC_IRQChannel = TIM3_IRQn;
     NVIC_InitStruct.NVIC_IRQChannelCmd = ENABLE;
     NVIC_InitStruct.NVIC_IRQChannelPreemptionPriority = 15;
     NVIC_InitStruct.NVIC_IRQChannelSubPriority = 0;
@@ -67,7 +67,7 @@ uint32_t stopTiming(void)
 
 
 
-void TIM2_IRQHandler(void)
+void TIM3_IRQHandler(void)
 {
     if(TIM_GetITStatus(timingTimer,TIM_IT_Update) == SET)
     {

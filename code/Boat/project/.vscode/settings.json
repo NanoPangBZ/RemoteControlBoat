@@ -9,6 +9,8 @@
         "user.h": "c",
         "inv_mpu_dmp_motion_driver.h": "c",
         "inv_mpu.h": "c",
-        "font_lib.h": "c"
+        "font_lib.h": "c",
+        "self_portable.h": "c",
+        "xlocnum": "c"
     }
 }
