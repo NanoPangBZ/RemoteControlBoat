@@ -1,12 +1,5 @@
 #include "self_stm32f10x.h"
 
-#include "BSP\bsp_usart.h"
-#include "BSP\bsp_spi.h"
-#include "BSP\bsp_adc.h"
-
-#include "HARDWARE\usart_hmi.h"
-#include "HARDWARE\nrf24l01.h"
-
 #include "user.h"
 
 #pragma	diag_suppress	870	//屏蔽汉字警告
@@ -18,17 +11,23 @@ static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t SendFre = 50;	//nrf24通讯频率
+uint8_t RockerFre = 40;	//摇杆采样频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
 TaskHandle_t RemoteControl_TaskHandle = NULL;
 TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t User_FeedBack_TaskHandle = NULL;
+TaskHandle_t Rocker_TaskHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
+SemaphoreHandle_t	boatGyroscope_occFlag = NULL;		//船只姿态数据占用标志(互斥信号量)
+
+//全局变量
+float BoatGyroscope[3];					//船只返回的姿态 boatGyroscope_occFlag保护
 
 void RTOS_CreatTask_Task(void*ptr);
 
@@ -84,10 +83,12 @@ void RTOS_CreatTask_Task(void*ptr)
     nRF24_ISRFlag = xSemaphoreCreateBinary();
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();
 	nRF24_SendResult = xQueueCreate(1,1);
+	boatGyroscope_occFlag = xSemaphoreCreateMutex();
+
     xTaskCreate(
 		RemoteControl_Task,
 		"RC task",
-		256,
+		512,
 		(void*)&SendFre,
 		12,
 		&RemoteControl_TaskHandle
@@ -95,20 +96,18 @@ void RTOS_CreatTask_Task(void*ptr)
 	xTaskCreate(
 		nRF24L01_Intterrupt_Task,
 		"NI task",
-		64,
+		72,
 		NULL,
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
 	);
-    #if 1
 	xTaskCreate(
 		User_FeedBack_Task,
 		"UFB task",
-		72,
+		64,
 		NULL,
 		12,
 		&User_FeedBack_TaskHandle
 	);
-    #endif
     vTaskDelete(NULL);
 }

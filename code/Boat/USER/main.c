@@ -32,7 +32,7 @@ TaskHandle_t	KeyInput_TaskHandle = NULL;
 TaskHandle_t	Beep_TaskHandle = NULL;
 TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄 0:main_l 1:main_r 2:sec_l 3:sec_r
 TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄
-TaskHandle_t	StreetMotor_TaskHandle[3] = {NULL,NULL};	//舵机任务句柄
+TaskHandle_t	StreetMotor_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//舵机任务句柄
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
@@ -40,7 +40,7 @@ SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进�
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 QueueHandle_t		ER_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//电调任务命令接收队列
 QueueHandle_t		DCMotor_CmdQueue[2] = {NULL,NULL};		//直流电机任务命令接收队列
-QueueHandle_t		STMotor_CmdQueue[3] = {NULL,NULL,NULL};	//舵机任务命令接收队列
+QueueHandle_t		STMotor_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//舵机任务命令接收队列
 QueueHandle_t		Beep_CmdQueue = NULL;		//蜂鸣器命令队列
 SemaphoreHandle_t	mpuDat_occFlag = NULL;		//mpu数据占用标志(互斥信号量)
 SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互斥信号量)
@@ -158,6 +158,7 @@ void RTOSCreateTask_Task(void*ptr)
 		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));	//创建命令接收队列
 		DCMotor_is[temp].queueAddr = &DCMotor_CmdQueue[temp];				//设置命令接收队列地址
 		DCMotor_is[temp].cycle = 20;	//50Hz执行频率
+		DCMotor_is[temp].max_inc = 100;
 		DCMotor_is[temp].a4950 = a4950[temp];	//见hardware_def.h
 		xTaskCreate(
 			Motor_Task,

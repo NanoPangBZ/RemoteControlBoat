@@ -47,11 +47,13 @@
 #define configTICK_RATE_HZ			( ( TickType_t ) 500 )
 #define configMAX_PRIORITIES		( 12 )
 #define configMINIMAL_STACK_SIZE	( ( unsigned short ) 128 )          //空闲任务使用的堆栈大小 512Byte(128字) 
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 12 * 1024 ) )        //12kB 堆大小
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 16 * 1024 ) )        //16kB 堆大小
 #define configMAX_TASK_NAME_LEN		( 16 )
 #define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
 #define configIDLE_SHOULD_YIELD		1
+#define configSUPPORT_DYNAMIC_ALLOCATION   1    //使能动态分配
+#define configUSE_MUTEXES           1   //使用互斥信号量
 
 /* Co-routine definitions. */
 #define configUSE_CO_ROUTINES 		0

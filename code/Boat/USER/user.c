@@ -149,10 +149,10 @@ void OLED_Task(void*ptr)
         }
         OLED12864_Show_String(0,0,sbuf,1);
         //test
-        sprintf((char*)sbuf,"er1:%d",ER_ReadOut(&er[0]));
+        sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
         OLED12864_Clear_Page(4);
         OLED12864_Show_String(4,0,sbuf,1);
-        sprintf((char*)sbuf,"er2:%d",ER_ReadOut(&er[1]));
+        sprintf((char*)sbuf,"dc:%d",A4950_ReadOut(&a4950[0]));
         OLED12864_Clear_Page(5);
         OLED12864_Show_String(5,0,sbuf,1);
         //
@@ -188,6 +188,9 @@ void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
     ERctr_Type  e_ctr[2];
+    DCMotorCtr_Type d_ctr;
+    d_ctr.type = 4;
+    d_ctr.dat = 1;
     e_ctr[0].type = 1;
     e_ctr[1].type = 1;
     e_ctr[0].dat = 0;
@@ -196,22 +199,32 @@ void KeyInput_Task(void*ptr)
     {
         if(Key_Read(0) == Key_Press)
         {
-            e_ctr[0].dat += 10;
-            xQueueSend(ER_CmdQueue[0],&e_ctr[0],0);
+            d_ctr.dat = 100;
+            xQueueSend(DCMotor_CmdQueue[0],&d_ctr,0);
+            xQueueSend(DCMotor_CmdQueue[1],&d_ctr,0);
+            //e_ctr[0].dat += 10;
+            //xQueueSend(ER_CmdQueue[0],&e_ctr[0],0);
         }else
         if(Key_Read(1) == Key_Press)
         {
-            e_ctr[0].dat -= 10;
-            xQueueSend(ER_CmdQueue[0],&e_ctr[0],0);
+            d_ctr.dat = -100;
+            xQueueSend(DCMotor_CmdQueue[0],&d_ctr,0);
+            xQueueSend(DCMotor_CmdQueue[1],&d_ctr,0);
+            //e_ctr[0].dat -= 10;
+            //xQueueSend(ER_CmdQueue[0],&e_ctr[0],0);
         }else
         if(Key_Read(2) == Key_Press)
         {
+            e_ctr[0].dat += 10;
             e_ctr[1].dat += 10;
+            xQueueSend(ER_CmdQueue[0],&e_ctr[1],0);
             xQueueSend(ER_CmdQueue[1],&e_ctr[1],0);
         }else
         if(Key_Read(3) == Key_Press)
         {
+            e_ctr[0].dat -= 10;
             e_ctr[1].dat -= 10;
+            xQueueSend(ER_CmdQueue[0],&e_ctr[1],0);
             xQueueSend(ER_CmdQueue[1],&e_ctr[1],0);
         }
         vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);

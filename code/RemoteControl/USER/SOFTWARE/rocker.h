@@ -10,13 +10,10 @@ typedef struct
     uint8_t Median_min;     //中位下限位
 }rocker_Type;
 
-static rocker_Type rockers[4] = 
-{
+extern rocker_Type rockers[4];
 
-};
-
-void Rock_Get(rocker_Type*rocker);
-
+int Rocker_Get(rocker_Type*rocker);
+uint8_t Rocker_UnsignedGet(rocker_Type*rocker);
 
 #endif
 

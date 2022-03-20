@@ -12,14 +12,14 @@
 
 /*************************遥控器发送,船只接收*******************************/
 
-//直流电机单周期最大增量
+//直流电机单周期最大增量    4B
 typedef struct
 {
     uint16_t motor_1;
     uint16_t motor_2;
 }DC_maxIncType;
 
-//直流电机目标速度
+//直流电机目标速度  5B
 typedef struct
 {
     uint8_t cmd;    //0:直接输出 1:周期增量靠近
@@ -27,7 +27,7 @@ typedef struct
     short motor_2;
 }DC_targetType;
 
-//舵机单周期角度最大增量
+//舵机单周期角度最大增量    12B
 typedef struct
 {
     float angle1_inc;
@@ -36,7 +36,7 @@ typedef struct
 }SM_maxIncType;
 
 //舵机目标角度
-typedef struct
+typedef struct  //13B
 {
     uint8_t cmd;    //0:直接输出 1:周期增量靠近
     float angle1;
@@ -44,7 +44,7 @@ typedef struct
     float angle3;
 }SM_targetType;
 
-//电调目标设置
+//电调目标设置  //8B
 typedef struct
 {
     uint16_t main_l;
@@ -53,14 +53,14 @@ typedef struct
     uint16_t sec_r;
 }ER_targetType;
 
-//电调PWM单周期最大增量
+//电调PWM单周期最大增量 //2B
 typedef struct
 {
     uint8_t main;
     uint8_t sec;
 }ER_maxIncType;
 
-//航向角修正pid设置
+//航向角修正pid设置 //13B
 typedef struct
 {
     uint8_t k;  //缩放单位 0.01 (0~2.56)
@@ -69,7 +69,7 @@ typedef struct
     float d;
 }Yaw_pidType;
 
-//控制数据
+//控制数据  13B
 typedef union
 {
     ER_maxIncType ER_maxInc;
@@ -82,7 +82,7 @@ typedef union
 }ControlDat;
 
 //遥控器发送的数据类型
-typedef struct
+typedef struct      //20B
 {
     uint8_t type;       //dat的数据类型 0:保留
                         //1:ER_maxIncType 2:ER_targetType 3:SM_maxIncType 
@@ -90,7 +90,7 @@ typedef struct
     uint8_t cmd;        //附加命令 0:保留 1:航向角锁定 2:紧急停止
     uint8_t replyType;  //请求遥控器返回的数据类型
     uint8_t rocker[4];  //摇杆值 lx ly rx ry (0~100)       4Byte
-    ControlDat dat;
+    ControlDat dat; //13B
 }RemoteControl_Type;
 
 /*************************船只发送,遥控器接收*******************************/

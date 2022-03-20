@@ -10,17 +10,13 @@ extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;
 extern TaskHandle_t User_FeedBack_TaskHandle ;
 
 //队列 信号
-extern SemaphoreHandle_t nRF24_ISRFlag;
-extern SemaphoreHandle_t nRF24_RecieveFlag;
-extern QueueHandle_t     nRF24_SendResult;
+extern SemaphoreHandle_t	nRF24_ISRFlag;		//nrf24硬件中断标志
+extern SemaphoreHandle_t	nRF24_RecieveFlag;	//nrf24接收标志(数据已经进入单片机,等待处理)
+extern QueueHandle_t		nRF24_SendResult;	//nrf24发送结果
+extern SemaphoreHandle_t	boatGyroscope_occFlag;		//船只姿态数据占用标志(互斥信号量)
 
 //全局变量
-float BoatGyroscope[3];
-uint16_t SendCount = 0;
-uint16_t SendAck_Count = 0;
-uint16_t SendNoAck_Count = 0;
-uint16_t Slave_AckCoount = 0;
-uint16_t Slave_NoAckCount = 0;
+extern float BoatGyroscope[3];
 
 //使用串口打印消息(带当前任务的名字,方便调试)
 #define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
@@ -45,54 +41,31 @@ void RemoteControl_Task(void*ptr)
         //等待nrf24中断(发送完成中断 或 未应答中断)
         while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4) == pdFALSE)
         {
-            vTaskSuspend(User_FeedBack_TaskHandle);    //暂时挂起串口反馈,防止冲掉调试消息
-
-            //等待中断超时
-            //可能是本机nrf24没有进入中断 或者 中断处理函数没有给出消息
-            printMsg("nrf24 wait send result timeout.\r\n");
-            vTaskDelay(500/portTICK_RATE_MS);
-            //检查硬件是否正常
-            while(nRF24L01_Check() == 1)
-            {
-                printMsg("nrf24 is err!!\r\n");
-                vTaskDelay(500/portTICK_RATE_MS);
-            }
-            //硬件故障排除,重新发送
-            printMsg("nrf24 is ok.\r\n");
-            nRF24L01_Config(&nRF24_Cfg);
-            printMsg("refresh nrf24 config.\r\n");
-            vTaskDelay(500/portTICK_RATE_MS);
-            printMsg("Resend.\r\n");
-
-            vTaskResume(User_FeedBack_TaskHandle);    //解除串口反馈任务的挂起
-
             nRF24L01_Send(sbuffer,32);
             time = xTaskGetTickCount();  //重新获取当前系统时间
         }
-        SendCount++;
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
         if(temp)
         {
             //接收到硬件ACK 说明从机的nrf24已经接收到
-            SendAck_Count++;
             //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
             //等待时长 1/2 任务周期
             if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle/2) == pdFALSE)
             {
                 //未接收到从机软件回复
-                Slave_NoAckCount++;
             }else
             {
                 //处理从机软件回复
-                MemCopy((uint8_t*)sbuffer,(uint8_t*)BoatGyroscope,12);
-                Slave_AckCoount++;
+                if(xSemaphoreTake(boatGyroscope_occFlag,2) == pdPASS)
+                {
+                    MemCopy((uint8_t*)sbuffer,(uint8_t*)BoatGyroscope,12);
+                    xSemaphoreGive(boatGyroscope_occFlag);
+                }
             }
         }else
         {
             //没有接收到硬件ACK 说明从机没有接收到数据
-            SendNoAck_Count++;
         }
-        
         xTaskDelayUntil(&time,delay_cycle); 
     }
 }
@@ -137,14 +110,16 @@ void User_FeedBack_Task(void*ptr)
         vTaskDelay(1000/portTICK_RATE_MS);
         #endif
         //vTaskDelay(20/portTICK_PERIOD_MS);
-        vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);
-        for(uint8_t temp=0;temp<3;temp++)
+        vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);   //50Hz
+        if(xSemaphoreTake(boatGyroscope_occFlag,10) == pdPASS)
         {
-            Vofa_Input(BoatGyroscope[temp],temp);
+            for(uint8_t temp=0;temp<3;temp++)
+                Vofa_Input(BoatGyroscope[temp],temp);
+            xSemaphoreGive(boatGyroscope_occFlag);
         }
-        for(uint8_t temp = 0;temp<5;temp++)
+        for(uint8_t temp = 0;temp<4;temp++)
         {
-            Vofa_Input(ADC_ReadVoltage(temp),3+temp);
+            Vofa_Input((float)Rocker_UnsignedGet(&rockers[temp]),temp + 3);
         }
         Vofa_Send();
     }

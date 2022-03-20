@@ -2,7 +2,7 @@
 #define _VAFA_P_H_
 
 //宏定义通道数量
-#define DataNum	10
+#define DataNum	7
 
 #include "BSP\bsp_usart.h"
 

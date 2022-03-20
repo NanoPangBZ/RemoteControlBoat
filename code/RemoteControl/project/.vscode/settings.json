@@ -4,6 +4,9 @@
         "queue.h": "c",
         "nrf24l01.h": "c",
         "self_stm32f10x.h": "c",
-        "vofa_p.h": "c"
+        "vofa_p.h": "c",
+        "self_portable.h": "c",
+        "rocker.h": "c",
+        "user.h": "c"
     }
 }

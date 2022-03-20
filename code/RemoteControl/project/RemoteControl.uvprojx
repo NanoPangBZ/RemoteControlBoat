@@ -458,6 +458,16 @@
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\vofa_p.c</FilePath>
             </File>
+            <File>
+              <FileName>self_portable.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\self_portable\self_portable.c</FilePath>
+            </File>
+            <File>
+              <FileName>rocker.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\rocker.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
