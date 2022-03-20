@@ -149,12 +149,12 @@ void OLED_Task(void*ptr)
         }
         OLED12864_Show_String(0,0,sbuf,1);
         //test
+        sprintf((char*)sbuf,"er1:%d",ER_ReadOut(&er[0]));
         OLED12864_Clear_Page(4);
+        OLED12864_Show_String(4,0,sbuf,1);
+        sprintf((char*)sbuf,"er2:%d",ER_ReadOut(&er[1]));
         OLED12864_Clear_Page(5);
-        OLED12864_Clear_Page(6);
-        OLED12864_Show_Num(4,0,PWM_Read(0),1);
-        OLED12864_Show_Num(5,0,A4950_ReadOut(0),1);
-        OLED12864_Show_Num(6,0,PWM_Read(11),1);
+        OLED12864_Show_String(5,0,sbuf,1);
         //
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
@@ -187,31 +187,32 @@ void MPU_Task(void*ptr)
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
-    DCMotorCtr_Type ctr;
-    StreetMotorCtr_Type s_str;
-    s_str.type = 1;
-    ctr.type = 4;
+    ERctr_Type  e_ctr[2];
+    e_ctr[0].type = 1;
+    e_ctr[1].type = 1;
+    e_ctr[0].dat = 0;
+    e_ctr[1].dat = 0;
     while(1)
     {
         if(Key_Read(0) == Key_Press)
         {
-            ctr.dat = 10;
-            xQueueSend(DCMotor_CmdQueue[0],&ctr,0);
+            e_ctr[0].dat += 10;
+            xQueueSend(ER_CmdQueue[0],&e_ctr[0],0);
         }else
         if(Key_Read(1) == Key_Press)
         {
-            ctr.dat = -10;
-            xQueueSend(DCMotor_CmdQueue[0],&ctr,0);
+            e_ctr[0].dat -= 10;
+            xQueueSend(ER_CmdQueue[0],&e_ctr[0],0);
         }else
         if(Key_Read(2) == Key_Press)
         {
-            s_str.dat = +5.0f;
-            xQueueSend(STMotor_CmdQueue[0],&s_str,0);
+            e_ctr[1].dat += 10;
+            xQueueSend(ER_CmdQueue[1],&e_ctr[1],0);
         }else
         if(Key_Read(3) == Key_Press)
         {
-            s_str.dat = -5.0f;
-            xQueueSend(STMotor_CmdQueue[0],&s_str,0);
+            e_ctr[1].dat -= 10;
+            xQueueSend(ER_CmdQueue[1],&e_ctr[1],0);
         }
         vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
     }
@@ -233,24 +234,24 @@ void Motor_Task(void*ptr)
             switch(ctr.type)
             {
                 case 1:target_out = ctr.dat;break;
-                case 2:target_out = 0;A4950_Brake(DCMT.a4950_id);break;
+                case 2:target_out = 0;A4950_Brake(&DCMT.a4950);break;
                 case 3:DCMT.max_inc = ctr.dat;break;
                 case 4:target_out += ctr.dat;break;
             }
         }
-        out = A4950_ReadOut(DCMT.a4950_id);
+        out = A4950_ReadOut(&DCMT.a4950);
         if(out < target_out)
         {
             out += DCMT.max_inc;
             if(out > target_out)
                 out = target_out;
-            A4950_Out(DCMT.a4950_id,target_out);
+            A4950_Out(&DCMT.a4950,target_out);
         }else if(out > target_out)
         {
             out -= DCMT.max_inc;
             if(out < target_out)
                 out = target_out;
-            A4950_Out(DCMT.a4950_id,target_out);
+            A4950_Out(&DCMT.a4950,target_out);
         }
         vTaskDelayUntil(&time,DCMT.cycle / portTICK_PERIOD_MS);
     }
@@ -262,8 +263,8 @@ void ER_Task(void*ptr)
     ER_Type ERT = *(ER_Type*)ptr ;
     ERctr_Type ctr;
     TickType_t  time = xTaskGetTickCount();
-    uint16_t target_width = 1400 ;
-    uint16_t width;
+    int target_out = 0 ;
+    int out;
     while(1)
     {
         //查看是否有新的指令
@@ -271,27 +272,28 @@ void ER_Task(void*ptr)
         {
             switch (ctr.type)
             {
-            case 1: target_width = ctr.dat; break;
+            case 1: target_out = ctr.dat; break;
             case 2: ERT.max_inc = ctr.dat; break;
             case 3: ERT.cycle = ctr.dat;break;
             }
         }
-        //更新PWM输出
-        width = PWM_Read(ERT.channel);
-        if(width > target_width)
+        //获取当前电调输出
+        out = ER_ReadOut(&ERT.er);
+        //更新电调输出
+        if(out > target_out)
         {
-            if(width - target_width > ERT.max_inc)
-                width -= ERT.max_inc;
+            if(out - target_out > ERT.max_inc)
+                out -= ERT.max_inc;
             else
-                width = target_width;
-            PWM_Out(ERT.channel,width);
-        }else if(width < target_width)
+                out = target_out;
+            ER_Out(&ERT.er,out);
+        }else if(out < target_out)
         {
-            if(target_width - width > ERT.max_inc)
-                width += ERT.max_inc;
+            if(target_out - out > ERT.max_inc)
+                out += ERT.max_inc;
             else
-                width = target_width;
-            PWM_Out(ERT.channel,width);
+                out = target_out;
+            ER_Out(&ERT.er,out);
         }
         vTaskDelayUntil(&time,ERT.cycle/portTICK_PERIOD_MS);
     }
@@ -315,7 +317,7 @@ void StreetMotor_Task(void*ptr)
             case 2:SMT.angle_inc = ctr.dat; break;
             case 3:target_angle = ctr.dat; break;
             case 4:target_angle = angle = ctr.dat;
-                StreetMotor_Set(SMT.street_motor_id,target_angle);
+                StreetMotor_Set(&SMT.streetMotor,target_angle);
                 break;
             }
         }
@@ -324,13 +326,13 @@ void StreetMotor_Task(void*ptr)
             angle += SMT.angle_inc;
             if(angle > target_angle)
                 angle = target_angle;
-            StreetMotor_Set(SMT.street_motor_id,target_angle);
+            StreetMotor_Set(&SMT.streetMotor,target_angle);
         }else if(angle > target_angle)
         {
             angle -= SMT.angle_inc;
             if(angle < target_angle)
                 angle = target_angle;
-            StreetMotor_Set(SMT.street_motor_id,target_angle);
+            StreetMotor_Set(&SMT.streetMotor,target_angle);
         }
         vTaskDelayUntil(&time,SMT.cycle/portTICK_PERIOD_MS);
     }

@@ -4,16 +4,16 @@ static void ADC_GPIO_Init(void);
 static void ADC_Config(void);
 
 const static Pin ADC_Pin[5] = {
-    {GPIO_Pin_0,GPIOA},{GPIO_Pin_1,GPIOA},
-    {GPIO_Pin_0,GPIOB},{GPIO_Pin_1,GPIOB},
-    {GPIO_Pin_4,GPIOA}
+    {GPIO_Pin_4,GPIOB},{GPIO_Pin_5,GPIOB},
+    {GPIO_Pin_6,GPIOA},{GPIO_Pin_7,GPIOA},
+    {GPIO_Pin_0,GPIOA}
 };
 
 const static uint8_t ADC_Channel[5] = 
 {
-    ADC_Channel_0,ADC_Channel_1,
     ADC_Channel_8,ADC_Channel_9,
-    ADC_Channel_4
+    ADC_Channel_6,ADC_Channel_7,
+    ADC_Channel_0
 };
 
 void BSP_ADC_Init(void)
@@ -66,12 +66,13 @@ void ADC_Config(void)
 float ADC_ReadVoltage(uint8_t channel_num)
 {
     //给规则通道1绑定ADC捕获口
-    ADC_RegularChannelConfig(ADC1,ADC_Channel[channel_num],1,ADC_SampleTime_13Cycles5);
+    ADC_RegularChannelConfig(ADC1,ADC_Channel[channel_num],1,ADC_SampleTime_7Cycles5);
     //开始转换
     ADC_SoftwareStartConvCmd(ADC1,ENABLE);
     //等待转换结束
     while(!ADC_GetFlagStatus(ADC1,ADC_FLAG_EOC));
 
-    return (float)ADC_GetConversionValue(ADC1)*3.3/4096;
+    return (float)ADC_GetConversionValue(ADC1)/4096;
+    //return (float)ADC_GetConversionValue(ADC1)*3.3/4096;
 }
 

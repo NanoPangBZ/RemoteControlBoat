@@ -25,39 +25,6 @@ uint16_t Slave_NoAckCount = 0;
 //使用串口打印消息(带当前任务的名字,方便调试)
 #define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
 
-void RTOS_CreatTask_Task(void*ptr)
-{
-    nRF24_ISRFlag = xSemaphoreCreateBinary();
-	nRF24_RecieveFlag = xSemaphoreCreateBinary();
-	nRF24_SendResult = xQueueCreate(1,1);
-    xTaskCreate(
-		RemoteControl_Task,
-		"RC task",
-		256,
-		(void*)&SendFre,
-		12,
-		&RemoteControl_TaskHandle
-	);
-	xTaskCreate(
-		nRF24L01_Intterrupt_Task,
-		"NI task",
-		64,
-		NULL,
-		13,
-		&nRF24L01_Intterrupt_TaskHandle
-	);
-    #if 1
-	xTaskCreate(
-		User_FeedBack_Task,
-		"UFB task",
-		72,
-		NULL,
-		12,
-		&User_FeedBack_TaskHandle
-	);
-    #endif
-    vTaskDelete(NULL);
-}
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -170,13 +137,15 @@ void User_FeedBack_Task(void*ptr)
         vTaskDelay(1000/portTICK_RATE_MS);
         #endif
         //vTaskDelay(20/portTICK_PERIOD_MS);
-        vTaskDelayUntil(&time,10/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);
         for(uint8_t temp=0;temp<3;temp++)
         {
             Vofa_Input(BoatGyroscope[temp],temp);
         }
-        if(Slave_AckCoount != 0)
-        Vofa_Input(Slave_AckCoount / (float)SendAck_Count ,3);
+        for(uint8_t temp = 0;temp<5;temp++)
+        {
+            Vofa_Input(ADC_ReadVoltage(temp),3+temp);
+        }
         Vofa_Send();
     }
 }

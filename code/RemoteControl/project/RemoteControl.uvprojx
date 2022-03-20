@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F10X_MD</Define>
               <Undefine></Undefine>
-              <IncludePath>..\USER;..\StdPeriph\inc;..\OS\core\include;..\OS\port;C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.3.0\Device\Include;C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include</IncludePath>
+              <IncludePath>..\USER;..\StdPeriph\inc;..\OS\core\include;..\OS\port;C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.3.0\Device\Include;C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include;..\..\..\code</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

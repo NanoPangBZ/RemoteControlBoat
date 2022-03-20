@@ -10,18 +10,17 @@
 
 #include "SOFTWARE\vofa_p.h"
 
+#include "self_portable\self_portable.h"
+
 #include "self_stm32f10x.h"
 
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
 
-void RTOS_CreatTask_Task(void*ptr);
 void RemoteControl_Task(void*ptr);          //nrf24l01控制
 void nRF24L01_Intterrupt_Task(void*ptr);
 void User_FeedBack_Task(void*ptr);
-void HMI_slider_Task(void*ptr);
-
 
 #endif //_USER_H_
 

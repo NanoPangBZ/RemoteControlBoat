@@ -140,7 +140,7 @@ void RTOSCreateTask_Task(void*ptr)
 	{
 		STMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
 		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
-		STMotor_is[temp].street_motor_id = temp;	//舵机编号
+		STMotor_is[temp].streetMotor = streetMotor[temp];	//见hardware_def.h
 		STMotor_is[temp].cycle = 20;
 		STMotor_is[temp].angle_inc = 0.5f;
 		xTaskCreate(
@@ -158,7 +158,7 @@ void RTOSCreateTask_Task(void*ptr)
 		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));	//创建命令接收队列
 		DCMotor_is[temp].queueAddr = &DCMotor_CmdQueue[temp];				//设置命令接收队列地址
 		DCMotor_is[temp].cycle = 20;	//50Hz执行频率
-		DCMotor_is[temp].a4950_id = temp;		//a4950(电机)标号(0、1) 见HARDWARE\MOTOR\a9450.c 
+		DCMotor_is[temp].a4950 = a4950[temp];	//见hardware_def.h
 		xTaskCreate(
 			Motor_Task,
 			"MT",
@@ -173,7 +173,7 @@ void RTOSCreateTask_Task(void*ptr)
 	{
 		ER_CmdQueue[temp] = xQueueCreate(3,sizeof(ERctr_Type));		//创建命令接收队列
 		ER_is[temp].queueAddr = &ER_CmdQueue[temp];					//设置命令接收队列地址
-		ER_is[temp].channel = 8+temp;	//PWM通道 Target_CCR[8~11] T8C1~T8C4 见bsp_pwm.c
+		ER_is[temp].er = er[temp];	//见hardware_def.h
 		ER_is[temp].cycle = 20;
 		ER_is[temp].max_inc = 10;
 		xTaskCreate(
@@ -239,16 +239,8 @@ void RTOSCreateTask_Task(void*ptr)
 		&Beep_TaskHandle
 	);
 	//鸣响,表示开始运行
-	Beep_ON(Mu_Fre[0]);
-	soft_delay_ms(200);
-	Beep_OFF();
-	soft_delay_ms(100);
-	Beep_ON(Mu_Fre[1]);
-	soft_delay_ms(200);
-	Beep_OFF();
-	soft_delay_ms(100);
-	Beep_ON(Mu_Fre[2]);
-	soft_delay_ms(200);
+	Beep_ON(Mu_Fre[4]);
+	soft_delay_ms(800);
 	Beep_OFF();
 	//删除自身
     vTaskDelete(NULL);

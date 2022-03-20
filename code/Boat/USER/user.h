@@ -9,6 +9,7 @@
 #include "BSP\bsp_key.h"
 #include "BSP\bsp_beep.h"
 
+#include "HARDWARE\hardware_def.h"
 #include "HARDWARE\MPU6050\mpu6050.h"
 #include "HARDWARE\MPU6050\eMPL\inv_mpu.h"
 #include "HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.h"
@@ -16,6 +17,7 @@
 #include "HARDWARE\OLED\oled12864.h"
 #include "HARDWARE\MOTOR\a4950.h"
 #include "HARDWARE\MOTOR\street_motor.h"
+#include "HARDWARE\MOTOR\er.h"
 
 #include "SOFTWARE\vofa_p.h"
 
@@ -28,7 +30,7 @@
 //电调任务参数
 typedef struct
 {
-    uint8_t channel;    //pwm管道 见bsp_pwm.c中的Target_CCR[]数组
+    er_Type er;    //电调
     uint8_t max_inc;     //单任务周期脉宽最大增量 -> us单位
     uint8_t cycle;      //任务执行周期 -> ms单位
     QueueHandle_t*queueAddr;   ///队列句柄的地址,用于电调任务接收控制信号
@@ -38,14 +40,14 @@ typedef struct
 typedef struct
 {
     uint8_t type;   //0:保留 1:脉宽 2:最大增量 3:任务周期
-    uint16_t dat;
+    int dat;        
 }ERctr_Type;
 
 /**************************直流电机相关类型*****************************************/
 //直流电机任务参数
 typedef struct
 {
-    uint8_t a4950_id; //a4950_id 见HARDWARE/MOTOR/a4950.c
+    a4950_Type a4950 ;  //a4950
     uint16_t max_inc ;  //最大增量
     uint8_t cycle;
     QueueHandle_t*queueAddr;   //队列句柄的地址,用于直流电机任务接收控制信号
@@ -62,7 +64,7 @@ typedef struct
 //舵机任务参数
 typedef struct
 {
-    uint8_t street_motor_id;    //舵机标号 见HARDWARE\MOTOR\street_motor.c street_motor_pwm_ch[]数组
+    streetMotor_Type streetMotor; //舵机 见hardware_def.h
     uint8_t cycle;              //任务执行周期 -> ms单位
     float angle_inc;          //单任务周期角度增量
     QueueHandle_t*queueAddr;    //队列句柄的地址,用于电调任务接收控制信号

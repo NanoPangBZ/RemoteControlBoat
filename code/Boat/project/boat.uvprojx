@@ -339,7 +339,7 @@
               <MiscControls></MiscControls>
               <Define>USE_STDPERIPH_DRIVER,STM32F10X_HD</Define>
               <Undefine></Undefine>
-              <IncludePath>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.3.0\Device\Include;C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include;..\FWLIB\inc;..\USER;..\OS\include;..\OS\portable</IncludePath>
+              <IncludePath>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.3.0\Device\Include;C:\Keil_v5\ARM\PACK\ARM\CMSIS\5.8.0\CMSIS\Core\Include;..\FWLIB\inc;..\USER;..\OS\include;..\OS\portable;..\..\..\code</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -548,6 +548,16 @@
               <FileType>1</FileType>
               <FilePath>..\USER\HARDWARE\MOTOR\street_motor.c</FilePath>
             </File>
+            <File>
+              <FileName>er.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\MOTOR\er.c</FilePath>
+            </File>
+            <File>
+              <FileName>hardware_def.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\USER\HARDWARE\hardware_def.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -557,6 +567,11 @@
               <FileName>vofa_p.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\vofa_p.c</FilePath>
+            </File>
+            <File>
+              <FileName>self_portable.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\self_portable\self_portable.c</FilePath>
             </File>
           </Files>
         </Group>

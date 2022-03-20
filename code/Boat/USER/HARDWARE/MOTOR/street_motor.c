@@ -7,17 +7,17 @@
 //舵机对应的pwm通道
 uint8_t street_motor_pwm_ch[STREET_MOTOR_NUM] = {4,5,6,7};
 
-void StreetMotor_Set(unsigned char motor_id,float angle)
+void StreetMotor_Set(streetMotor_Type*motor,float angle)
 {
-    if(motor_id < STREET_MOTOR_NUM && angle>0 && angle<180)
-        PWM_Out_Port(street_motor_pwm_ch[motor_id],AngleToWidth(angle));
+    if(angle>0 && angle<180)
+        PWM_Out_Port(motor->pwm_ch,AngleToWidth(angle));
 }
 
-void StreetMotor_SetWidth(unsigned char motor_id,uint16_t width)
+void StreetMotor_SetWidth(streetMotor_Type*motor,uint16_t width)
 {
-    if(motor_id < STREET_MOTOR_NUM && width>499 && width<2501)
+    if(width>499 && width<2501)
     {
-        PWM_Out_Port(street_motor_pwm_ch[motor_id],width);
+        PWM_Out_Port(motor->pwm_ch,width);
     }
 }
 

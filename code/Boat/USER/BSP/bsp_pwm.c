@@ -2,7 +2,7 @@
 
 static TIM_TypeDef* Target_TIM[3] = {TIM1,TIM4,TIM8};
 
-static __IO uint16_t* Target_CCR[12] = {
+static __IO uint16_t* PWM_Channel[12] = {
     &TIM1->CCR1,&TIM1->CCR2,&TIM1->CCR3,&TIM1->CCR4,
     &TIM4->CCR1,&TIM4->CCR2,&TIM4->CCR3,&TIM4->CCR4,
     &TIM8->CCR1,&TIM8->CCR2,&TIM8->CCR3,&TIM8->CCR4,
@@ -126,12 +126,12 @@ void PWM_Ch_Init(void)
 void PWM_Out(uint8_t Channel,uint16_t CCR)
 {
     if(Channel < 12)
-    *Target_CCR[Channel] = CCR;
+    *PWM_Channel[Channel] = CCR;
 }
 
 uint16_t PWM_Read(uint8_t Channel)
 {
     if(Channel < 12)
-        return *Target_CCR[Channel];
+        return *PWM_Channel[Channel];
     return 0xffff;
 }

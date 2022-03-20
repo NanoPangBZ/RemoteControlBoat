@@ -11,6 +11,8 @@
         "inv_mpu.h": "c",
         "font_lib.h": "c",
         "self_portable.h": "c",
-        "xlocnum": "c"
+        "xlocnum": "c",
+        "hardware_def.h": "c",
+        "xiosbase": "c"
     }
 }

@@ -9,6 +9,7 @@
                 "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\OS\\port",
                 "C:\\Keil_v5\\ARM\\PACK\\Keil\\STM32F1xx_DFP\\2.3.0\\Device\\Include",
                 "C:\\Keil_v5\\ARM\\PACK\\ARM\\CMSIS\\5.8.0\\CMSIS\\Core\\Include",
+                "e:\\UnderwayProject\\Machine_contest\\code",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
                 "e:\\UnderwayProject\\Machine_contest\\code\\RemoteControl\\USER\\BSP",

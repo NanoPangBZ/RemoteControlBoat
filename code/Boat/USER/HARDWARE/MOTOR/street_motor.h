@@ -18,9 +18,14 @@
 
 #include "BSP\bsp_pwm.h"
 
+typedef struct
+{
+    uint8_t pwm_ch;     //PWM的通道标号 见 BSP\bsp_pwm.c PWM_Channel[]数组
+    uint8_t max_angle;
+}streetMotor_Type;
 
-void StreetMotor_Set(unsigned char motor_id,float angle);
-void StreetMotor_SetWidth(unsigned char motor_id,uint16_t width);
+void StreetMotor_Set(streetMotor_Type*motor,float angle);
+void StreetMotor_SetWidth(streetMotor_Type*motor,uint16_t width);
 unsigned int AngleToWidth(float angle);
 
 #endif

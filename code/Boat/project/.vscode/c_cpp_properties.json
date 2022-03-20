@@ -9,6 +9,7 @@
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS\\include",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS\\portable",
+                "e:\\UnderwayProject\\Machine_contest\\code",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include",
                 "C:\\Keil_v5\\ARM\\ARMCC\\include\\rw",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\FWLIB\\src",
@@ -18,7 +19,9 @@
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\NRF24",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\OLED",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE\\MOTOR",
+                "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\HARDWARE",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\USER\\SOFTWARE",
+                "e:\\UnderwayProject\\Machine_contest\\code\\self_portable",
                 "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\OS"
             ],
             "defines": [
