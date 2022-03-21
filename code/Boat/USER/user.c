@@ -29,6 +29,8 @@ void ReplyMaster_Task(void*ptr)
 {
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
+    RemoteControl_Type  nrf_receive;
+    Ctr_Type    ctr;
     uint8_t resualt;        //发射结果接收
     uint8_t signal = 1;     //信号丢失标志
     BeepCtr_Type beep;      //蜂鸣器控制
@@ -65,6 +67,14 @@ void ReplyMaster_Task(void*ptr)
         }
         //处理主机发送的数据
         //..
+        MemCopy(sbuf,(uint8_t*)&nrf_receive,20);
+        ctr.StreetMotorCtr.type = 1;
+        ctr.StreetMotorCtr.dat = (float)(50-nrf_receive.rocker[2]) / 100;
+        xQueueSend(STMotor_CmdQueue[0],&ctr.StreetMotorCtr,0);
+        ctr.ERctr.type = 1;
+        ctr.ERctr.dat = (50-nrf_receive.rocker[1]) * 10;
+        xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);
+        xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);
         //回复主机
         if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
         {

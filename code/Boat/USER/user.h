@@ -21,6 +21,8 @@
 
 #include "SOFTWARE\vofa_p.h"
 
+#include "self_portable\self_portable.h"
+
 #include "FreeRTOS.h"
 #include "task.h"
 #include "semphr.h"
@@ -86,6 +88,15 @@ typedef struct
     uint16_t on_ms; //鸣响时长
     uint16_t off_ms;    //关闭时长
 }BeepCtr_Type;
+
+/**************************联合体*****************************************/
+typedef union
+{
+    BeepCtr_Type BeepCtr;
+    StreetMotorCtr_Type StreetMotorCtr;
+    DCMotorCtr_Type DCMotorCtr;
+    ERctr_Type  ERctr;
+}Ctr_Type;      //控制信息
 
 
 /**************************系统状态*****************************************/

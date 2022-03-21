@@ -11,7 +11,7 @@ static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t SendFre = 50;	//nrf24通讯频率
-uint8_t RockerFre = 40;	//摇杆采样频率
+uint8_t RockerFre = 50;	//摇杆采样频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
@@ -25,10 +25,11 @@ SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 SemaphoreHandle_t	boatGyroscope_occFlag = NULL;		//船只姿态数据占用标志(互斥信号量)
+//SemaphoreHandle_t	rockerInput_occFlag = NULL;			//摇杆输入数据占用标志(互斥信号量)
 
 //全局变量
-float BoatGyroscope[3];					//船只返回的姿态 boatGyroscope_occFlag保护
-
+float BoatGyroscope[3];		//船只返回的姿态 boatGyroscope_occFlag保护
+uint8_t rockerInput[4];		//摇杆输入
 void RTOS_CreatTask_Task(void*ptr);
 
 int main(void)
@@ -84,6 +85,7 @@ void RTOS_CreatTask_Task(void*ptr)
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();
 	nRF24_SendResult = xQueueCreate(1,1);
 	boatGyroscope_occFlag = xSemaphoreCreateMutex();
+	//rockerInput_occFlag = xSemaphoreCreateMutex();
 
     xTaskCreate(
 		RemoteControl_Task,
@@ -92,6 +94,14 @@ void RTOS_CreatTask_Task(void*ptr)
 		(void*)&SendFre,
 		12,
 		&RemoteControl_TaskHandle
+	);
+	xTaskCreate(
+		Rocker_Task,
+		"RK",
+		32,
+		(void*)&RockerFre,
+		9,
+		&Rocker_TaskHandle
 	);
 	xTaskCreate(
 		nRF24L01_Intterrupt_Task,

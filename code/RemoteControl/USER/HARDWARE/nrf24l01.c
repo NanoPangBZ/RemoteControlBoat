@@ -126,6 +126,8 @@ uint8_t  nRF24L01_Init(void)
         return 1;
     }
 
+    nRF24L01_Write_Reg(STATUS,0xE0);    //清除nrf24所有中断
+
     //默认配置
     DefaultCfg.Channel = DEFAULT_Channel;
     DefaultCfg.retry = DEFAULT_RETRY;

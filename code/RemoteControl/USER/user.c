@@ -2,25 +2,20 @@
 
 //任务参数
 extern nRF24L01_Cfg nRF24_Cfg;
-extern uint8_t SendFre;
 
 //任务句柄
-extern TaskHandle_t RemoteControl_TaskHandle ;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;    
-extern TaskHandle_t User_FeedBack_TaskHandle ;
 
 //队列 信号
 extern SemaphoreHandle_t	nRF24_ISRFlag;		//nrf24硬件中断标志
 extern SemaphoreHandle_t	nRF24_RecieveFlag;	//nrf24接收标志(数据已经进入单片机,等待处理)
 extern QueueHandle_t		nRF24_SendResult;	//nrf24发送结果
 extern SemaphoreHandle_t	boatGyroscope_occFlag;		//船只姿态数据占用标志(互斥信号量)
+//extern SemaphoreHandle_t    rockerInput_occFlag;        //摇杆输入数据占用标志(互斥信号量)
 
 //全局变量
 extern float BoatGyroscope[3];
-
-//使用串口打印消息(带当前任务的名字,方便调试)
-#define printMsg(str)   printf("%s:%s",pcTaskGetName(NULL),str)
-
+extern uint8_t rockerInput[4];		//摇杆输入
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -33,19 +28,28 @@ void RemoteControl_Task(void*ptr)
 {
     uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;    //通讯频率计算
     uint8_t*sbuffer = nRF24L01_Get_RxBufAddr();
-    uint8_t temp;
+    RemoteControl_Type  send;
+    uint8_t sendResault = 0;
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
-        nRF24L01_Send(sbuffer,32);
+        MemCopy(rockerInput,send.rocker,4);
+        nRF24L01_Send((uint8_t*)&send,32);
         //等待nrf24中断(发送完成中断 或 未应答中断)
-        while(xQueueReceive(nRF24_SendResult,&temp,delay_cycle/4) == pdFALSE)
+        while(xQueueReceive(nRF24_SendResult,&sendResault,delay_cycle/4) == pdFALSE)
         {
+            //可能是nrf出现未知错误
+            vTaskSuspend(nRF24L01_Intterrupt_TaskHandle);   //挂起中断任务
+            nRF24L01_Write_Reg(0x07,0xE0);    //清除nrf24所有中断
+            EXTI_ClearITPendingBit(NRF24L01_IQR_Line);          //挂起外部中断
+            nRF24L01_Init();                   //重新初始化nrf
+            nRF24L01_Config(&nRF24_Cfg);
+            vTaskResume(nRF24L01_Intterrupt_TaskHandle);    //解挂
             nRF24L01_Send(sbuffer,32);
             time = xTaskGetTickCount();  //重新获取当前系统时间
         }
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
-        if(temp)
+        if(sendResault)
         {
             //接收到硬件ACK 说明从机的nrf24已经接收到
             //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
@@ -67,6 +71,24 @@ void RemoteControl_Task(void*ptr)
             //没有接收到硬件ACK 说明从机没有接收到数据
         }
         xTaskDelayUntil(&time,delay_cycle); 
+    }
+}
+
+/*******************************************************************
+ * 功能:摇杆输入
+ * 参数:频率
+ * 返回值:无
+ * 2022/2/17   庞碧璋
+ *******************************************************************/
+void Rocker_Task(void*ptr)
+{
+    uint8_t cycle = (1000 / *(uint8_t*)ptr) / portTICK_PERIOD_MS;   //频率换算周期
+    TickType_t  time = xTaskGetTickCount();
+    while(1)
+    {
+        for(uint8_t temp=0;temp<4;temp++)
+            rockerInput[temp] = Rocker_UnsignedGet(&rockers[temp]);
+        vTaskDelayUntil(&time,cycle);
     }
 }
 
@@ -111,16 +133,19 @@ void User_FeedBack_Task(void*ptr)
         #endif
         //vTaskDelay(20/portTICK_PERIOD_MS);
         vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);   //50Hz
-        if(xSemaphoreTake(boatGyroscope_occFlag,10) == pdPASS)
+        float sbuf[3];
+        //姿态反馈
+        if(xSemaphoreTake(boatGyroscope_occFlag,5) == pdPASS)
         {
-            for(uint8_t temp=0;temp<3;temp++)
-                Vofa_Input(BoatGyroscope[temp],temp);
+            MemCopy((uint8_t*)BoatGyroscope,(uint8_t*)sbuf,12);
             xSemaphoreGive(boatGyroscope_occFlag);
         }
-        for(uint8_t temp = 0;temp<4;temp++)
-        {
-            Vofa_Input((float)Rocker_UnsignedGet(&rockers[temp]),temp + 3);
-        }
+        for(uint8_t temp=0;temp<3;temp++)
+            Vofa_Input(BoatGyroscope[temp],temp);
+        Vofa_Input((float)rockerInput[0],3);
+        Vofa_Input((float)rockerInput[1],4);
+        Vofa_Input((float)rockerInput[2],5);
+        Vofa_Input((float)rockerInput[3],6);
         Vofa_Send();
     }
 }
