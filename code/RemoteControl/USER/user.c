@@ -33,6 +33,7 @@ void RemoteControl_Task(void*ptr)
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
+        send.cmd = 1;
         MemCopy(rockerInput,send.rocker,4);
         nRF24L01_Send((uint8_t*)&send,32);
         //等待nrf24中断(发送完成中断 或 未应答中断)

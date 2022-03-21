@@ -41,7 +41,7 @@ typedef struct
 //电调控制类型
 typedef struct
 {
-    uint8_t type;   //0:保留 1:脉宽 2:最大增量 3:任务周期
+    uint8_t type;   //0:保留 1:目标输出 2:最大增量 3:任务周期
     int dat;        
 }ERctr_Type;
 
@@ -105,9 +105,8 @@ typedef struct
 {
     uint8_t oled_page;  //当前oled的页
     uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
+    RemoteControl_Type  Recive; //当前遥控器接收到的消息
 }sysStatus_Type;
-
-
 
 void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
@@ -118,6 +117,7 @@ void ER_Task(void*ptr);
 void Motor_Task(void*ptr);
 void StreetMotor_Task(void*ptr);
 void Beep_Task(void*ptr);
+void Main_Task(void*ptr);
 
 
 #endif  //_USER_H_

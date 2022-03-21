@@ -87,7 +87,7 @@ typedef struct      //20B
     uint8_t type;       //dat的数据类型 0:保留
                         //1:ER_maxIncType 2:ER_targetType 3:SM_maxIncType 
                         //4:SM_targetType 5:DC_maxIncType 6:DC_targetType
-    uint8_t cmd;        //附加命令 0:保留 1:航向角锁定 2:紧急停止
+    uint8_t cmd;        //附加命令 0:保留 1:按rocker值执行 2:航向角闭环
     uint8_t replyType;  //请求遥控器返回的数据类型
     uint8_t rocker[4];  //摇杆值 lx ly rx ry (0~100)       4Byte
     ControlDat dat; //13B

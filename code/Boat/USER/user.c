@@ -30,7 +30,6 @@ void ReplyMaster_Task(void*ptr)
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
     RemoteControl_Type  nrf_receive;
-    Ctr_Type    ctr;
     uint8_t resualt;        //发射结果接收
     uint8_t signal = 1;     //信号丢失标志
     BeepCtr_Type beep;      //蜂鸣器控制
@@ -65,16 +64,8 @@ void ReplyMaster_Task(void*ptr)
             taskEXIT_CRITICAL();
             vTaskResume(nRF24L01_Intterrupt_TaskHandle);
         }
-        //处理主机发送的数据
-        //..
-        MemCopy(sbuf,(uint8_t*)&nrf_receive,20);
-        ctr.StreetMotorCtr.type = 1;
-        ctr.StreetMotorCtr.dat = (float)(50-nrf_receive.rocker[2]) / 100;
-        xQueueSend(STMotor_CmdQueue[0],&ctr.StreetMotorCtr,0);
-        ctr.ERctr.type = 1;
-        ctr.ERctr.dat = (50-nrf_receive.rocker[1]) * 10;
-        xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);
-        xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);
+        //拷贝接收到的数据
+        MemCopy(sbuf,(uint8_t*)&nrf_receive,sizeof(RemoteControl_Type));
         //回复主机
         if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
         {
@@ -82,7 +73,13 @@ void ReplyMaster_Task(void*ptr)
             xSemaphoreGive(mpuDat_occFlag);     //释放资源
         }
         nRF24L01_Send(sbuf,32);
-        xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待发送结果
+        xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待回复结果 -> nRF24L01_Send()
+        //处理主机发送的数据 -> 更新到sysStatus.Recive中,由Main_Task处理
+        if(xSemaphoreTake(sysStatus_occFlag,5) == pdPASS)
+        {
+            MemCopy((uint8_t*)&nrf_receive,(uint8_t*)&sysStatus.Recive,sizeof(RemoteControl_Type));
+            xSemaphoreGive(sysStatus_occFlag);
+        }
         //判断是否需要系统状态标志
         //能运行到这里说明信号没有丢失
         if(signal == 1)
@@ -100,6 +97,45 @@ void ReplyMaster_Task(void*ptr)
             }
         }
         LED_CTR(0,LED_Reserval);
+    }
+}
+
+//主要任务
+void Main_Task(void*ptr)
+{
+    uint8_t cycle = (1000 / *(uint8_t*)ptr ) / portTICK_PERIOD_MS;  //频率转周期
+    TickType_t time = xTaskGetTickCount();
+    sysStatus_Type status;
+    Ctr_Type ctr;
+    int ER_BaseOut;     //电调基准输出
+    int ER_sc;          //对称电调差速 -> 用于差速转向
+    while(1)
+    {
+        if(xSemaphoreTake(sysStatus_occFlag,5) == pdPASS)
+        {
+            status = sysStatus;
+            xSemaphoreGive(sysStatus_occFlag);
+        }
+        if(status.Recive.cmd == 1)
+        {
+            //电调输出配置
+            ER_BaseOut = (status.Recive.rocker[1] - 50) * 10;
+            if(ER_BaseOut == 0)
+            {
+                ER_sc = (status.Recive.rocker[2] - 50) * 2;
+            }else
+            {
+                ER_sc = (int)( (status.Recive.rocker[2] - 50 ) * ER_BaseOut / 100 ) ;     //差速
+            }
+            ctr.ERctr.type = 1;
+            //左电调
+            ctr.ERctr.dat = ER_BaseOut + ER_sc;
+            xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);
+            //右电调
+            ctr.ERctr.dat = ER_BaseOut - ER_sc;
+            xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);
+        }
+        vTaskDelayUntil(&time,cycle);
     }
 }
 
@@ -159,10 +195,10 @@ void OLED_Task(void*ptr)
         }
         OLED12864_Show_String(0,0,sbuf,1);
         //test
-        sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
+        sprintf((char*)sbuf,"er1:%d",ER_ReadOut(&er[0]));
         OLED12864_Clear_Page(4);
         OLED12864_Show_String(4,0,sbuf,1);
-        sprintf((char*)sbuf,"dc:%d",A4950_ReadOut(&a4950[0]));
+        sprintf((char*)sbuf,"er2:%d",ER_ReadOut(&er[1]));
         OLED12864_Clear_Page(5);
         OLED12864_Show_String(5,0,sbuf,1);
         //
@@ -291,7 +327,7 @@ void ER_Task(void*ptr)
     while(1)
     {
         //查看是否有新的指令
-        while(xQueueReceive(*ERT.queueAddr,&ctr,0) == pdTRUE)
+        while(xQueueReceive(*ERT.queueAddr,&ctr,5) == pdTRUE)
         {
             switch (ctr.type)
             {
@@ -376,3 +412,4 @@ void Beep_Task(void*ptr)
         }
     }
 }
+

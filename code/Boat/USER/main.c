@@ -15,6 +15,7 @@ static uint8_t RxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
+uint8_t main_fre = 50;				//主任务频率
 uint8_t oled_fre = 24;				//OLED刷新频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
@@ -24,6 +25,7 @@ StreetMotor_Type STMotor_is[3];		//舵机任务参数
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
+TaskHandle_t	Main_TaskHandle = NULL;
 TaskHandle_t	ReplyMaster_TaskHandle = NULL;
 TaskHandle_t	OLED_TaskHandle = NULL;
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
@@ -128,6 +130,7 @@ void RTOSCreateTask_Task(void*ptr)
 	//全局变量赋值
     sysStatus.nrf_signal = 0;
     sysStatus.oled_page = 0;
+	sysStatus.Recive.cmd = 0;
 	//建立 队列 信号量
     nRF24_ISRFlag = xSemaphoreCreateBinary();		//nrf外部中断标志,由isr给出
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//nrf发生接收中断标志
@@ -176,7 +179,7 @@ void RTOSCreateTask_Task(void*ptr)
 		ER_is[temp].queueAddr = &ER_CmdQueue[temp];					//设置命令接收队列地址
 		ER_is[temp].er = er[temp];	//见hardware_def.h
 		ER_is[temp].cycle = 20;
-		ER_is[temp].max_inc = 10;
+		ER_is[temp].max_inc = 20;
 		xTaskCreate(
         	ER_Task,
         	"ER",
@@ -186,6 +189,15 @@ void RTOSCreateTask_Task(void*ptr)
         	&ER_TaskHandle[temp]
     	);
 	}
+	//建立主要任务
+    xTaskCreate(
+        Main_Task,
+        "main",
+        256,
+        (void*)&main_fre,
+        14,
+        &Main_TaskHandle
+    );
 	//建立nrf回复主机任务
     xTaskCreate(
         ReplyMaster_Task,
