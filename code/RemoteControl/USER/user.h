@@ -14,9 +14,9 @@
 
 #include "HARDWARE\usart_hmi.h"
 #include "HARDWARE\nrf24l01.h"
+#include "HARDWARE\rocker.h"
 
 #include "SOFTWARE\vofa_p.h"
-#include "SOFTWARE\rocker.h"
 
 #include "self_portable\self_portable.h"    //通讯协议
 

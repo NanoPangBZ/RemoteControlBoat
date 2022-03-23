@@ -5,14 +5,14 @@ static void ADC_Config(void);
 
 const static Pin ADC_Pin[5] = {
     {GPIO_Pin_4,GPIOB},{GPIO_Pin_5,GPIOB},
-    {GPIO_Pin_6,GPIOA},{GPIO_Pin_7,GPIOA},
+    {GPIO_Pin_1,GPIOA},{GPIO_Pin_4,GPIOA},
     {GPIO_Pin_0,GPIOA}
 };
 
 const static uint8_t ADC_Channel[5] = 
 {
     ADC_Channel_8,ADC_Channel_9,
-    ADC_Channel_6,ADC_Channel_7,
+    ADC_Channel_4,ADC_Channel_1,
     ADC_Channel_0
 };
 

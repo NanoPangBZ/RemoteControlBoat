@@ -119,13 +119,13 @@ void Main_Task(void*ptr)
         if(status.Recive.cmd == 1)
         {
             //电调输出配置
-            ER_BaseOut = (status.Recive.rocker[1] - 50) * 10;
+            ER_BaseOut = (status.Recive.rocker[0] - 50) * 10;
             if(ER_BaseOut == 0)
             {
-                ER_sc = (status.Recive.rocker[2] - 50) * 2;
+                ER_sc = (status.Recive.rocker[3] - 50) * 5;
             }else
             {
-                ER_sc = (int)( (status.Recive.rocker[2] - 50 ) * ER_BaseOut / 100 ) ;     //差速
+                ER_sc = (int)( (status.Recive.rocker[3] - 50 ) * ER_BaseOut / 80 ) ;     //差速
             }
             ctr.ERctr.type = 1;
             //左电调

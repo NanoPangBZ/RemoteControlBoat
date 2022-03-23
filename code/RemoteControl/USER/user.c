@@ -34,8 +34,8 @@ void RemoteControl_Task(void*ptr)
     while(1)
     {
         send.cmd = 1;
-        MemCopy(rockerInput,send.rocker,4);
-        nRF24L01_Send((uint8_t*)&send,32);
+        MemCopy(rockerInput,send.rocker,4);     //将摇杆值载入发送
+        nRF24L01_Send((uint8_t*)&send,32);      //发送
         //等待nrf24中断(发送完成中断 或 未应答中断)
         while(xQueueReceive(nRF24_SendResult,&sendResault,delay_cycle/4) == pdFALSE)
         {
@@ -143,10 +143,12 @@ void User_FeedBack_Task(void*ptr)
         }
         for(uint8_t temp=0;temp<3;temp++)
             Vofa_Input(BoatGyroscope[temp],temp);
+        #if 1
         Vofa_Input((float)rockerInput[0],3);
         Vofa_Input((float)rockerInput[1],4);
         Vofa_Input((float)rockerInput[2],5);
         Vofa_Input((float)rockerInput[3],6);
+        #endif
         Vofa_Send();
     }
 }

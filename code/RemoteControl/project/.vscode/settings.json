@@ -7,6 +7,7 @@
         "vofa_p.h": "c",
         "self_portable.h": "c",
         "rocker.h": "c",
-        "user.h": "c"
+        "user.h": "c",
+        "string.h": "c"
     }
 }

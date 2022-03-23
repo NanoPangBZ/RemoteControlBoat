@@ -16,3 +16,12 @@ Pass:
 
 ![image-20220317215042371](log.assets/image-20220317215042371.png)
 
+```c
+#include "stdui.g"
+
+void main(void)
+{
+    
+}
+```
+

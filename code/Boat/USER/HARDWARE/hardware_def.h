@@ -5,6 +5,14 @@
 #include "HARDWARE\MOTOR\street_motor.h"
 #include "HARDWARE\MOTOR\er.h"
 
+#define ER_MainL    0
+#define ER_MainR    1
+#define ER_SecL     2
+#define ER_SecR     3
+
+#define SM_D    0
+#define SD_U    1
+
 //a4950 X 2
 static a4950_Type a4950[2] = { {0,1,3600} , {2,3,3600} };
 //舵机X4

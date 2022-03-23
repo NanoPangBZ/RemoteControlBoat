@@ -89,7 +89,7 @@ typedef struct      //20B
                         //4:SM_targetType 5:DC_maxIncType 6:DC_targetType
     uint8_t cmd;        //附加命令 0:保留 1:按rocker值执行 2:航向角闭环
     uint8_t replyType;  //请求遥控器返回的数据类型
-    uint8_t rocker[4];  //摇杆值 lx ly rx ry (0~100)       4Byte
+    uint8_t rocker[4];  //摇杆值 ly lx ry rx       8B
     ControlDat dat; //13B
 }RemoteControl_Type;
 

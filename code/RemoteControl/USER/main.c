@@ -95,6 +95,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		12,
 		&RemoteControl_TaskHandle
 	);
+	#if 1
 	xTaskCreate(
 		Rocker_Task,
 		"RK",
@@ -103,6 +104,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		9,
 		&Rocker_TaskHandle
 	);
+	#endif
 	xTaskCreate(
 		nRF24L01_Intterrupt_Task,
 		"NI task",
