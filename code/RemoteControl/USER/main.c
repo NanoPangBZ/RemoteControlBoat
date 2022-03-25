@@ -46,6 +46,8 @@ int main(void)
 	BSP_Usart_Init();
 	BSP_ADC_Init();	//ADC初始化
 
+	printf("HelloWorld\r\n");
+
 	//nRF24L01初始化
 	nrf_err = nRF24L01_Init();
 	if(nrf_err)
@@ -65,6 +67,7 @@ int main(void)
 		nRF24L01_Rx_Mode();
 	}
 
+#if 0
 	xTaskCreate(
 		RTOS_CreatTask_Task,
 		"CreatTask",
@@ -75,8 +78,15 @@ int main(void)
 	);
 
 	vTaskStartScheduler();
+#endif
 
-	while(1);
+	while(1)
+	{
+		HMI_Msg("test");
+		soft_delay_ms(2000);
+		HMI_ClearMsg();
+		soft_delay_ms(2000);
+	}
 }
 
 void RTOS_CreatTask_Task(void*ptr)
