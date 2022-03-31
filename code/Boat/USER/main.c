@@ -32,9 +32,9 @@ TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t	MPU_TaskHandle = NULL;
 TaskHandle_t	KeyInput_TaskHandle = NULL;
 TaskHandle_t	Beep_TaskHandle = NULL;
-TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄 0:main_l 1:main_r 2:sec_l 3:sec_r
-TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄
-TaskHandle_t	StreetMotor_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//舵机任务句柄
+TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄	-> 接收ERctr_Type
+TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄 -> 接收DCMotorCtr_Type
+TaskHandle_t	StreetMotor_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//舵机任务句柄 -> 接收StreetMotorCtr_Type
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志

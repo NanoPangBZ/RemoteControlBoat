@@ -7,6 +7,7 @@
 #define HMI_Msg_TxtHight    16  //定义串口屏消息框字高
 #define HMI_Msg_BoxHight    64  //定义串口屏消息框高度
 
+void HMI_Reset(void);
 void HMI_ClearMsg(void);
 void HMI_Msg(char*msg);
 

@@ -46,13 +46,17 @@ int main(void)
 	BSP_Usart_Init();
 	BSP_ADC_Init();	//ADC初始化
 
-	printf("HelloWorld\r\n");
+	//串口屏初始化
+	soft_delay_ms(500);
+	//不清楚原因,用两次就能成功初始化
+	HMI_Reset();
+	HMI_Reset();
 
 	//nRF24L01初始化
 	nrf_err = nRF24L01_Init();
 	if(nrf_err)
 	{
-		//Usart_HMI_MsgBox("nrf err");
+		HMI_Msg("nrf err");
 	}else
 	{
 		//nRF24L01 相关配置
@@ -63,11 +67,11 @@ int main(void)
 		MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);
 		MemCopy(RxAddr,nRF24_Cfg.RX_Addr,5);
 		nRF24L01_Config(&nRF24_Cfg);	//配置nRF24L01	
-		//Usart_HMI_MsgBox("nrf pass");
+		HMI_Msg("nrf pass");
 		nRF24L01_Rx_Mode();
 	}
 
-#if 0
+#if 1
 	xTaskCreate(
 		RTOS_CreatTask_Task,
 		"CreatTask",
@@ -82,10 +86,7 @@ int main(void)
 
 	while(1)
 	{
-		HMI_Msg("test");
-		soft_delay_ms(2000);
-		HMI_ClearMsg();
-		soft_delay_ms(2000);
+
 	}
 }
 
@@ -123,6 +124,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
 	);
+	#if 0
 	xTaskCreate(
 		User_FeedBack_Task,
 		"UFB task",
@@ -131,5 +133,8 @@ void RTOS_CreatTask_Task(void*ptr)
 		12,
 		&User_FeedBack_TaskHandle
 	);
+	#endif
+	HMI_ClearMsg();
+	HMI_Msg("系统成功启动");
     vTaskDelete(NULL);
 }

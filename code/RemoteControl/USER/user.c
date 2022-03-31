@@ -70,6 +70,7 @@ void RemoteControl_Task(void*ptr)
         }else
         {
             //没有接收到硬件ACK 说明从机没有接收到数据
+            HMI_Msg("loss");
         }
         xTaskDelayUntil(&time,delay_cycle); 
     }

@@ -7,12 +7,18 @@ static uint8_t Add_3FF(uint8_t*buf);   //静态函数,在buf(字符串)末尾添
 const char* txt = "txt";
 const char* Msg = "msg";
 const char* val_y = "val_y";
+const char* val = "val";
 
-static uint16_t MsgHight = 0;   //当前串口屏消息框高度
+uint16_t MsgHight = 0;   //当前串口屏消息框高度
 
-void HMI_Init(void)
+void HMI_Reset(void)
 {
-    
+    uint8_t str[16] = "rest";
+    uint8_t len;
+    len = Add_3FF(str);
+    port_Send(str,len);
+    soft_delay_ms(1000);
+    MsgHight = 0;
 }
 
 /*************************************************
@@ -46,9 +52,6 @@ void HMI_ClearMsg(void)
     sprintf((char*)str,"%s.%s=\"\"",Msg,txt);
     len = Add_3FF(str);
     while( port_Send(str,len) );
-    sprintf((char*)str,"%s.%s=0",Msg,val_y);
-    len = Add_3FF(str);
-    while( port_Send( str,len ) );
     MsgHight = 0;
 }
 
@@ -65,7 +68,7 @@ void HMI_Msg(char*msg)
     len = Add_3FF(str);
     while( port_Send(str, len) );
     MsgHight += HMI_Msg_TxtHight;
-    if(MsgHight > HMI_Msg_BoxHight);
+    if(MsgHight > HMI_Msg_BoxHight)
     {
         sprintf((char*)str,"%s.%s+=%d",Msg,val_y,HMI_Msg_TxtHight);
         len = Add_3FF(str);
