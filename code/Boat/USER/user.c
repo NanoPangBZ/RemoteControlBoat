@@ -35,10 +35,11 @@ void ReplyMaster_Task(void*ptr)
     BeepCtr_Type beep;      //蜂鸣器控制
     while(1)
     {
+        //nrf半双工从机模式,等待nrf接收到主机的信号
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
         {
             //过长时间没有接收到主机信号
-            //紧急停止代码
+            //紧急停止代码 -> 暂时不在这里加入急停代码,只更新系统状态,由MainTask()完成急停代码
             //...
             //更新至系统状态
             if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
@@ -64,8 +65,10 @@ void ReplyMaster_Task(void*ptr)
             taskEXIT_CRITICAL();
             vTaskResume(nRF24L01_Intterrupt_TaskHandle);
         }
+
         //拷贝接收到的数据
         MemCopy(sbuf,(uint8_t*)&nrf_receive,sizeof(RemoteControl_Type));
+
         //回复主机
         if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
         {
@@ -74,12 +77,14 @@ void ReplyMaster_Task(void*ptr)
         }
         nRF24L01_Send(sbuf,32);
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待回复结果 -> nRF24L01_Send()
+
         //处理主机发送的数据 -> 更新到sysStatus.Recive中,由Main_Task处理
         if(xSemaphoreTake(sysStatus_occFlag,5) == pdPASS)
         {
             MemCopy((uint8_t*)&nrf_receive,(uint8_t*)&sysStatus.Recive,sizeof(RemoteControl_Type));
             xSemaphoreGive(sysStatus_occFlag);
         }
+
         //判断是否需要系统状态标志
         //能运行到这里说明信号没有丢失
         if(signal == 1)
@@ -111,15 +116,18 @@ void Main_Task(void*ptr)
     int ER_sc;          //对称电调差速 -> 用于差速转向
     while(1)
     {
+        //获得当前系统状态
         if(xSemaphoreTake(sysStatus_occFlag,5) == pdPASS)
         {
             status = sysStatus;
             xSemaphoreGive(sysStatus_occFlag);
         }
-        if(status.Recive.cmd == 1)
+        //执行从nrf接收到的指令
+        if(status.Recive.cmd == 1 && status.nrf_signal == 0)
         {
             //电调输出配置
             ER_BaseOut = (status.Recive.rocker[0] - 50) * 10;
+            //配置油门差 用于转向
             if(ER_BaseOut == 0)
             {
                 ER_sc = (status.Recive.rocker[3] - 50) * 5;
@@ -127,13 +135,22 @@ void Main_Task(void*ptr)
             {
                 ER_sc = (int)( (status.Recive.rocker[3] - 50 ) * ER_BaseOut / 80 ) ;     //差速
             }
+            //配置控制类型 ERctr->控制电调 type->控制类型
             ctr.ERctr.type = 1;
             //左电调
             ctr.ERctr.dat = ER_BaseOut + ER_sc;
-            xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);
+            xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);    //向左电调任务发送控制命令
             //右电调
             ctr.ERctr.dat = ER_BaseOut - ER_sc;
-            xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);
+            xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);    //向右电调任务发送控制命令
+        }else
+        {
+            //紧急停止
+            ctr.ERctr.type = 1;
+            ctr.ERctr.dat = 0;
+            //发送命令到所有电调任务
+            xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);
+            xQueueSend(ER_CmdQueue[1],&ctr.ERctr,1);
         }
         vTaskDelayUntil(&time,cycle);
     }
@@ -194,14 +211,14 @@ void OLED_Task(void*ptr)
             sprintf((char*)sbuf,"connect");
         }
         OLED12864_Show_String(0,0,sbuf,1);
-        //test
+        //数据反馈 er->电调油门  MT->直流电机油门
         sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
         OLED12864_Clear_Page(4);
         OLED12864_Show_String(4,0,sbuf,1);
         sprintf((char*)sbuf,"MT:%d",A4950_ReadOut(&a4950[1]));
         OLED12864_Clear_Page(5);
         OLED12864_Show_String(5,0,sbuf,1);
-        //
+        
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
     }
@@ -393,6 +410,7 @@ void StreetMotor_Task(void*ptr)
     }
 }
 
+//蜂鸣器任务
 void Beep_Task(void*ptr)
 {
     BeepCtr_Type ctr;

@@ -1,11 +1,4 @@
-#include "self_stm32f10x.h"
-
 #include "user.h"
-
-#include "FreeRTOS.h"
-#include "task.h"
-#include "semphr.h"
-#include "queue.h"
 
 #pragma	diag_suppress	870	//屏蔽汉字警告
 
@@ -49,6 +42,7 @@ SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互
 
 //全局变量
 float mpu_data[3] = {0,0,0};    //姿态 -> mpuDat_occFlag保护
+float BatVol = 0.0f;			//电池电压
 sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 
 void RTOSCreateTask_Task(void*ptr);
@@ -243,6 +237,7 @@ void RTOSCreateTask_Task(void*ptr)
         9,
         &KeyInput_TaskHandle
     );
+	//建立蜂鸣器任务
 	xTaskCreate(
 		Beep_Task,
 		"Beep",

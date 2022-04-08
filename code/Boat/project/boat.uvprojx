@@ -503,6 +503,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\BSP\bsp_beep.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_adc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -1,6 +1,6 @@
 #include "usart_hmi.h"
 
-#define port_Send(dat,len)  Usart_Send(1,dat,len)
+#define port_Send(dat,len)  Usart_Send(2,dat,len)
 
 static uint8_t Add_3FF(uint8_t*buf);   //静态函数,在buf(字符串)末尾添加3个0xFF -> 覆盖'/0'
 

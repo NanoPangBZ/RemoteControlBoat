@@ -1,6 +1,7 @@
 #ifndef _USER_H_
 #define _USER_H_
 
+#include "BSP\bsp_adc.h"
 #include "BSP\bsp_spi.h"
 #include "BSP\bsp_pwm.h"
 #include "BSP\bsp_led.h"
@@ -38,7 +39,7 @@ typedef struct
     QueueHandle_t*queueAddr;   ///队列句柄的地址,用于电调任务接收控制信号
 }ER_Type;
 
-//电调控制类型
+//电调控制类型 -> 通过队列发发送,由对应任务负责代码实现 CmdQueue -> 见main.c
 typedef struct
 {
     uint8_t type;   //0:保留 1:目标输出 2:最大增量 3:任务周期
@@ -55,7 +56,7 @@ typedef struct
     QueueHandle_t*queueAddr;   //队列句柄的地址,用于直流电机任务接收控制信号
 }DCMotor_Type;
 
-//直流电机控制类型
+//直流电机控制类型 -> 通过队列发发送,由对应任务负责代码实现 CmdQueue -> 见main.c
 typedef struct
 {
     uint8_t type;   //0:保留 1:目标速度 2:刹车 3:单周期增量 4:基于当前目标增加
@@ -72,7 +73,7 @@ typedef struct
     QueueHandle_t*queueAddr;    //队列句柄的地址,用于电调任务接收控制信号
 }StreetMotor_Type;
 
-//舵机控制类型
+//舵机控制类型 -> 通过队列发发送,由对应任务负责代码实现 CmdQueue -> 见main.c
 typedef struct
 {
     uint8_t type;       //0:保留 1:基于当前角度增加 2:单周期增量 3:设置目标角度 4:直接设置角度
@@ -80,7 +81,7 @@ typedef struct
 }StreetMotorCtr_Type;
 
 /**************************蜂鸣器相关类型*****************************************/
-//蜂鸣器控制
+//蜂鸣器控制 -> 通过队列发发送,由对应任务负责代码实现 CmdQueue -> 见main.c
 typedef struct
 {
     uint8_t count;  //鸣响次数
@@ -90,13 +91,15 @@ typedef struct
 }BeepCtr_Type;
 
 /**************************联合体*****************************************/
+//任务控制 -> 通过队列发发送,由对应任务负责代码实现 CmdQueue -> 见main.c
+//整合Ctr_Type,方便向任务发送
 typedef union
 {
     BeepCtr_Type BeepCtr;
     StreetMotorCtr_Type StreetMotorCtr;
     DCMotorCtr_Type DCMotorCtr;
     ERctr_Type  ERctr;
-}Ctr_Type;      //控制信息
+}Ctr_Type;
 
 
 /**************************系统状态*****************************************/
