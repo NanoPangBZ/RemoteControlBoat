@@ -64,7 +64,7 @@ float ADC_ReadVoltage(uint8_t channel_num)
     //开始转换
     ADC_SoftwareStartConvCmd(ADC1,DISABLE);
     //给规则通道1绑定ADC捕获口
-    ADC_RegularChannelConfig(ADC1,ADC_Channel[channel_num],1,ADC_SampleTime_13Cycles5);
+    ADC_RegularChannelConfig(ADC1,ADC_Channel[channel_num],1,ADC_SampleTime_239Cycles5);
     //开始转换
     ADC_SoftwareStartConvCmd(ADC1,ENABLE);
     //等待转换结束

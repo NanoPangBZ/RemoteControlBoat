@@ -17,17 +17,18 @@ DCMotor_Type DCMotor_is[2];			//直流电机任务参数
 StreetMotor_Type STMotor_is[3];		//舵机任务参数
 
 //任务句柄
-TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;
-TaskHandle_t	Main_TaskHandle = NULL;
-TaskHandle_t	ReplyMaster_TaskHandle = NULL;
-TaskHandle_t	OLED_TaskHandle = NULL;
-TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;
-TaskHandle_t	MPU_TaskHandle = NULL;
-TaskHandle_t	KeyInput_TaskHandle = NULL;
-TaskHandle_t	Beep_TaskHandle = NULL;
-TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄	-> 接收ERctr_Type
-TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄 -> 接收DCMotorCtr_Type
-TaskHandle_t	StreetMotor_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//舵机任务句柄 -> 接收StreetMotorCtr_Type
+TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;	//创建任务句柄
+TaskHandle_t	Main_TaskHandle = NULL;				//主任务句柄
+TaskHandle_t	ReplyMaster_TaskHandle = NULL;		//主机回复任务句柄
+TaskHandle_t	OLED_TaskHandle = NULL;				//oled刷新任务句柄
+TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;	//nrf中断任务句柄
+TaskHandle_t	MPU_TaskHandle = NULL;				//陀螺仪刷新任务句柄
+TaskHandle_t	KeyInput_TaskHandle = NULL;			//按键任务句柄
+TaskHandle_t	Voltage_TaskHandle = NULL;			//电池电压检测任务句柄
+TaskHandle_t	Beep_TaskHandle = NULL;				//蜂鸣器任务句柄
+TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄
+TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄
+TaskHandle_t	StreetMotor_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//舵机任务句柄
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
@@ -63,6 +64,7 @@ int main(void)
 	//BSP_Timer_Init();
 	BSP_Key_Init();
 	BSP_Beep_Init();
+	BSP_ADC_Init();
 
 	//OLED初始化
 	OLED12864_Init();
@@ -228,13 +230,22 @@ void RTOSCreateTask_Task(void*ptr)
         14,
         &nRF24L01_Intterrupt_TaskHandle
     );
+	//建立电池电压检测任务
+    xTaskCreate(
+        Voltage_Task,
+        "batvol",
+        128,
+        NULL,
+        3,
+        &Voltage_TaskHandle
+    );
 	//建立按键输入任务
     xTaskCreate(
         KeyInput_Task,
         "key",
         64,
         NULL,
-        9,
+        8,
         &KeyInput_TaskHandle
     );
 	//建立蜂鸣器任务
@@ -243,7 +254,7 @@ void RTOSCreateTask_Task(void*ptr)
 		"Beep",
 		48,
 		NULL,
-		4,
+		2,
 		&Beep_TaskHandle
 	);
 	//鸣响,表示开始运行

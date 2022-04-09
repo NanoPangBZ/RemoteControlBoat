@@ -114,6 +114,7 @@ typedef struct
 void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
 void nRF24L01_Intterrupt_Task(void*ptr);
+void Voltage_Task(void*ptr);
 void OLED_Task(void*ptr);
 void KeyInput_Task(void*ptr);
 void ER_Task(void*ptr);

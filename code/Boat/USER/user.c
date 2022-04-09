@@ -22,6 +22,7 @@ extern QueueHandle_t     STMotor_CmdQueue[3];
 
 //全局变量
 extern float mpu_data[3];               //姿态 -> mpuDat_occFlag保护
+extern float BatVol;
 extern sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 
 //回复主机
@@ -156,6 +157,19 @@ void Main_Task(void*ptr)
     }
 }
 
+void Voltage_Task(void*ptr)
+{
+    TickType_t  time = xTaskGetTickCount();
+    uint8_t sbuf[32];
+    while(1)
+    {
+        BatVol = Read_BatVol() * 4.01; //读取电池电压
+        sprintf((char*)sbuf,"%.3fV",BatVol);
+        OLED12864_Show_String(1,48,sbuf,2);
+        vTaskDelayUntil(&time,50);  //0.05s更新一次电池电压
+    }
+}
+
 //nrf24中断处理
 void nRF24L01_Intterrupt_Task(void*ptr)
 {
@@ -190,9 +204,9 @@ void OLED_Task(void*ptr)
             {
                 MemCopy((uint8_t*)mpu_data,(uint8_t*)gyroscope,12);
                 xSemaphoreGive(mpuDat_occFlag); //释放资源
-                OLED12864_Clear_Page(1);
-                OLED12864_Clear_Page(2);
-                OLED12864_Clear_Page(3);
+                OLED12864_Clear_PageBlock(1,0,48);
+                OLED12864_Clear_PageBlock(2,0,48);
+                OLED12864_Clear_PageBlock(3,0,48);
                 sprintf((char*)sbuf,"x:%.1f",gyroscope[0]);
                 OLED12864_Show_String(1,0,sbuf,1);
                 sprintf((char*)sbuf,"y:%.1f",gyroscope[1]);

@@ -14,6 +14,7 @@
 typedef struct
 {
     uint8_t pwm_ch;     //pwm管道标号
+    uint8_t dir;        //方向  0:默认 1:反向
     uint16_t median;    //中位
 }er_Type;
 
