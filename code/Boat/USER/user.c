@@ -144,6 +144,12 @@ void Main_Task(void*ptr)
             //右电调
             ctr.ERctr.dat = ER_BaseOut - ER_sc;
             xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);    //向右电调任务发送控制命令
+            //执行遥控器其他指令
+            switch(status.Recive.type)
+            {
+                case 6:break;
+                default:break;
+            }
         }else
         {
             //紧急停止
@@ -160,12 +166,9 @@ void Main_Task(void*ptr)
 void Voltage_Task(void*ptr)
 {
     TickType_t  time = xTaskGetTickCount();
-    uint8_t sbuf[32];
     while(1)
     {
         BatVol = Read_BatVol() * 4.01; //读取电池电压
-        sprintf((char*)sbuf,"%.3fV",BatVol);
-        OLED12864_Show_String(1,48,sbuf,2);
         vTaskDelayUntil(&time,50);  //0.05s更新一次电池电压
     }
 }
@@ -217,6 +220,7 @@ void OLED_Task(void*ptr)
             OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
             break;
         }
+        //显示nrf信号状态
         OLED12864_Clear_Page(0);
         if(sys.nrf_signal != 0)
         {
@@ -225,6 +229,9 @@ void OLED_Task(void*ptr)
             sprintf((char*)sbuf,"connect");
         }
         OLED12864_Show_String(0,0,sbuf,1);
+        //显示电压
+        sprintf((char*)sbuf,"Vol:%.1fV",BatVol);
+        OLED12864_Show_String(2,55,sbuf,2);
         //数据反馈 er->电调油门  MT->直流电机油门
         sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
         OLED12864_Clear_Page(4);
