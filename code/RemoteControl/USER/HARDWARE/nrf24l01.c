@@ -2,8 +2,6 @@
 #include "nrf24l01_micro.h"
 #include <stdio.h>
 
-#include "BSP\bsp_spi.h"
-
 /**********************************自定义静态变量**********************************************/
 static const Pin nRF24L01_PIN[5] = {
     {NRF24L01_CE_PIN,NRF24L01_CE_GPIO},
@@ -14,6 +12,7 @@ static const Pin nRF24L01_PIN[5] = {
 };
 
 /**********************************移植接口**********************************************/
+#include "BSP\bsp_spi.h"
 #define CE_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CE])
 #define CE_HIGH Pin_Set(nRF24L01_PIN[NRF24L01_CE])
 #define CS_LOW  Pin_Reset(nRF24L01_PIN[NRF24L01_CS])

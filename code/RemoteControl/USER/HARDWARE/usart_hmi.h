@@ -10,6 +10,7 @@
 void HMI_Reset(void);
 void HMI_ClearMsg(void);
 void HMI_Msg(char*msg);
+void HMI_SetNum(int num,uint8_t channel);
 
 #endif  //_USART_HMI_H_
 

@@ -12,6 +12,7 @@ static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 //任务参数
 uint8_t SendFre = 50;	//nrf24通讯频率
 uint8_t RockerFre = 50;	//摇杆采样频率
+uint8_t HMI_Fre = 20;	//串口屏幕刷新频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
@@ -19,6 +20,7 @@ TaskHandle_t RemoteControl_TaskHandle = NULL;
 TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t User_FeedBack_TaskHandle = NULL;
 TaskHandle_t Rocker_TaskHandle = NULL;
+TaskHandle_t HMI_TaskHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
@@ -51,6 +53,7 @@ int main(void)
 	//不清楚原因,用两次就能成功初始化
 	HMI_Reset();
 	HMI_Reset();
+	soft_delay_ms(500);
 
 	//nRF24L01初始化
 	nrf_err = nRF24L01_Init();
@@ -71,7 +74,8 @@ int main(void)
 		nRF24L01_Rx_Mode();
 	}
 
-#if 1
+	soft_delay_ms(2000);
+
 	xTaskCreate(
 		RTOS_CreatTask_Task,
 		"CreatTask",
@@ -82,22 +86,16 @@ int main(void)
 	);
 
 	vTaskStartScheduler();
-#endif
-
-	while(1)
-	{
-
-	}
+	while(1);
 }
 
 void RTOS_CreatTask_Task(void*ptr)
 {
-    nRF24_ISRFlag = xSemaphoreCreateBinary();
-	nRF24_RecieveFlag = xSemaphoreCreateBinary();
-	nRF24_SendResult = xQueueCreate(1,1);
-	boatGyroscope_occFlag = xSemaphoreCreateMutex();
-	//rockerInput_occFlag = xSemaphoreCreateMutex();
-
+    nRF24_ISRFlag = xSemaphoreCreateBinary();		//创建nrf中断信号量 -> 由外部中断给出
+	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//创建nrf接收中断信号量 -> 由nrf中断处理函数给出
+	nRF24_SendResult = xQueueCreate(1,1);			//创建nrf发送结果消息队列
+	boatGyroscope_occFlag = xSemaphoreCreateMutex();	//创建船只姿态数据占用标志(互斥信号量)
+	//建立遥控任务
     xTaskCreate(
 		RemoteControl_Task,
 		"RC task",
@@ -106,7 +104,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		12,
 		&RemoteControl_TaskHandle
 	);
-	#if 1
+	//建立摇杆值测量任务
 	xTaskCreate(
 		Rocker_Task,
 		"RK",
@@ -115,7 +113,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		9,
 		&Rocker_TaskHandle
 	);
-	#endif
+	//建立nrf中断处理任务
 	xTaskCreate(
 		nRF24L01_Intterrupt_Task,
 		"NI task",
@@ -124,7 +122,8 @@ void RTOS_CreatTask_Task(void*ptr)
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
 	);
-	#if 1
+	#if 0
+	//建立串口反馈任务 -> 串口1
 	xTaskCreate(
 		User_FeedBack_Task,
 		"UFB task",
@@ -134,6 +133,15 @@ void RTOS_CreatTask_Task(void*ptr)
 		&User_FeedBack_TaskHandle
 	);
 	#endif
+	//建立串口屏任务 -> 串口2
+	xTaskCreate(
+		HMI_Task,
+		"HMI task",
+		128,
+		&HMI_Fre,
+		10,
+		&HMI_TaskHandle
+	);
 	HMI_ClearMsg();
 	HMI_Msg("系统成功启动");
     vTaskDelete(NULL);

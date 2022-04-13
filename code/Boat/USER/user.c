@@ -59,8 +59,8 @@ void ReplyMaster_Task(void*ptr)
                 beep.on_ms = 100;
                 xQueueSend(Beep_CmdQueue,&beep,0);
             }
-            vTaskSuspend(nRF24L01_Intterrupt_TaskHandle);   //挂起中断服务
             //有可能是本机nrf挂了,重启nrf
+            vTaskSuspend(nRF24L01_Intterrupt_TaskHandle);   //挂起中断服务
             taskENTER_CRITICAL();
             nRF24L01_Restart();
             taskEXIT_CRITICAL();

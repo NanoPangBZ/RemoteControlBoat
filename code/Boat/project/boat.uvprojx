@@ -428,6 +428,11 @@
               <FileType>1</FileType>
               <FilePath>..\FWLIB\src\stm32f10x_usart.c</FilePath>
             </File>
+            <File>
+              <FileName>stm32f10x_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\FWLIB\src\stm32f10x_flash.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -507,6 +512,11 @@
               <FileName>bsp_adc.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\BSP\bsp_adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\BSP\bsp_flash.c</FilePath>
             </File>
           </Files>
         </Group>

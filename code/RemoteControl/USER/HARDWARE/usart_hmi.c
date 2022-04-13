@@ -1,6 +1,6 @@
 #include "usart_hmi.h"
 
-#define port_Send(dat,len)  Usart_Send(2,dat,len)
+#define port_Send(dat,len)  Usart_Send(1,dat,len)
 
 static uint8_t Add_3FF(uint8_t*buf);   //静态函数,在buf(字符串)末尾添加3个0xFF -> 覆盖'/0'
 
@@ -8,6 +8,7 @@ const char* txt = "txt";
 const char* Msg = "msg";
 const char* val_y = "val_y";
 const char* val = "val";
+const char* num_boxName[] = {"msp","ssp"};
 
 uint16_t MsgHight = 0;   //当前串口屏消息框高度
 
@@ -74,4 +75,19 @@ void HMI_Msg(char*msg)
         len = Add_3FF(str);
         while( port_Send(str,len) );
     }
+}
+
+/*************************************************
+ * 功能:更改HMI数字框显示的数据
+ * 参数:
+ * channle 0:主油门数字框 1:副油门数字框
+ * 返回值:无
+*************************************************/
+void HMI_SetNum(int num,uint8_t channel)
+{
+    uint8_t str[48];
+    uint8_t len;
+    sprintf((char*)str,"%s.%s=%d",num_boxName[channel],val,num);
+    len = Add_3FF(str);
+    while( port_Send(str,len) );
 }

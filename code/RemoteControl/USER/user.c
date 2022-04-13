@@ -132,7 +132,6 @@ void User_FeedBack_Task(void*ptr)
         printf("Slave_NoAckCount:%d\r\n",Slave_NoAckCount);
         vTaskDelay(1000/portTICK_RATE_MS);
         #endif
-        //vTaskDelay(20/portTICK_PERIOD_MS);
         vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);   //50Hz
         float sbuf[3];
         //姿态反馈
@@ -153,4 +152,15 @@ void User_FeedBack_Task(void*ptr)
     }
 }
 
+void HMI_Task(void*ptr)
+{
+    TickType_t time = xTaskGetTickCount();
+    uint16_t cycle = 1000 / *(uint8_t*)ptr / portTICK_PERIOD_MS;
+    while(1)
+    {
+        HMI_SetNum((short)rockerInput[0] - 50,0);
+        HMI_SetNum((short)rockerInput[3] - 50,1);
+        vTaskDelayUntil(&time,cycle);
+    }
+}
 
