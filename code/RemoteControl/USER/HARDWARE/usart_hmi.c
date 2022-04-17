@@ -1,6 +1,8 @@
 #include "usart_hmi.h"
 
-#define port_Send(dat,len)  Usart_Send(1,dat,len)
+#define port_Send(dat,len)  Usart_Send(2,dat,len)   //串口发送
+#define port_Recive()       Usart_Read(2)+1         //读串口
+#define port_PushSbuffer(len)  USART_Push(2,len)    //清除串口缓存区前len字节
 
 static uint8_t Add_3FF(uint8_t*buf);   //静态函数,在buf(字符串)末尾添加3个0xFF -> 覆盖'/0'
 
@@ -12,6 +14,11 @@ const char* num_boxName[] = {"msp","ssp"};
 
 uint16_t MsgHight = 0;   //当前串口屏消息框高度
 
+/*************************************************
+ * 功能:重置串口屏
+ * 参数:无
+ * 返回值:无
+*************************************************/
 void HMI_Reset(void)
 {
     uint8_t str[16] = "rest";
@@ -91,3 +98,4 @@ void HMI_SetNum(int num,uint8_t channel)
     len = Add_3FF(str);
     while( port_Send(str,len) );
 }
+

@@ -1,21 +1,5 @@
 #include "user.h"
-
-//任务参数
-extern nRF24L01_Cfg nRF24_Cfg;
-
-//任务句柄
-extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle ;    
-
-//队列 信号
-extern SemaphoreHandle_t	nRF24_ISRFlag;		//nrf24硬件中断标志
-extern SemaphoreHandle_t	nRF24_RecieveFlag;	//nrf24接收标志(数据已经进入单片机,等待处理)
-extern QueueHandle_t		nRF24_SendResult;	//nrf24发送结果
-extern SemaphoreHandle_t	boatGyroscope_occFlag;		//船只姿态数据占用标志(互斥信号量)
-//extern SemaphoreHandle_t    rockerInput_occFlag;        //摇杆输入数据占用标志(互斥信号量)
-
-//全局变量
-extern float BoatGyroscope[3];
-extern uint8_t rockerInput[4];		//摇杆输入
+#include "main.h"
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -33,6 +17,7 @@ void RemoteControl_Task(void*ptr)
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
+        send = sysStatus.readySend;
         send.cmd = 1;
         MemCopy(rockerInput,send.rocker,4);     //将摇杆值载入发送
         nRF24L01_Send((uint8_t*)&send,32);      //发送
@@ -46,7 +31,7 @@ void RemoteControl_Task(void*ptr)
             nRF24L01_Init();                   //重新初始化nrf
             nRF24L01_Config(&nRF24_Cfg);
             vTaskResume(nRF24L01_Intterrupt_TaskHandle);    //解挂
-            nRF24L01_Send(sbuffer,32);
+            nRF24L01_Send((uint8_t*)&send,32);    //重新发送
             time = xTaskGetTickCount();  //重新获取当前系统时间
         }
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
@@ -75,9 +60,24 @@ void RemoteControl_Task(void*ptr)
     }
 }
 
+void Main_Task(void*ptr)
+{
+    sysStatus_Type Last_Status;
+    sysStatus_Type sysStatus_Temp;
+    while(1)
+    {
+        if(xSemaphoreTake(sysStatus_occFlag,0) == pdTRUE)
+        {
+            sysStatus_Temp = sysStatus;
+            xSemaphoreGive(sysStatus_occFlag);
+        }
+        vTaskDelay(20/portTICK_PERIOD_MS);
+    }
+}
+
 /*******************************************************************
  * 功能:摇杆输入
- * 参数:频率
+ * 参数:(uint8_t*) -> 任务频率
  * 返回值:无
  * 2022/2/17   庞碧璋
  *******************************************************************/
@@ -108,6 +108,8 @@ void nRF24L01_Intterrupt_Task(void*ptr)
         nRF24L01_InterruptHandle();     //isr处理函数
     }
 }
+
+
 
 /*******************************************************************
  * 功能:通过串口定时打印运行状态
@@ -152,14 +154,23 @@ void User_FeedBack_Task(void*ptr)
     }
 }
 
+/*******************************************************************
+ * 功能:刷新串口屏显示
+ * 参数:(uint8_t*) -> 刷新频率
+ * 返回值:无
+ ******************************************************************/
 void HMI_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
     uint16_t cycle = 1000 / *(uint8_t*)ptr / portTICK_PERIOD_MS;
     while(1)
     {
+        //更新油门显示
         HMI_SetNum((short)rockerInput[0] - 50,0);
         HMI_SetNum((short)rockerInput[3] - 50,1);
+        //更新信号状态
+
+        //处理串口屏返回
         vTaskDelayUntil(&time,cycle);
     }
 }

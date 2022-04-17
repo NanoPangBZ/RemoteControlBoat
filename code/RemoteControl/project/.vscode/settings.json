@@ -8,6 +8,7 @@
         "self_portable.h": "c",
         "rocker.h": "c",
         "user.h": "c",
-        "string.h": "c"
+        "string.h": "c",
+        "main.h": "c"
     }
 }

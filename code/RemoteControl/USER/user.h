@@ -33,6 +33,15 @@ typedef struct
     uint16_t Slave_NoAckCount;
 }nrfCount_Type;
 
+typedef struct
+{
+    uint8_t sign;                   //nrf信号 0:正常 1:丢失
+    RemoteControl_Type  readySend;  //准备发送的数据
+    BoatReply_Type      recieve;    //从船只接收到的数据
+}sysStatus_Type;
+
+void Main_Task(void*ptr);
+
 void RemoteControl_Task(void*ptr);          //nrf24l01控制
 void nRF24L01_Intterrupt_Task(void*ptr);
 void User_FeedBack_Task(void*ptr);

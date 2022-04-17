@@ -194,11 +194,13 @@ void OLED_Task(void*ptr)
     while(1)
     {
         time = xTaskGetTickCount();
+        //获取系统状态
         if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
         {
             sys = sysStatus;
             xSemaphoreGive(sysStatus_occFlag);  //释放资源
         }
+        //显示对应页面信息
         switch (sys.oled_page)
         {
         case 0:
@@ -332,7 +334,9 @@ void Motor_Task(void*ptr)
                 case 4:target_out += ctr.dat;break;
             }
         }
+        //获取当前pwm输出
         out = A4950_ReadOut(&DCMT.a4950);
+        //更新本任务周期pwm输出
         if(out < target_out)
         {
             out += DCMT.max_inc;
@@ -402,6 +406,7 @@ void StreetMotor_Task(void*ptr)
     float angle = 90.0;
     while(1)
     {
+        
         while(xQueueReceive(*SMT.queueAddr,&ctr,0) == pdPASS)
         {
             switch (ctr.type)

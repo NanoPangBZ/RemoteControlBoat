@@ -12,6 +12,12 @@ static void PWM_GPIO_Init(void);
 static void PWM_TIM_Init(void);
 static void PWM_Ch_Init(void);
 
+/*******************************************************************
+ * 功能:PWM输出初始化
+ * 参数:无
+ * 返回值:无
+ * 2021/5  庞碧璋
+ *******************************************************************/
 void BSP_PWM_Init(void)
 {
     PWM_GPIO_Init();
@@ -123,12 +129,26 @@ void PWM_Ch_Init(void)
     TIM_OC4PreloadConfig(TIM8,TIM_OCPreload_Enable);
 }
 
+/*******************************************************************
+ * 功能:PWM输出
+ * 参数:
+ *  Channel:PWM通道 -> 数组PWM_Channel[]标号
+ *  CCR:通道的比较寄存器的值 -> 用于设置脉宽/占空比
+ * 返回值:无
+ * 2021/5  庞碧璋
+ *******************************************************************/
 void PWM_Out(uint8_t Channel,uint16_t CCR)
 {
     if(Channel < 12)
     *PWM_Channel[Channel] = CCR;
 }
 
+/*******************************************************************
+ * 功能:读取当前PWM输出
+ * 参数:PWM通道 -> 数组PWM_Channel[]标号
+ * 返回值:通道的比较寄存器的值
+ * 2021/5  庞碧璋
+ *******************************************************************/
 uint16_t PWM_Read(uint8_t Channel)
 {
     if(Channel < 12)

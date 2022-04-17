@@ -1,6 +1,4 @@
-#include "self_stm32f10x.h"
-
-#include "user.h"
+#include "main.h"
 
 #pragma	diag_suppress	870	//屏蔽汉字警告
 
@@ -16,6 +14,7 @@ uint8_t HMI_Fre = 20;	//串口屏幕刷新频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
+TaskHandle_t Main_TaskHandle = NULL;
 TaskHandle_t RemoteControl_TaskHandle = NULL;
 TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t User_FeedBack_TaskHandle = NULL;
@@ -27,11 +26,12 @@ SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 SemaphoreHandle_t	boatGyroscope_occFlag = NULL;		//船只姿态数据占用标志(互斥信号量)
-//SemaphoreHandle_t	rockerInput_occFlag = NULL;			//摇杆输入数据占用标志(互斥信号量)
+SemaphoreHandle_t	sysStatus_occFlag = NULL;	//sysStatus全局变量占用标志(互斥信号量)
 
 //全局变量
-float BoatGyroscope[3];		//船只返回的姿态 boatGyroscope_occFlag保护
-uint8_t rockerInput[4];		//摇杆输入
+float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag保护
+uint8_t rockerInput[4];			//摇杆输入
+sysStatus_Type sysStatus = {0};	//系统状态
 void RTOS_CreatTask_Task(void*ptr);
 
 int main(void)
@@ -74,7 +74,7 @@ int main(void)
 		nRF24L01_Rx_Mode();
 	}
 
-	soft_delay_ms(2000);
+	soft_delay_ms(1000);
 
 	xTaskCreate(
 		RTOS_CreatTask_Task,
@@ -91,17 +91,29 @@ int main(void)
 
 void RTOS_CreatTask_Task(void*ptr)
 {
-    nRF24_ISRFlag = xSemaphoreCreateBinary();		//创建nrf中断信号量 -> 由外部中断给出
-	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//创建nrf接收中断信号量 -> 由nrf中断处理函数给出
+    nRF24_ISRFlag = xSemaphoreCreateBinary();		//创建nrf中断信号量 -> 由单片机(硬件)外部中断给出
+	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//创建nrf接收中断信号量 -> 由(软件)nrf中断处理函数给出
 	nRF24_SendResult = xQueueCreate(1,1);			//创建nrf发送结果消息队列
 	boatGyroscope_occFlag = xSemaphoreCreateMutex();	//创建船只姿态数据占用标志(互斥信号量)
+	sysStatus_occFlag = xSemaphoreCreateMutex();		//创建sysStatus数据占用标志(互斥信号量)
+	#if 1
+	//建立主任务
+	xTaskCreate(
+		Main_Task,
+		"main",
+		256,
+		NULL,
+		12,
+		&Main_TaskHandle
+	);
+	#endif
 	//建立遥控任务
     xTaskCreate(
 		RemoteControl_Task,
 		"RC task",
 		512,
 		(void*)&SendFre,
-		12,
+		11,
 		&RemoteControl_TaskHandle
 	);
 	//建立摇杆值测量任务
@@ -110,7 +122,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		"RK",
 		32,
 		(void*)&RockerFre,
-		9,
+		8,
 		&Rocker_TaskHandle
 	);
 	//建立nrf中断处理任务
@@ -139,7 +151,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		"HMI task",
 		128,
 		&HMI_Fre,
-		10,
+		9,
 		&HMI_TaskHandle
 	);
 	HMI_ClearMsg();
