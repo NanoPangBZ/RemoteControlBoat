@@ -50,7 +50,9 @@ int main(void)
 
 	//串口屏初始化
 	soft_delay_ms(500);
-	//不清楚原因,用两次就能成功初始化
+	//串口屏开机要一段时间
+	//为了串口屏能完整的接收到复位数据
+	//初始化两次
 	HMI_Reset();
 	HMI_Reset();
 	soft_delay_ms(500);
@@ -134,7 +136,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
 	);
-	#if 0
+	#if 1
 	//建立串口反馈任务 -> 串口1
 	xTaskCreate(
 		User_FeedBack_Task,

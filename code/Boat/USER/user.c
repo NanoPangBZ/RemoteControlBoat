@@ -131,10 +131,10 @@ void Main_Task(void*ptr)
             //配置油门差 用于转向
             if(ER_BaseOut == 0)
             {
-                ER_sc = (status.Recive.rocker[3] - 50) * 5;
+                ER_sc = (status.Recive.rocker[1] - 50) * 5;
             }else
             {
-                ER_sc = (int)( (status.Recive.rocker[3] - 50 ) * ER_BaseOut / 80 ) ;     //差速
+                ER_sc = (int)( (status.Recive.rocker[1] - 50 ) * ER_BaseOut / 80 ) ;     //差速
             }
             //配置控制类型 ERctr->控制电调 type->控制类型
             ctr.ERctr.type = 1;
@@ -147,17 +147,34 @@ void Main_Task(void*ptr)
             //执行遥控器其他指令
             switch(status.Recive.type)
             {
-                case 6:break;
+                //执行直流电机运行
+                case 6:
+                    ctr.DCMotorCtr.type = 1;
+                    //控制直流电机1
+                    ctr.DCMotorCtr.dat = status.Recive.dat.DC_target.motor_1;
+                    xQueueSend(DCMotor_CmdQueue[0],&ctr.DCMotorCtr,2);
+                    //控制直流电机2
+                    ctr.DCMotorCtr.dat = status.Recive.dat.DC_target.motor_2;
+                    xQueueSend(DCMotor_CmdQueue[1],&ctr.DCMotorCtr,2);
+                    break;
                 default:break;
             }
         }else
         {
-            //紧急停止
+            //紧急停止无刷电机
             ctr.ERctr.type = 1;
             ctr.ERctr.dat = 0;
             //发送命令到所有电调任务
-            xQueueSend(ER_CmdQueue[0],&ctr.ERctr,0);
-            xQueueSend(ER_CmdQueue[1],&ctr.ERctr,1);
+            xQueueSend(ER_CmdQueue[0],&ctr.ERctr,portMAX_DELAY);
+            xQueueSend(ER_CmdQueue[1],&ctr.ERctr,portMAX_DELAY);
+            xQueueSend(ER_CmdQueue[2],&ctr.ERctr,portMAX_DELAY);
+            xQueueSend(ER_CmdQueue[3],&ctr.ERctr,portMAX_DELAY);
+            //紧急停止直流电机
+            ctr.DCMotorCtr.type = 1;
+            ctr.DCMotorCtr.dat = 0;
+            //发送命令到所有直流电机任务
+            xQueueSend(DCMotor_CmdQueue[0],&ctr.DCMotorCtr,portMAX_DELAY);
+            xQueueSend(DCMotor_CmdQueue[1],&ctr.DCMotorCtr,portMAX_DELAY);
         }
         vTaskDelayUntil(&time,cycle);
     }

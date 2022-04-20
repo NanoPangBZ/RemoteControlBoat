@@ -19,10 +19,9 @@ typedef struct
     uint16_t motor_2;
 }DC_maxIncType;
 
-//直流电机目标速度  5B
+//直流电机目标速度  4B
 typedef struct
 {
-    uint8_t cmd;    //0:直接输出 1:周期增量靠近
     short motor_1;
     short motor_2;
 }DC_targetType;

@@ -8,7 +8,7 @@ static uint8_t RxAddr[5] = {0x43,0x16,'R','C',0xFF};	//遥控器地址
 static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
-uint8_t main_fre = 80;				//主任务频率
+uint8_t main_fre = 50;				//主任务频率
 uint8_t oled_fre = 12;				//OLED刷新频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
@@ -147,7 +147,7 @@ void RTOSCreateTask_Task(void*ptr)
 		STMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
 		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
 		STMotor_is[temp].streetMotor = streetMotor[temp];	//见hardware_def.h
-		STMotor_is[temp].cycle = 20;
+		STMotor_is[temp].cycle = 20;	//50Hz执行频率
 		STMotor_is[temp].angle_inc = 0.5f;
 		xTaskCreate(
 			StreetMotor_Task,
@@ -164,7 +164,7 @@ void RTOSCreateTask_Task(void*ptr)
 		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));	//创建命令接收队列
 		DCMotor_is[temp].queueAddr = &DCMotor_CmdQueue[temp];				//设置命令接收队列地址
 		DCMotor_is[temp].cycle = 20;	//50Hz执行频率
-		DCMotor_is[temp].max_inc = 100;
+		DCMotor_is[temp].max_inc = 50;
 		DCMotor_is[temp].a4950 = a4950[temp];	//见hardware_def.h
 		xTaskCreate(
 			Motor_Task,

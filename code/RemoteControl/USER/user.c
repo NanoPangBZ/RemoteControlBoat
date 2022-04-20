@@ -71,6 +71,15 @@ void Main_Task(void*ptr)
             sysStatus_Temp = sysStatus;
             xSemaphoreGive(sysStatus_occFlag);
         }
+        //更新信号状态到串口屏幕
+        if(Last_Status.sign == 1 && sysStatus_Temp.sign == 1)
+        {
+            HMI_Msg("信号丢失");
+        }else if(Last_Status.sign == 1 && sysStatus_Temp.sign == 0)
+        {
+            HMI_Msg("信号已经找回");
+        }
+        //准备发送到船只的数据
         vTaskDelay(20/portTICK_PERIOD_MS);
     }
 }
@@ -168,8 +177,6 @@ void HMI_Task(void*ptr)
         //更新油门显示
         HMI_SetNum((short)rockerInput[0] - 50,0);
         HMI_SetNum((short)rockerInput[3] - 50,1);
-        //更新信号状态
-
         //处理串口屏返回
         vTaskDelayUntil(&time,cycle);
     }

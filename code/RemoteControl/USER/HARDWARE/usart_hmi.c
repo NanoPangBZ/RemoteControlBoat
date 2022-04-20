@@ -99,3 +99,11 @@ void HMI_SetNum(int num,uint8_t channel)
     while( port_Send(str,len) );
 }
 
+void HMI_SetFloat(float f,uint8_t channle)
+{
+    uint8_t str[48];
+    uint8_t len;
+    sprintf((char*)str,"%s.%s=%.1f","a","a","a");
+    len = Add_3FF((uint8_t*)str);
+    while( port_Send(str,len) );
+}
