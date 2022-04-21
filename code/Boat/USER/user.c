@@ -64,7 +64,7 @@ void ReplyMaster_Task(void*ptr)
             taskENTER_CRITICAL();
             nRF24L01_Restart();
             taskEXIT_CRITICAL();
-            vTaskResume(nRF24L01_Intterrupt_TaskHandle);
+            vTaskResume(nRF24L01_Intterrupt_TaskHandle);    //解挂
         }
 
         //拷贝接收到的数据

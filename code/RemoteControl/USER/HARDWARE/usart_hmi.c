@@ -99,6 +99,19 @@ void HMI_SetNum(int num,uint8_t channel)
     while( port_Send(str,len) );
 }
 
+void HMI_SetSign(uint8_t sign)
+{
+    uint8_t str[32];
+    uint8_t len;
+    if(sign == 0)
+        sprintf((char*)str,"si.val=1");
+    else
+        sprintf((char*)str,"si.val=0");
+    len = Add_3FF(str);
+    while( port_Send(str,len) );
+}
+
+#if 0
 void HMI_SetFloat(float f,uint8_t channle)
 {
     uint8_t str[48];
@@ -107,3 +120,4 @@ void HMI_SetFloat(float f,uint8_t channle)
     len = Add_3FF((uint8_t*)str);
     while( port_Send(str,len) );
 }
+#endif

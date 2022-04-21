@@ -17,7 +17,6 @@ void RemoteControl_Task(void*ptr)
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
-        send = sysStatus.readySend;
         send.cmd = 1;
         MemCopy(rockerInput,send.rocker,4);     //将摇杆值载入发送
         nRF24L01_Send((uint8_t*)&send,32);      //发送
@@ -33,6 +32,7 @@ void RemoteControl_Task(void*ptr)
             vTaskResume(nRF24L01_Intterrupt_TaskHandle);    //解挂
             nRF24L01_Send((uint8_t*)&send,32);    //重新发送
             time = xTaskGetTickCount();  //重新获取当前系统时间
+            sign++;
         }
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
         if(sendResault)
@@ -43,8 +43,10 @@ void RemoteControl_Task(void*ptr)
             if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle/2) == pdFALSE)
             {
                 //未接收到从机软件回复
+                sign++;
             }else
             {
+                sign = 0;
                 //处理从机软件回复
                 if(xSemaphoreTake(boatGyroscope_occFlag,2) == pdPASS)
                 {
@@ -55,32 +57,9 @@ void RemoteControl_Task(void*ptr)
         }else
         {
             //没有接收到硬件ACK 说明从机没有接收到数据
+            sign++;
         }
         xTaskDelayUntil(&time,delay_cycle); 
-    }
-}
-
-void Main_Task(void*ptr)
-{
-    sysStatus_Type Last_Status;
-    sysStatus_Type sysStatus_Temp;
-    while(1)
-    {
-        if(xSemaphoreTake(sysStatus_occFlag,0) == pdTRUE)
-        {
-            sysStatus_Temp = sysStatus;
-            xSemaphoreGive(sysStatus_occFlag);
-        }
-        //更新信号状态到串口屏幕
-        if(Last_Status.sign == 1 && sysStatus_Temp.sign == 1)
-        {
-            HMI_Msg("信号丢失");
-        }else if(Last_Status.sign == 1 && sysStatus_Temp.sign == 0)
-        {
-            HMI_Msg("信号已经找回");
-        }
-        //准备发送到船只的数据
-        vTaskDelay(20/portTICK_PERIOD_MS);
     }
 }
 
@@ -131,18 +110,6 @@ void User_FeedBack_Task(void*ptr)
     TickType_t time = xTaskGetTickCount();
     while(1)
     {
-        #if 0
-        printf("******************FeedBack***********************\r\n");
-        printf("%s surplusStack:%d\r\n",pcTaskGetName(RemoteControl_TaskHandle),uxTaskGetStackHighWaterMark(RemoteControl_TaskHandle));
-        printf("%s surplusStack:%d\r\n",pcTaskGetName(nRF24L01_Intterrupt_TaskHandle),uxTaskGetStackHighWaterMark(nRF24L01_Intterrupt_TaskHandle));
-        printf("%s surplusStack:%d\r\n",pcTaskGetName(User_FeedBack_TaskHandle),uxTaskGetStackHighWaterMark(User_FeedBack_TaskHandle));
-        printf("SendCount:%d\r\n",SendCount);
-        printf("SendAck_Count:%d\r\n",SendAck_Count);
-        printf("SendNoAck_Count:%d\r\n",SendNoAck_Count);
-        printf("Slave_AckCoount:%d\r\n",Slave_AckCoount);
-        printf("Slave_NoAckCount:%d\r\n",Slave_NoAckCount);
-        vTaskDelay(1000/portTICK_RATE_MS);
-        #endif
         vTaskDelayUntil(&time,20/portTICK_PERIOD_MS);   //50Hz
         float sbuf[3];
         //姿态反馈
@@ -177,6 +144,11 @@ void HMI_Task(void*ptr)
         //更新油门显示
         HMI_SetNum((short)rockerInput[0] - 50,0);
         HMI_SetNum((short)rockerInput[3] - 50,1);
+        //更新信号状态
+        if(sign > 5)
+            HMI_SetSign(1);
+        else
+            HMI_SetSign(0);
         //处理串口屏返回
         vTaskDelayUntil(&time,cycle);
     }

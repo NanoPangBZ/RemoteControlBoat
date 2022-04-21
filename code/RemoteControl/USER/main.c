@@ -26,12 +26,12 @@ SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 SemaphoreHandle_t	boatGyroscope_occFlag = NULL;		//船只姿态数据占用标志(互斥信号量)
-SemaphoreHandle_t	sysStatus_occFlag = NULL;	//sysStatus全局变量占用标志(互斥信号量)
 
 //全局变量
+uint16_t sign  = 1;				//信号状态 0:正常 1:丢失
 float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag保护
 uint8_t rockerInput[4];			//摇杆输入
-sysStatus_Type sysStatus = {0};	//系统状态
+
 void RTOS_CreatTask_Task(void*ptr);
 
 int main(void)
@@ -66,7 +66,7 @@ int main(void)
 	{
 		//nRF24L01 相关配置
 		nRF24_Cfg.Channel = 50;	//2.45GHz 通讯频段
-		nRF24_Cfg.retry = 5;	//最大重发次数
+		nRF24_Cfg.retry = 3;	//最大重发次数
 		nRF24_Cfg.retry_cycle = 1;	//重发周期
 		nRF24_Cfg.Rx_Length = 32;	//结束长度
 		MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);
@@ -97,18 +97,6 @@ void RTOS_CreatTask_Task(void*ptr)
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//创建nrf接收中断信号量 -> 由(软件)nrf中断处理函数给出
 	nRF24_SendResult = xQueueCreate(1,1);			//创建nrf发送结果消息队列
 	boatGyroscope_occFlag = xSemaphoreCreateMutex();	//创建船只姿态数据占用标志(互斥信号量)
-	sysStatus_occFlag = xSemaphoreCreateMutex();		//创建sysStatus数据占用标志(互斥信号量)
-	#if 1
-	//建立主任务
-	xTaskCreate(
-		Main_Task,
-		"main",
-		256,
-		NULL,
-		12,
-		&Main_TaskHandle
-	);
-	#endif
 	//建立遥控任务
     xTaskCreate(
 		RemoteControl_Task,
@@ -151,7 +139,7 @@ void RTOS_CreatTask_Task(void*ptr)
 	xTaskCreate(
 		HMI_Task,
 		"HMI task",
-		128,
+		256,
 		&HMI_Fre,
 		9,
 		&HMI_TaskHandle
