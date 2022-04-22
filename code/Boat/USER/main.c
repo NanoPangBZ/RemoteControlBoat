@@ -98,7 +98,7 @@ int main(void)
 
 	//nRF24L01 相关配置
 	nRF24_Cfg.Channel = 50;	//2.45GHz 通讯频段
-	nRF24_Cfg.retry = 5;	//最大重发次数
+	nRF24_Cfg.retry = 10;	//最大重发次数
 	nRF24_Cfg.retry_cycle = 1;	//重发周期
 	nRF24_Cfg.Rx_Length = 32;	//结束长度
 	MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);

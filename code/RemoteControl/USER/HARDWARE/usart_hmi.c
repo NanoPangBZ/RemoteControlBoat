@@ -10,7 +10,8 @@ const char* txt = "txt";
 const char* Msg = "msg";
 const char* val_y = "val_y";
 const char* val = "val";
-const char* num_boxName[] = {"msp","ssp"};
+const char* num_boxName[] = {"msp","ssp","si"};
+const char* float_boxName[] = {"fx","fy","fz"};
 
 uint16_t MsgHight = 0;   //当前串口屏消息框高度
 
@@ -99,25 +100,12 @@ void HMI_SetNum(int num,uint8_t channel)
     while( port_Send(str,len) );
 }
 
-void HMI_SetSign(uint8_t sign)
-{
-    uint8_t str[32];
-    uint8_t len;
-    if(sign == 0)
-        sprintf((char*)str,"si.val=1");
-    else
-        sprintf((char*)str,"si.val=0");
-    len = Add_3FF(str);
-    while( port_Send(str,len) );
-}
-
-#if 0
-void HMI_SetFloat(float f,uint8_t channle)
+void HMI_SetFloat(float num,uint8_t channel)
 {
     uint8_t str[48];
     uint8_t len;
-    sprintf((char*)str,"%s.%s=%.1f","a","a","a");
-    len = Add_3FF((uint8_t*)str);
+    short temp = (short)(num*10);
+    sprintf((char*)str,"%s.%s=%d",float_boxName[channel],val,temp);
+    len = Add_3FF(str);
     while( port_Send(str,len) );
 }
-#endif

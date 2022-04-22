@@ -28,7 +28,7 @@ QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
 SemaphoreHandle_t	boatGyroscope_occFlag = NULL;		//船只姿态数据占用标志(互斥信号量)
 
 //全局变量
-uint16_t sign  = 1;				//信号状态 0:正常 1:丢失
+uint8_t nrf_signal = 0;		//nrf信号强度 0~10
 float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag保护
 uint8_t rockerInput[4];			//摇杆输入
 
@@ -66,7 +66,7 @@ int main(void)
 	{
 		//nRF24L01 相关配置
 		nRF24_Cfg.Channel = 50;	//2.45GHz 通讯频段
-		nRF24_Cfg.retry = 3;	//最大重发次数
+		nRF24_Cfg.retry = 10;	//最大重发次数
 		nRF24_Cfg.retry_cycle = 1;	//重发周期
 		nRF24_Cfg.Rx_Length = 32;	//结束长度
 		MemCopy(TxAddr,nRF24_Cfg.TX_Addr,5);
@@ -135,6 +135,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		&User_FeedBack_TaskHandle
 	);
 	#endif
+	#if 1
 	//建立串口屏任务 -> 串口2
 	xTaskCreate(
 		HMI_Task,
@@ -144,6 +145,7 @@ void RTOS_CreatTask_Task(void*ptr)
 		9,
 		&HMI_TaskHandle
 	);
+	#endif
 	HMI_ClearMsg();
 	HMI_Msg("系统成功启动");
     vTaskDelete(NULL);
