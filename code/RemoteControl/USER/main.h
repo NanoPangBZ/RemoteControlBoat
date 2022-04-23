@@ -24,6 +24,7 @@ extern SemaphoreHandle_t	boatGyroscope_occFlag;		//船只姿态数据占用标�
 //全局变量
 extern float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag保护
 extern uint8_t rockerInput[4];			//摇杆输入
+extern float BoatVoltage;
 extern uint8_t nrf_signal;
 
 #endif

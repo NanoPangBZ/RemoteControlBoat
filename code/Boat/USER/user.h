@@ -121,8 +121,6 @@ void ER_Task(void*ptr);
 void Motor_Task(void*ptr);
 void StreetMotor_Task(void*ptr);
 void Beep_Task(void*ptr);
-void Main_Task(void*ptr);
-
 
 #endif  //_USER_H_
 

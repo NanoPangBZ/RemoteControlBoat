@@ -95,9 +95,9 @@ typedef struct      //20B
 /*************************船只发送,遥控器接收*******************************/
 typedef struct
 {
-    RemoteControl_Type a;
+    float Voltage;
+    float Gyroscope[3];
 }BoatReply_Type;
-
 
 #endif
 

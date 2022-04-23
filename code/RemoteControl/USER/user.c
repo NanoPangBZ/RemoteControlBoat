@@ -15,6 +15,7 @@ void RemoteControl_Task(void*ptr)
     uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;    //通讯频率计算
     uint8_t*sbuffer = nRF24L01_Get_RxBufAddr();
     RemoteControl_Type  send;
+    BoatReply_Type      receive;
     uint8_t sendResault = 0;
     uint8_t statis_sendCount = 0;   //发送统计
     uint8_t statis_sfAckCount = 0;  //从机软件回复统计
@@ -54,17 +55,25 @@ void RemoteControl_Task(void*ptr)
             {
                 AckCount++;
                 statis_sfAckCount++;
-                //处理从机软件回复
+                //拷贝从机回复的数据
                 if(xSemaphoreTake(boatGyroscope_occFlag,2) == pdPASS)
                 {
-                    MemCopy((uint8_t*)sbuffer,(uint8_t*)BoatGyroscope,12);
+                    MemCopy((uint8_t*)sbuffer,(uint8_t*)&receive,sizeof(BoatReply_Type));
                     xSemaphoreGive(boatGyroscope_occFlag);
                 }
+                //更新陀螺仪数据到全局
+                if(xSemaphoreTake(boatGyroscope_occFlag,0)==pdPASS)
+                {
+                    MemCopy( (uint8_t*)receive.Gyroscope , (uint8_t*)BoatGyroscope , 12 );
+                    xSemaphoreGive(boatGyroscope_occFlag);
+                }
+                BoatVoltage = receive.Voltage;
             }
         }else
         {
             //没有接收到硬件ACK 说明从机没有接收到数据
         }
+        //计算信号强度
         if(statis_sendCount == 50)
         {
             nrf_signal = statis_sfAckCount;
@@ -137,6 +146,7 @@ void User_FeedBack_Task(void*ptr)
         Vofa_Input((float)rockerInput[3],6);
         Vofa_Input((float)SendCount,7);
         Vofa_Input((float)AckCount,8);
+        Vofa_Input(BoatVoltage,9);
         #endif
         Vofa_Send();
     }

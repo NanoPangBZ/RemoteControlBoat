@@ -192,20 +192,11 @@ void RTOSCreateTask_Task(void*ptr)
         	&ER_TaskHandle[temp]
     	);
 	}
-	//建立主要任务
-    xTaskCreate(
-        Main_Task,
-        "main",
-        256,
-        (void*)&main_fre,
-        14,
-        &Main_TaskHandle
-    );
 	//建立nrf回复主机任务
     xTaskCreate(
         ReplyMaster_Task,
         "Reply",
-        128,
+        256,
         (void*)&nrf_maxDelay,
         11,
         &ReplyMaster_TaskHandle
