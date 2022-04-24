@@ -14,23 +14,23 @@ u8 MPU_Init(void)
   
 	GPIO_InitTypeDef  GPIO_InitStructure;
 	
-
-	//PA15 -> AD0
+	//配置地址 AD0引脚
+	//PA15
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA,ENABLE);	//先使能外设IO PORTA时钟 
 	
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;					  //端口配置
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 	//推挽输出
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		  //IO口速度为50MHz
-  GPIO_Init(GPIOA, &GPIO_InitStructure);					      //根据设定参数初始化GPIOA
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_15;					  //端口配置
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP; 		 	//推挽输出
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;		  //IO口速度为50MHz
+	GPIO_Init(GPIOA, &GPIO_InitStructure);					      //根据设定参数初始化GPIOA
 
 	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable,ENABLE);
 
 	GPIOA->ODR &= ~GPIO_Pin_15;
 	//MPU_AD0_CTRL=0;			//控制MPU6050的AD0脚为低电平,从机地址为:0X68
 	
-	MPU_IIC_Init();			//初始化IIC总线
+	//MPU_IIC_Init();			//初始化IIC总线
 	MPU_Write_Byte(MPU_PWR_MGMT1_REG,0X80);	//复位MPU6050
-  soft_delay_ms(100);
+  	soft_delay_ms(100);
 	MPU_Write_Byte(MPU_PWR_MGMT1_REG,0X00);	//唤醒MPU6050 
 	MPU_Set_Gyro_Fsr(3);										//陀螺仪传感器,±2000dps
 	MPU_Set_Accel_Fsr(0);										//加速度传感器,±2g
@@ -115,14 +115,13 @@ u8 MPU_Set_Rate(u16 rate)
 **********************************************/
 short MPU_Get_Temperature(void)
 {
-   u8 buf[2]; 
-   short raw;
-	 float temp;
-	
-	 MPU_Read_Len(MPU_ADDR,MPU_TEMP_OUTH_REG,2,buf); 
-   raw=((u16)buf[0]<<8)|buf[1];
-   temp=36.53+((double)raw)/340;
-   return temp*100;
+	u8 buf[2]; 
+   	short raw;
+	float temp;
+	MPU_Read_Len(MPU_ADDR,MPU_TEMP_OUTH_REG,2,buf); 
+	raw=((u16)buf[0]<<8)|buf[1];
+	temp=36.53+((double)raw)/340;
+	return temp*100;
 }
 
 /**********************************************

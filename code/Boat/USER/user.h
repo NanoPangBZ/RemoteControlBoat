@@ -8,6 +8,7 @@
 #include "BSP\bsp_usart.h"
 #include "BSP\bsp_timer.h"
 #include "BSP\bsp_key.h"
+#include "BSP\bsp_i2c.h"
 #include "BSP\bsp_beep.h"
 
 #include "HARDWARE\hardware_def.h"
@@ -106,9 +107,7 @@ typedef union
 //系统状态
 typedef struct
 {
-    uint8_t oled_page;  //当前oled的页
     uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
-    RemoteControl_Type  Recive; //当前遥控器接收到的消息
 }sysStatus_Type;
 
 void MPU_Task(void*ptr);

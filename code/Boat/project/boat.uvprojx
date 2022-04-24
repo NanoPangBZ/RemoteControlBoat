@@ -509,9 +509,9 @@
               <FilePath>..\USER\BSP\bsp_adc.c</FilePath>
             </File>
             <File>
-              <FileName>bsp_flash.c</FileName>
+              <FileName>bsp_i2c.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\USER\BSP\bsp_flash.c</FilePath>
+              <FilePath>..\USER\BSP\bsp_i2c.c</FilePath>
             </File>
           </Files>
         </Group>

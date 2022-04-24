@@ -3,6 +3,8 @@
 
 #include "user.h"
 
+//对外声明main.c中的全局变量
+
 //其它参数
 extern nRF24L01_Cfg nRF24_Cfg;
 
@@ -19,7 +21,7 @@ extern SemaphoreHandle_t sysStatus_occFlag;     //系统状态变量占用标志
 extern QueueHandle_t     Beep_CmdQueue;
 extern QueueHandle_t	 ER_CmdQueue[4];
 extern QueueHandle_t     DCMotor_CmdQueue[2];
-extern QueueHandle_t     STMotor_CmdQueue[3];
+extern QueueHandle_t     STMotor_CmdQueue[4];
 
 //全局变量
 extern float mpu_data[3];               //姿态 -> mpuDat_occFlag保护

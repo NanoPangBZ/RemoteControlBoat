@@ -1,4 +1,4 @@
-#include "user.h"
+#include "main.h"
 
 #pragma	diag_suppress	870	//屏蔽汉字警告
 
@@ -65,13 +65,14 @@ int main(void)
 	BSP_Key_Init();
 	BSP_Beep_Init();
 	BSP_ADC_Init();
+	BSP_i2c_Init();
 
-	//OLED初始化
+	//OLED初始化 -> 需要SPI
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
 	OLED12864_Refresh();
 
-	//MPU初始化
+	//MPU初始化	-> 需要IIC
 	mpu_err = MPU_Init();
 	if(mpu_err)
 	{
@@ -83,7 +84,7 @@ int main(void)
 			OLED12864_Show_String(3,0,"6050 dmp err",1);
 	}
 
-	//nrf24初始化和配置
+	//nrf24初始化和配置 -> 需要SPI
 	nrf_err = nRF24L01_Init();
 	if(nrf_err)	//检查硬件
 	{
@@ -132,8 +133,6 @@ void RTOSCreateTask_Task(void*ptr)
 {
 	//全局变量赋值
     sysStatus.nrf_signal = 0;
-    sysStatus.oled_page = 0;
-	sysStatus.Recive.cmd = 0;
 	//建立 队列 信号量
     nRF24_ISRFlag = xSemaphoreCreateBinary();		//nrf外部中断标志,由isr给出
 	nRF24_RecieveFlag = xSemaphoreCreateBinary();	//nrf发生接收中断标志

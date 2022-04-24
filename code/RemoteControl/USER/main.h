@@ -3,6 +3,8 @@
 
 #include "user.h"
 
+//对外声明main.c中的全局变量
+
 //nRF24L01配置信息
 extern nRF24L01_Cfg nRF24_Cfg;
 

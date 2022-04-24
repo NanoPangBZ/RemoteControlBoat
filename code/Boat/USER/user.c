@@ -10,42 +10,32 @@ void ReplyMaster_Task(void*ptr)
 {
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
-    RemoteControl_Type  nrf_receive;
-    BoatReply_Type      nrf_send;
+    RemoteControl_Type  nrf_receive;    //接收到的数据
+    BoatReply_Type      nrf_send;       //准备发送回去的数据
     uint8_t resualt;        //发射结果接收
-    uint8_t signal = 1;     //信号丢失标志
-    BeepCtr_Type beep;      //蜂鸣器控制
+    uint8_t signal = 1;     //信号丢失标志 1:丢失
     while(1)
     {
-        //nrf半双工从机模式,等待nrf接收到主机的信号
+        //等待nrf接收到主机的信号
         while(xSemaphoreTake(nRF24_RecieveFlag,MaxWait) == pdFALSE)
         {
             //过长时间没有接收到主机信号
-            //紧急停止代码 -> 暂时不在这里加入急停代码,只更新系统状态,由MainTask()完成急停代码
-            //...
+            OS_EMG_Stop();     //紧急停止
             //更新至系统状态
             if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
             {
                 sysStatus.nrf_signal += 1;
                 xSemaphoreGive(sysStatus_occFlag);  //释放资源
             }
-            //任务内标志
+            //首次丢失信号鸣响蜂鸣器
             if(signal != 1)
             {
                 signal = 1;
                 //蜂鸣器警告
-                beep.count = 3;
-                beep.fre = Mu_Fre[3];
-                beep.off_ms = 100;
-                beep.on_ms = 100;
-                xQueueSend(Beep_CmdQueue,&beep,0);
+                OS_Beep(100,100,3,3);
             }
-            //有可能是本机nrf挂了,重启nrf
-            vTaskSuspend(nRF24L01_Intterrupt_TaskHandle);   //挂起中断服务
-            taskENTER_CRITICAL();
-            nRF24L01_Restart();
-            taskEXIT_CRITICAL();
-            vTaskResume(nRF24L01_Intterrupt_TaskHandle);    //解挂
+            //有可能是本机nrf挂了,重启一次nrf
+            OS_nrf_Restart();
         }
 
         //拷贝接收到的数据
@@ -59,10 +49,11 @@ void ReplyMaster_Task(void*ptr)
         }
         nrf_send.Voltage = BatVol;
         nRF24L01_Send((uint8_t*)&nrf_send,32);
+
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待回复结果 -> nRF24L01_Send()
 
-        //处理主机发送的数据
-        ResponesRecive_Function(&nrf_receive);
+        //响应从遥控器接收到的命令和数据
+        OS_ResponesRecive(&nrf_receive);
 
         //判断是否需要系统状态标志
         //能运行到这里说明信号没有丢失
@@ -73,11 +64,7 @@ void ReplyMaster_Task(void*ptr)
                 sysStatus.nrf_signal = 0;
                 xSemaphoreGive(sysStatus_occFlag);  //释放资源
                 signal = 0;
-                beep.count = 2;
-                beep.fre = Mu_Fre[0];
-                beep.off_ms = 100;
-                beep.on_ms = 100;
-                xQueueSend(Beep_CmdQueue,&beep,0);
+                OS_Beep(100,100,2,0);
             }
         }
         LED_CTR(0,LED_Reserval);
@@ -110,7 +97,7 @@ void OLED_Task(void*ptr)
     uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;     //频率换算成心跳周期
     TickType_t  time = xTaskGetTickCount();
     float gyroscope[3];
-    sysStatus_Type sys = {0,0};
+    sysStatus_Type sys = {0};
     uint8_t sbuf[32];
     while(1)
     {
@@ -122,27 +109,22 @@ void OLED_Task(void*ptr)
             xSemaphoreGive(sysStatus_occFlag);  //释放资源
         }
         //显示对应页面信息
-        switch (sys.oled_page)
+        //将陀螺仪数据载入gyroscope 并且更新oled的姿态显示
+        if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
         {
-        case 0:
-            //将陀螺仪数据载入gyroscope 并且更新oled的姿态显示
-            if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
-            {
-                MemCopy((uint8_t*)mpu_data,(uint8_t*)gyroscope,12);
-                xSemaphoreGive(mpuDat_occFlag); //释放资源
-                OLED12864_Clear_PageBlock(1,0,48);
-                OLED12864_Clear_PageBlock(2,0,48);
-                OLED12864_Clear_PageBlock(3,0,48);
-                sprintf((char*)sbuf,"x:%.1f",gyroscope[0]);
-                OLED12864_Show_String(1,0,sbuf,1);
-                sprintf((char*)sbuf,"y:%.1f",gyroscope[1]);
-                OLED12864_Show_String(2,0,sbuf,1);
-                sprintf((char*)sbuf,"z:%.1f",gyroscope[2]);
-                OLED12864_Show_String(3,0,sbuf,1);
-            }
-            OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
-            break;
+            MemCopy((uint8_t*)mpu_data,(uint8_t*)gyroscope,12);
+            xSemaphoreGive(mpuDat_occFlag); //释放资源
+            OLED12864_Clear_PageBlock(1,0,48);
+            OLED12864_Clear_PageBlock(2,0,48);
+            OLED12864_Clear_PageBlock(3,0,48);
+            sprintf((char*)sbuf,"x:%.1f",gyroscope[0]);
+            OLED12864_Show_String(1,0,sbuf,1);
+            sprintf((char*)sbuf,"y:%.1f",gyroscope[1]);
+            OLED12864_Show_String(2,0,sbuf,1);
+            sprintf((char*)sbuf,"z:%.1f",gyroscope[2]);
+            OLED12864_Show_String(3,0,sbuf,1);
         }
+        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
         //显示nrf信号状态
         OLED12864_Clear_Page(0);
         if(sys.nrf_signal != 0)

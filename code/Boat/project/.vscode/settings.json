@@ -13,6 +13,9 @@
         "self_portable.h": "c",
         "xlocnum": "c",
         "hardware_def.h": "c",
-        "xiosbase": "c"
+        "xiosbase": "c",
+        "main.h": "c",
+        "bsp_i2c.h": "c",
+        "mpuiic.h": "c"
     }
 }
