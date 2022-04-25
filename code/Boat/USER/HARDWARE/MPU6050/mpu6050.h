@@ -1,7 +1,16 @@
 #ifndef __MPU6050_H
 #define __MPU6050_H
 
-#include "mpuiic.h"											  	  
+#include "BSP\bsp_i2c.h"
+
+#define MPU_IIC_Delay() i2c_Delay(MPU6050)
+#define MPU_IIC_Start() I2C_Start(MPU6050)
+#define MPU_IIC_Stop()  I2C_Stop(MPU6050)
+#define MPU_IIC_Send_Byte(dat)  I2C_SendByte(MPU6050,dat)   
+#define MPU_IIC_Read_Byte(ack)  I2C_ReadByte_Ack(MPU6050,ack)
+#define MPU_IIC_Wait_Ack()      I2C_WaitAck(MPU6050)
+#define MPU_IIC_Ack()   I2C_Ack(MPU6050)
+#define MPU_IIC_NAck()  I2C_Nack(MPU6050)										  	  
  
 //来自 : https://blog.csdn.net/lihaotian111/article/details/117307644
 

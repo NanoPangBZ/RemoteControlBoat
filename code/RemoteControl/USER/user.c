@@ -10,6 +10,7 @@
  *******************************************************************/
 uint16_t SendCount = 0;
 uint16_t AckCount = 0;
+uint16_t HackCount = 0;
 void RemoteControl_Task(void*ptr)
 {
     uint16_t delay_cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;    //通讯频率计算
@@ -45,6 +46,7 @@ void RemoteControl_Task(void*ptr)
         //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
         if(sendResault)
         {
+            HackCount++;
             //接收到硬件ACK 说明从机的nrf24已经接收到
             //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
             //等待时长 1/2 任务周期
@@ -146,7 +148,8 @@ void User_FeedBack_Task(void*ptr)
         Vofa_Input((float)rockerInput[3],6);
         Vofa_Input((float)SendCount,7);
         Vofa_Input((float)AckCount,8);
-        Vofa_Input(BoatVoltage,9);
+        Vofa_Input((float)HackCount,9);
+        //Vofa_Input(BoatVoltage,9);
         #endif
         Vofa_Send();
     }
@@ -169,6 +172,7 @@ void HMI_Task(void*ptr)
         HMI_SetNum((short)(nrf_signal)*2,2);
         for(uint8_t temp=0;temp<3;temp++)
             HMI_SetFloat(BoatGyroscope[temp],temp);
+        HMI_SetFloat(BoatVoltage,3);
         //处理串口屏返回
         vTaskDelayUntil(&time,cycle);
     }

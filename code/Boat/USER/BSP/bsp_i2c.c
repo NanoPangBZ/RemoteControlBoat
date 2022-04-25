@@ -17,7 +17,7 @@ static i2c_busType i2c_Bus[1] = {
 #define SCL_L(device)   Pin_Reset(i2c_Bus[device].SCL)
 #define SDA_read(device)	Pin_Read(i2c_Bus[device].SDA)
 
-void i2c_Delay(i2c_device device)
+static void i2c_Delay(i2c_device device)
 {
 	uint8_t i;
 	uint8_t k = i2c_Bus[device].delay;
@@ -98,6 +98,17 @@ uint8_t I2C_ReadByte(i2c_device device)
 		i2c_Delay(device);
 	}
 	return value;
+}
+
+uint8_t I2C_ReadByte_Ack(i2c_device device,uint8_t ack)
+{
+	uint8_t receive;
+	receive = I2C_ReadByte(device);
+	if(ack)
+		I2C_Ack(device);
+	else
+		I2C_Nack(device);
+	return receive;
 }
 
 uint8_t I2C_WaitAck(i2c_device device)

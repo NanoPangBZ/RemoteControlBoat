@@ -11,7 +11,7 @@ const char* Msg = "msg";
 const char* val_y = "val_y";
 const char* val = "val";
 const char* num_boxName[] = {"msp","ssp","si"};
-const char* float_boxName[] = {"fx","fy","fz"};
+const char* float_boxName[] = {"fx","fy","fz","vo"};
 
 uint16_t MsgHight = 0;   //当前串口屏消息框高度
 

@@ -12,7 +12,7 @@ void OS_ResponesRecive(RemoteControl_Type*receive)
         ER_Base = (receive->rocker[0] - 50) * 10;
         if(ER_Base != 0)
         {
-            ER_sc = (receive->rocker[1] - 50) * 0.8 *ER_Base;
+            ER_sc = (receive->rocker[1] - 50) * 0.02 *ER_Base;
         }else
         {
             ER_sc = (receive->rocker[1] - 50) * 8;

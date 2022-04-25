@@ -28,11 +28,11 @@ void I2C_Start(i2c_device device);
 void I2C_Stop(i2c_device device);
 void I2C_SendByte(i2c_device device,uint8_t byte);
 uint8_t I2C_ReadByte(i2c_device device);
+uint8_t I2C_ReadByte_Ack(i2c_device device,uint8_t ack);
 uint8_t I2C_WaitAck(i2c_device device);
 uint8_t I2C_NoWaitACK(i2c_device device);
 void I2C_Ack(i2c_device device);
 void I2C_Nack(i2c_device device);
-void i2c_Delay(i2c_device device);
 
 #endif
 
