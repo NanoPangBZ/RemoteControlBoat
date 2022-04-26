@@ -24,6 +24,14 @@ void OS_ResponesRecive(RemoteControl_Type*receive)
         //右
         ctr.ERctr.dat = ER_Base - ER_sc;
         xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);
+        //直流电机
+        ctr.DCMotorCtr.type = 1;
+        if(receive->switch_value & 0x01 != 0)
+            ctr.DCMotorCtr.dat = 3600;
+        else
+            ctr.DCMotorCtr.dat = 0;
+        xQueueSend(DCMotor_CmdQueue[0],&ctr.DCMotorCtr,2);
+        xQueueSend(DCMotor_CmdQueue[1],&ctr.DCMotorCtr,2);
     }
 }
 

@@ -25,6 +25,7 @@ void RemoteControl_Task(void*ptr)
     {
         send.cmd = 1;
         MemCopy(rockerInput,send.rocker,4);     //将摇杆值载入发送
+        send.switch_value = HMI_SwitchValue;    //载入8个开关量
         nRF24L01_Send((uint8_t*)&send,32);      //发送
         //等待nrf24中断(发送完成中断 或 未应答中断)
         while(xQueueReceive(nRF24_SendResult,&sendResault,delay_cycle) == pdFALSE)
@@ -174,7 +175,22 @@ void HMI_Task(void*ptr)
         for(uint8_t temp=0;temp<3;temp++)
             HMI_SetFloat(BoatGyroscope[temp],temp);
         HMI_SetFloat(BoatVoltage,3);
-        HMI_Decode();
+        //更新开关量
+        switch(HMI_Decode())
+        {
+            case 1: 
+                HMI_SwitchValue |= 0x01;
+                break;
+            case 2:
+                HMI_SwitchValue &= ~0x01;
+                break;
+            case 3:
+                HMI_SwitchValue |= 0x02;
+                break;
+            case 4:
+                HMI_SwitchValue &= ~0x02;
+                break;
+        }
         //处理串口屏返回
         vTaskDelayUntil(&time,cycle);
     }

@@ -32,6 +32,7 @@ uint8_t nrf_signal = 0;		//nrf信号强度 0~10
 float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag保护
 float BoatVoltage;
 uint8_t rockerInput[4];			//摇杆输入
+uint8_t HMI_SwitchValue = 0;	//串口屏开关量 8开关
 
 void RTOS_CreatTask_Task(void*ptr);
 

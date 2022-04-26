@@ -112,6 +112,8 @@ void HMI_SetFloat(float num,uint8_t channel)
     while( port_Send(str,len) );
 }
 
+extern uint8_t HMI_SwitchValue;
+
 //解析串口屏发送的消息  -> 只解析单次
 uint8_t HMI_Decode(void)
 {

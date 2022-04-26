@@ -97,4 +97,3 @@ typedef struct   //
 }BoatReply_Type;
 
 #endif
-

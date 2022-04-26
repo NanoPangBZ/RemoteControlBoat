@@ -28,6 +28,7 @@ extern float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag�
 extern uint8_t rockerInput[4];			//摇杆输入
 extern float BoatVoltage;
 extern uint8_t nrf_signal;
+extern uint8_t HMI_SwitchValue;
 
 #endif
 
