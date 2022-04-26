@@ -2,11 +2,12 @@
 #include "main.h"
 
 //执行从遥控器接收到的命令
-void OS_ResponesRecive(RemoteControl_Type*receive)
+void OS_ResponesReceive(RemoteControl_Type*receive)
 {
     Ctr_Type ctr;
     if(receive->cmd == 1)
     {
+        //主电调油门配置
         int ER_Base;
         int ER_sc;
         ER_Base = (receive->rocker[0] - 50) * 10;
@@ -24,6 +25,13 @@ void OS_ResponesRecive(RemoteControl_Type*receive)
         //右
         ctr.ERctr.dat = ER_Base - ER_sc;
         xQueueSend(ER_CmdQueue[1],&ctr.ERctr,0);
+        //副电调油门配置
+        ER_Base = ER_Base / 2 ;
+        ER_sc = ER_sc / 2;
+        ctr.ERctr.dat = ER_Base + ER_sc;
+        xQueueSend(ER_CmdQueue[2],&ctr.ERctr,0);
+        ctr.ERctr.dat = ER_Base - ER_sc;
+        xQueueSend(ER_CmdQueue[3],&ctr.ERctr,0);
         //直流电机
         ctr.DCMotorCtr.type = 1;
         if(receive->switch_value & 0x01 != 0)
@@ -32,6 +40,12 @@ void OS_ResponesRecive(RemoteControl_Type*receive)
             ctr.DCMotorCtr.dat = 0;
         xQueueSend(DCMotor_CmdQueue[0],&ctr.DCMotorCtr,2);
         xQueueSend(DCMotor_CmdQueue[1],&ctr.DCMotorCtr,2);
+        //云台
+        ctr.StreetMotorCtr.type = 1;
+        ctr.StreetMotorCtr.dat = (receive->rocker[2] - 50) * 0.1;
+        xQueueSend(STMotor_CmdQueue[0],&ctr.StreetMotorCtr,0);
+        ctr.StreetMotorCtr.dat = (receive->rocker[3] - 50) * 0.1;
+        xQueueSend(STMotor_CmdQueue[1],&ctr.StreetMotorCtr,0);
     }
 }
 

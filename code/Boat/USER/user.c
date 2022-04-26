@@ -51,7 +51,7 @@ void ReplyMaster_Task(void*ptr)
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待回复结果 -> nRF24L01_Send()
 
         //响应从遥控器接收到的命令和数据
-        OS_ResponesRecive(&nrf_receive);
+        OS_ResponesReceive(&nrf_receive);
 
         //判断是否需要系统状态标志
         //能运行到这里说明信号没有丢失
@@ -66,6 +66,15 @@ void ReplyMaster_Task(void*ptr)
             }
         }
         LED_CTR(0,LED_Reserval);
+    }
+}
+
+//处理遥控器接收任务
+void ReceiveHandle_Task(void*ptr)
+{
+    while(1)
+    {
+
     }
 }
 

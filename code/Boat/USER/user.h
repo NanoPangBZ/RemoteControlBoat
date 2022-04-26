@@ -122,5 +122,7 @@ void Motor_Task(void*ptr);
 void StreetMotor_Task(void*ptr);
 void Beep_Task(void*ptr);
 
+void ReceiveHandle_Task(void*ptr);
+
 #endif  //_USER_H_
 
