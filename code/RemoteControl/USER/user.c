@@ -52,7 +52,7 @@ void RemoteControl_Task(void*ptr)
             //等待时长 1/2 任务周期
             if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle) == pdFALSE)
             {
-                //未接收到从机软件回复
+                //未接收到从机软件回复 从机软件出现错误
             }else
             {
                 AckCount++;
@@ -69,6 +69,7 @@ void RemoteControl_Task(void*ptr)
                     MemCopy( (uint8_t*)receive.Gyroscope , (uint8_t*)BoatGyroscope , 12 );
                     xSemaphoreGive(boatGyroscope_occFlag);
                 }
+                //更新电池电压到全局
                 BoatVoltage = receive.Voltage;
             }
         }else
@@ -173,6 +174,7 @@ void HMI_Task(void*ptr)
         for(uint8_t temp=0;temp<3;temp++)
             HMI_SetFloat(BoatGyroscope[temp],temp);
         HMI_SetFloat(BoatVoltage,3);
+        HMI_Decode();
         //处理串口屏返回
         vTaskDelayUntil(&time,cycle);
     }

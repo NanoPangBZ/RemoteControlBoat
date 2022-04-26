@@ -3,8 +3,6 @@
 #include "self_stm32f10x.h"
 #include <stdio.h>
 
-#include "SOFTWARE\user_fun.h"
-
 //回复主机
 void ReplyMaster_Task(void*ptr)
 {
@@ -44,7 +42,7 @@ void ReplyMaster_Task(void*ptr)
         //准备回复的数据
         if(xSemaphoreTake(mpuDat_occFlag,0) == pdPASS)
         {
-            MemCopy((uint8_t*)mpu_data,(uint8_t*)nrf_send.Gyroscope,12); 
+            MemCopy((uint8_t*)mpu_data,(uint8_t*)nrf_send.Gyroscope,12);
             xSemaphoreGive(mpuDat_occFlag);     //释放资源
         }
         nrf_send.Voltage = BatVol;

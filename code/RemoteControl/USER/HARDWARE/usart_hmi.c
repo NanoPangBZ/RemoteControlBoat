@@ -2,10 +2,12 @@
 
 #define port_Send(dat,len)  Usart_Send(2,dat,len)   //串口发送
 #define port_Recive()       Usart_Read(2)+1         //读串口
+#define port_Recive_Len     *Usart_Read(2)
 #define port_PushSbuffer(len)  USART_Push(2,len)    //清除串口缓存区前len字节
 
 static uint8_t Add_3FF(uint8_t*buf);   //静态函数,在buf(字符串)末尾添加3个0xFF -> 覆盖'/0'
 
+//串口屏控件名字及其属性的字符串表
 const char* txt = "txt";
 const char* Msg = "msg";
 const char* val_y = "val_y";
@@ -108,4 +110,34 @@ void HMI_SetFloat(float num,uint8_t channel)
     sprintf((char*)str,"%s.%s=%d",float_boxName[channel],val,temp);
     len = Add_3FF(str);
     while( port_Send(str,len) );
+}
+
+//解析串口屏发送的消息  -> 只解析单次
+uint8_t HMI_Decode(void)
+{
+    uint8_t len = port_Recive_Len;
+    uint8_t*dat = port_Recive();
+    uint8_t ed_pos = 0xff;  //帧头 ED位置 -> 相对dat
+    //寻找帧头
+    for(uint8_t temp=0;temp<len;temp++)
+    {
+        if(dat[temp] == 0xed)
+        {
+            ed_pos = temp;
+            break;
+        }
+    }
+    if(ed_pos == 0xff)
+        return 0;
+    //删除帧头前的字节
+    port_PushSbuffer(ed_pos);
+    //查看是否接收到了完整的帧
+    if( dat[1] + 1 >= port_Recive_Len)
+    {
+        uint8_t re;
+        re = dat[2];
+        port_PushSbuffer(dat[1]); //删除本帧
+        return re;
+    }
+    return 0;
 }

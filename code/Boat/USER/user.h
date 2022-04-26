@@ -1,6 +1,8 @@
 #ifndef _USER_H_
 #define _USER_H_
 
+#include "self_portable\self_portable.h"
+
 #include "BSP\bsp_adc.h"
 #include "BSP\bsp_spi.h"
 #include "BSP\bsp_pwm.h"
@@ -22,8 +24,7 @@
 #include "HARDWARE\MOTOR\er.h"
 
 #include "SOFTWARE\vofa_p.h"
-
-#include "self_portable\self_portable.h"
+#include "SOFTWARE\user_fun.h"
 
 #include "FreeRTOS.h"
 #include "task.h"

@@ -149,5 +149,7 @@ void RTOS_CreatTask_Task(void*ptr)
 	#endif
 	HMI_ClearMsg();
 	HMI_Msg("系统成功启动");
+	USART_Clear(1);
+	USART_Clear(2);
     vTaskDelete(NULL);
 }
