@@ -9,7 +9,6 @@
 extern nRF24L01_Cfg nRF24_Cfg;
 
 //任务句柄
-extern TaskHandle_t OLED_TaskHandle;
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
 
 //队列 信号

@@ -58,7 +58,7 @@ uint32_t stopTiming(void)
     timingTimer->CR1 &= (uint16_t)(~((uint16_t)TIM_CR1_CEN));   //关闭定时器
     if(overflow_count)
     {
-        return overflow_count*65535 + timingTimer->CNT;
+        return (uint32_t)overflow_count*65535 + timingTimer->CNT;
     }else
     {
         return (uint32_t)timingTimer->CNT;

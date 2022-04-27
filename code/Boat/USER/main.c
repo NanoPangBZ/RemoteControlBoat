@@ -18,9 +18,9 @@ StreetMotor_Type STMotor_is[3];		//舵机任务参数
 
 //任务句柄
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;	//创建任务句柄
-TaskHandle_t	Main_TaskHandle = NULL;				//主任务句柄
 TaskHandle_t	ReplyMaster_TaskHandle = NULL;		//主机回复任务句柄
 TaskHandle_t	OLED_TaskHandle = NULL;				//oled刷新任务句柄
+TaskHandle_t	SignalStatis_TaskHandle = NULL;		//信号统计任务
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;	//nrf中断任务句柄
 TaskHandle_t	MPU_TaskHandle = NULL;				//陀螺仪刷新任务句柄
 TaskHandle_t	KeyInput_TaskHandle = NULL;			//按键任务句柄
@@ -34,6 +34,7 @@ TaskHandle_t	StreetMotor_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//舵机任务�
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
 SemaphoreHandle_t	nRF24_RecieveFlag = NULL;	//nrf24接收标志(数据已经进入单片机,等待处理)
 QueueHandle_t		nRF24_SendResult = NULL;	//nrf24发送结果
+QueueHandle_t		wait_handle_receive = NULL;	//等待处理的接收信息
 QueueHandle_t		ER_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//电调任务命令接收队列
 QueueHandle_t		DCMotor_CmdQueue[2] = {NULL,NULL};		//直流电机任务命令接收队列
 QueueHandle_t		STMotor_CmdQueue[4] = {NULL,NULL,NULL,NULL};	//舵机任务命令接收队列
@@ -147,11 +148,11 @@ void RTOSCreateTask_Task(void*ptr)
 		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
 		STMotor_is[temp].streetMotor = streetMotor[temp];	//见hardware_def.h
 		STMotor_is[temp].cycle = 20;	//50Hz执行频率
-		STMotor_is[temp].angle_inc = 0.5f;
+		STMotor_is[temp].angle_inc = 5.0f;
 		xTaskCreate(
 			StreetMotor_Task,
 			"SM",
-			64,
+			64, 
 			(void*)&STMotor_is[temp],
 			5,
 			&StreetMotor_TaskHandle[temp]

@@ -42,9 +42,9 @@ void OS_ResponesReceive(RemoteControl_Type*receive)
         xQueueSend(DCMotor_CmdQueue[1],&ctr.DCMotorCtr,2);
         //云台
         ctr.StreetMotorCtr.type = 1;
-        ctr.StreetMotorCtr.dat = (receive->rocker[2] - 50) * 0.1;
+        ctr.StreetMotorCtr.dat = (float)(receive->rocker[2] -50 ) * 0.06f;
         xQueueSend(STMotor_CmdQueue[0],&ctr.StreetMotorCtr,0);
-        ctr.StreetMotorCtr.dat = (receive->rocker[3] - 50) * 0.1;
+        ctr.StreetMotorCtr.dat = (float)(receive->rocker[3] -50) * 0.06f;
         xQueueSend(STMotor_CmdQueue[1],&ctr.StreetMotorCtr,0);
     }
 }

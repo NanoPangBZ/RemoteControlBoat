@@ -3,6 +3,8 @@
 #include "self_stm32f10x.h"
 #include <stdio.h>
 
+uint8_t statis_receive = 0;
+
 //回复主机
 void ReplyMaster_Task(void*ptr)
 {
@@ -66,6 +68,7 @@ void ReplyMaster_Task(void*ptr)
             }
         }
         LED_CTR(0,LED_Reserval);
+        statis_receive++;
     }
 }
 
@@ -95,65 +98,6 @@ void nRF24L01_Intterrupt_Task(void*ptr)
     {
         xSemaphoreTake(nRF24_ISRFlag,portMAX_DELAY);
         nRF24L01_InterruptHandle();     //isr处理函数
-    }
-}
-
-//屏幕刷新
-void OLED_Task(void*ptr)
-{
-    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;     //频率换算成心跳周期
-    TickType_t  time = xTaskGetTickCount();
-    float gyroscope[3];
-    sysStatus_Type sys = {0};
-    uint8_t sbuf[32];
-    while(1)
-    {
-        time = xTaskGetTickCount();
-        //获取系统状态
-        if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
-        {
-            sys = sysStatus;
-            xSemaphoreGive(sysStatus_occFlag);  //释放资源
-        }
-        //显示对应页面信息
-        //将陀螺仪数据载入gyroscope 并且更新oled的姿态显示
-        if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
-        {
-            MemCopy((uint8_t*)mpu_data,(uint8_t*)gyroscope,12);
-            xSemaphoreGive(mpuDat_occFlag); //释放资源
-            OLED12864_Clear_PageBlock(1,0,48);
-            OLED12864_Clear_PageBlock(2,0,48);
-            OLED12864_Clear_PageBlock(3,0,48);
-            sprintf((char*)sbuf,"x:%.1f",gyroscope[0]);
-            OLED12864_Show_String(1,0,sbuf,1);
-            sprintf((char*)sbuf,"y:%.1f",gyroscope[1]);
-            OLED12864_Show_String(2,0,sbuf,1);
-            sprintf((char*)sbuf,"z:%.1f",gyroscope[2]);
-            OLED12864_Show_String(3,0,sbuf,1);
-        }
-        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
-        //显示nrf信号状态
-        OLED12864_Clear_Page(0);
-        if(sys.nrf_signal != 0)
-        {
-            sprintf((char*)sbuf,"loss:%d",sys.nrf_signal);
-        }else{
-            sprintf((char*)sbuf,"connect");
-        }
-        OLED12864_Show_String(0,0,sbuf,1);
-        //显示电压
-        sprintf((char*)sbuf,"Vol:%.1fV",BatVol);
-        OLED12864_Show_String(2,55,sbuf,2);
-        //数据反馈 er->电调油门  MT->直流电机油门
-        sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
-        OLED12864_Clear_Page(4);
-        OLED12864_Show_String(4,0,sbuf,1);
-        sprintf((char*)sbuf,"MT:%d",A4950_ReadOut(&a4950[1]));
-        OLED12864_Clear_Page(5);
-        OLED12864_Show_String(5,0,sbuf,1);
-        
-        OLED12864_Refresh();
-        vTaskDelayUntil(&time,Cycle);
     }
 }
 
@@ -329,6 +273,10 @@ void StreetMotor_Task(void*ptr)
                 break;
             }
         }
+        if(target_angle > 180.0f)
+            target_angle = 180.0f;
+        if(target_angle < 0.0f)
+            target_angle = 0.0f;
         if(angle < target_angle)
         {
             angle += SMT.angle_inc;
@@ -363,3 +311,60 @@ void Beep_Task(void*ptr)
     }
 }
 
+//屏幕刷新
+void OLED_Task(void*ptr)
+{
+    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS;     //频率换算成心跳周期
+    TickType_t  time = xTaskGetTickCount();
+    float gyroscope[3];
+    sysStatus_Type sys = {0};
+    uint8_t sbuf[32];
+    while(1)
+    {
+        time = xTaskGetTickCount();
+        //获取系统状态
+        if(xSemaphoreTake(sysStatus_occFlag,1) == pdTRUE)
+        {
+            sys = sysStatus;
+            xSemaphoreGive(sysStatus_occFlag);  //释放资源
+        }
+        //将陀螺仪数据载入gyroscope 并且更新oled的姿态显示
+        if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
+        {
+            MemCopy((uint8_t*)mpu_data,(uint8_t*)gyroscope,12);
+            xSemaphoreGive(mpuDat_occFlag); //释放资源
+            OLED12864_Clear_PageBlock(1,0,48);
+            OLED12864_Clear_PageBlock(2,0,48);
+            OLED12864_Clear_PageBlock(3,0,48);
+            sprintf((char*)sbuf,"x:%.1f",gyroscope[0]);
+            OLED12864_Show_String(1,0,sbuf,1);
+            sprintf((char*)sbuf,"y:%.1f",gyroscope[1]);
+            OLED12864_Show_String(2,0,sbuf,1);
+            sprintf((char*)sbuf,"z:%.1f",gyroscope[2]);
+            OLED12864_Show_String(3,0,sbuf,1);
+        }
+        OLED12864_Show_Num(7,0,time/portTICK_RATE_MS/1000,1);
+        //显示nrf信号状态
+        OLED12864_Clear_Page(0);
+        if(sys.nrf_signal != 0)
+        {
+            sprintf((char*)sbuf,"loss:%d",sys.nrf_signal);
+        }else{
+            sprintf((char*)sbuf,"connect");
+        }
+        OLED12864_Show_String(0,0,sbuf,1);
+        //显示电压
+        sprintf((char*)sbuf,"Vol:%.1fV",BatVol);
+        OLED12864_Show_String(2,55,sbuf,2);
+        //数据反馈 er->电调油门  MT->直流电机油门
+        sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
+        OLED12864_Clear_Page(4);
+        OLED12864_Show_String(4,0,sbuf,1);
+        sprintf((char*)sbuf,"MT:%d",A4950_ReadOut(&a4950[1]));
+        OLED12864_Clear_Page(5);
+        OLED12864_Show_String(5,0,sbuf,1);
+        
+        OLED12864_Refresh();
+        vTaskDelayUntil(&time,Cycle);
+    }
+}
