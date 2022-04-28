@@ -46,8 +46,17 @@ SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互
 float mpu_data[3] = {0,0,0};    //姿态 -> mpuDat_occFlag保护
 float BatVol = 0.0f;			//电池电压
 sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
+PID_Handle	Yaw_pid_Handle;		//航向角pid
 
-void RTOSCreateTask_Task(void*ptr);
+//PID参数以及限位
+#define YAW_P	1.0f
+#define YAW_I	0.0f
+#define YAW_D	0.0f
+#define YAW_ZOOM	2.0f
+#define YAW_MAX	100
+#define YAW_MIN	-100
+
+void RTOSCreateTask_Task(void*ptr);		//初始化任务
 
 int main(void)
 {
@@ -133,6 +142,14 @@ int main(void)
 void RTOSCreateTask_Task(void*ptr)
 {
 	//全局变量赋值
+	//航向角pid
+	Yaw_pid_Handle.pid.P = YAW_P;
+	Yaw_pid_Handle.pid.I = YAW_I;
+	Yaw_pid_Handle.pid.D = YAW_D;
+	Yaw_pid_Handle.pid.out_zoom = YAW_ZOOM;
+	Yaw_pid_Handle.OutputMax = YAW_MAX;
+	Yaw_pid_Handle.OutputMin = YAW_MIN;
+	//系统状态sysStatus
     sysStatus.nrf_signal = 0;
 	//建立 队列 信号量
     nRF24_ISRFlag = xSemaphoreCreateBinary();		//nrf外部中断标志,由isr给出

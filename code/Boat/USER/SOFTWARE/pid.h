@@ -25,6 +25,7 @@ typedef struct
     float_p P;
     float_p I;
     float_p D;
+    float_p out_zoom;    //输出缩放
 }PID_para;
 
 typedef struct

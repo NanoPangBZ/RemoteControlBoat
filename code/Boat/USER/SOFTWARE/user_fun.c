@@ -1,5 +1,6 @@
 #include "user_fun.h"
 #include "main.h"
+#include "user.h"
 
 //执行从遥控器接收到的命令
 void OS_ResponesReceive(RemoteControl_Type*receive)
@@ -47,6 +48,12 @@ void OS_ResponesReceive(RemoteControl_Type*receive)
         ctr.StreetMotorCtr.dat = (float)(receive->rocker[3] -50) * 0.06f;
         xQueueSend(STMotor_CmdQueue[1],&ctr.StreetMotorCtr,0);
     }
+}
+
+//航向角闭环
+void OS_YawControl(float yaw,float angle)
+{
+    
 }
 
 //紧急停止

@@ -1,35 +1,19 @@
 #ifndef _USER_H_
 #define _USER_H_
 
-#include "self_portable\self_portable.h"
-
-#include "BSP\bsp_adc.h"
-#include "BSP\bsp_spi.h"
-#include "BSP\bsp_pwm.h"
-#include "BSP\bsp_led.h"
-#include "BSP\bsp_usart.h"
-#include "BSP\bsp_timer.h"
-#include "BSP\bsp_key.h"
-#include "BSP\bsp_i2c.h"
-#include "BSP\bsp_beep.h"
-
-#include "HARDWARE\hardware_def.h"
-#include "HARDWARE\MPU6050\mpu6050.h"
-#include "HARDWARE\MPU6050\eMPL\inv_mpu.h"
-#include "HARDWARE\MPU6050\eMPL\inv_mpu_dmp_motion_driver.h"
-#include "HARDWARE\NRF24\nrf24l01.h"
-#include "HARDWARE\OLED\oled12864.h"
-#include "HARDWARE\MOTOR\a4950.h"
-#include "HARDWARE\MOTOR\street_motor.h"
-#include "HARDWARE\MOTOR\er.h"
-
-#include "SOFTWARE\vofa_p.h"
-#include "SOFTWARE\user_fun.h"
-
 #include "FreeRTOS.h"
 #include "task.h"
-#include "semphr.h"
 #include "queue.h"
+#include "semphr.h"
+
+#include "BSP\bsp.h"
+#include "HARDWARE\hardware.h"
+
+#include "SOFTWARE\pid.h"
+#include "SOFTWARE\user_fun.h"
+#include "SOFTWARE\vofa_p.h"
+
+#include "self_portable\self_portable.h"
 
 /**************************电调相关类型*****************************************/
 //电调任务参数
@@ -109,6 +93,7 @@ typedef union
 typedef struct
 {
     uint16_t nrf_signal; //nrf信号 0:正常 其他:信号丢失时长
+    uint16_t RunMode;    //运行模式
 }sysStatus_Type;
 
 void MPU_Task(void*ptr);

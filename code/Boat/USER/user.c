@@ -1,6 +1,5 @@
-#include "user.h"
+#include "user.h"   
 #include "main.h"
-#include "self_stm32f10x.h"
 #include <stdio.h>
 
 uint8_t statis_receive = 0;
@@ -54,7 +53,7 @@ void ReplyMaster_Task(void*ptr)
 
         //响应从遥控器接收到的命令和数据
         OS_ResponesReceive(&nrf_receive);
-
+        
         //判断是否需要系统状态标志
         //能运行到这里说明信号没有丢失
         if(signal == 1)

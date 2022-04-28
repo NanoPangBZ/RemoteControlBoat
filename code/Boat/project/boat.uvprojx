@@ -563,6 +563,11 @@
               <FileType>5</FileType>
               <FilePath>..\USER\HARDWARE\hardware_def.h</FilePath>
             </File>
+            <File>
+              <FileName>water_sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\WaterSensor\water_sensor.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -582,6 +587,11 @@
               <FileName>user_fun.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\user_fun.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\pid.c</FilePath>
             </File>
           </Files>
         </Group>
