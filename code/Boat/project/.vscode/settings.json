@@ -21,6 +21,7 @@
         "hardware.h": "c",
         "user_fun.h": "c",
         "a4950.h": "c",
-        "bsp.h": "c"
+        "bsp.h": "c",
+        "auto_sail.h": "c"
     }
 }

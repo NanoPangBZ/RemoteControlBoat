@@ -71,8 +71,7 @@ void ReplyMaster_Task(void*ptr)
     }
 }
 
-//处理遥控器接收任务
-void ReceiveHandle_Task(void*ptr)
+void AutoRun_Task(void*ptr)
 {
     while(1)
     {

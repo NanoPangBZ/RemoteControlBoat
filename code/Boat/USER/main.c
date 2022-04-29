@@ -20,7 +20,6 @@ StreetMotor_Type STMotor_is[3];		//舵机任务参数
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;	//创建任务句柄
 TaskHandle_t	ReplyMaster_TaskHandle = NULL;		//主机回复任务句柄
 TaskHandle_t	OLED_TaskHandle = NULL;				//oled刷新任务句柄
-TaskHandle_t	SignalStatis_TaskHandle = NULL;		//信号统计任务
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;	//nrf中断任务句柄
 TaskHandle_t	MPU_TaskHandle = NULL;				//陀螺仪刷新任务句柄
 TaskHandle_t	KeyInput_TaskHandle = NULL;			//按键任务句柄
@@ -169,7 +168,7 @@ void RTOSCreateTask_Task(void*ptr)
 		xTaskCreate(
 			StreetMotor_Task,
 			"SM",
-			64, 
+			64,
 			(void*)&STMotor_is[temp],
 			5,
 			&StreetMotor_TaskHandle[temp]

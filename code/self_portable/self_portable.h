@@ -4,7 +4,7 @@
 #include "self_stm32f10x.h"
 
 /*******************************************************************
- * self_portable.c/.h
+ * self_portable.h
  * 功能:
  * 用于遥控器和船之间的通讯
  * 2022/3/19   庞碧璋
@@ -90,7 +90,7 @@ typedef struct      //20B
 }RemoteControl_Type;
 
 /*************************船只发送,遥控器接收*******************************/
-typedef struct   //
+typedef struct
 {
     float Voltage;
     float Gyroscope[3];

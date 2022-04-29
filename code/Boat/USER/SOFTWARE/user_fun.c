@@ -50,6 +50,11 @@ void OS_ResponesReceive(RemoteControl_Type*receive)
     }
 }
 
+void OS_AutoRun(void)
+{
+
+}
+
 //航向角闭环
 void OS_YawControl(float yaw,float angle)
 {

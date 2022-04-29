@@ -11,6 +11,7 @@
 
 #include "SOFTWARE\pid.h"
 #include "SOFTWARE\user_fun.h"
+#include "SOFTWARE\auto_sail.h"
 #include "SOFTWARE\vofa_p.h"
 
 #include "self_portable\self_portable.h"
@@ -98,6 +99,7 @@ typedef struct
 
 void MPU_Task(void*ptr);
 void ReplyMaster_Task(void*ptr);
+void AutoRun_Task(void*ptr);
 void nRF24L01_Intterrupt_Task(void*ptr);
 void Voltage_Task(void*ptr);
 void OLED_Task(void*ptr);
@@ -106,8 +108,6 @@ void ER_Task(void*ptr);
 void Motor_Task(void*ptr);
 void StreetMotor_Task(void*ptr);
 void Beep_Task(void*ptr);
-
-void ReceiveHandle_Task(void*ptr);
 
 #endif  //_USER_H_
 
