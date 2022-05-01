@@ -5,11 +5,17 @@
 
 typedef struct
 {
-    float yaw_off;
-    float speed;
-    float distance;
+    float yaw_off;      //航向偏移
+    float speed;        //速度
+    float distance;     //距离
 }Route_Type;
 
+typedef struct
+{
+    Route_Type*list;
+    uint8_t node_num;
+    uint8_t node_count;
+}AutoSail_Type;
 
 
 #endif //_AUTO_SAIL_H_

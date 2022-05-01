@@ -73,9 +73,11 @@ void ReplyMaster_Task(void*ptr)
 
 void AutoRun_Task(void*ptr)
 {
+    AutoSail_Type handle = *(AutoSail_Type*)ptr;
+    Route_Type that_node = *handle.list;
     while(1)
     {
-
+        
     }
 }
 

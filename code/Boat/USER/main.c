@@ -142,10 +142,11 @@ void RTOSCreateTask_Task(void*ptr)
 {
 	//全局变量赋值
 	//航向角pid
-	Yaw_pid_Handle.pid.P = YAW_P;
-	Yaw_pid_Handle.pid.I = YAW_I;
-	Yaw_pid_Handle.pid.D = YAW_D;
-	Yaw_pid_Handle.pid.out_zoom = YAW_ZOOM;
+	MemFill((uint8_t*)&Yaw_pid_Handle,0,sizeof(Yaw_pid_Handle));
+	Yaw_pid_Handle.P = YAW_P;
+	Yaw_pid_Handle.I = YAW_I;
+	Yaw_pid_Handle.D = YAW_D;
+	Yaw_pid_Handle.out_zoom = YAW_ZOOM;
 	Yaw_pid_Handle.OutputMax = YAW_MAX;
 	Yaw_pid_Handle.OutputMin = YAW_MIN;
 	//系统状态sysStatus

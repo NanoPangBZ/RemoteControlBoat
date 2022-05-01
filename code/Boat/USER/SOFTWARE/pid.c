@@ -15,10 +15,10 @@ float_p PID_IncOperation(PID_Handle*handle,float_p Actual)
     handle->Err[2] = handle->Err[1];
     handle->Err[1] = handle->Err[0];
     handle->Err[0] = handle->Target - Actual;
-    Inc = handle->pid.P * (handle->Err[0] - handle->Err[1])
-         + handle->pid.I * (handle->Err[0])
-         + handle->pid.D * (handle->Err[0] - handle->Err[1]*2 + handle->Err[2]) ;
-    handle->Output += Inc*handle->pid.out_zoom;
+    Inc = handle->P * (handle->Err[0] - handle->Err[1])
+         + handle->I * (handle->Err[0])
+         + handle->D * (handle->Err[0] - handle->Err[1]*2 + handle->Err[2]) ;
+    handle->Output += Inc * handle->out_zoom;
     if(handle->Output > handle->OutputMax)
         handle->Output = handle->OutputMax;
     if(handle->Output < handle->OutputMin)
@@ -37,5 +37,16 @@ float_p PID_IncOperation(PID_Handle*handle,float_p Actual)
  *******************************************************************/
 float_p PID_PosOperation(PID_Handle*handle,float_p Actual)
 {
-    return 0;
+    handle->Err[2] = handle->Err[1];
+    handle->Err[1] = handle->Target - Actual;
+    handle->Err[0] += handle->Err[1];
+    handle->Output = handle->P * handle->Err[1] + 
+                        handle->I * handle->Err[0] + 
+                        handle->D * handle->Err[2];
+    handle->Output *= handle->out_zoom;
+    if(handle->Output > handle->OutputMax)
+        handle->Output = handle->OutputMax;
+    if(handle->Output < handle->OutputMin)
+        handle->Output = handle->OutputMin;
+    return handle->Output;
 }
