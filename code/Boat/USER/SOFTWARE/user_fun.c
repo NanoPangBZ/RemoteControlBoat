@@ -36,11 +36,13 @@ void OS_ResponesReceive(RemoteControl_Type *receive)
         xQueueSend(ER_CmdQueue[3], &ctr.ERctr, 0);
         //直流电机
         ctr.DCMotorCtr.type = 1;
-        if (receive->switch_value & 0x01 != 0)
+        if (receive->switch_value & DCMotor1_Mask != 0)
             ctr.DCMotorCtr.dat = 3600;
         else
             ctr.DCMotorCtr.dat = 0;
         xQueueSend(DCMotor_CmdQueue[0], &ctr.DCMotorCtr, 2);
+        if(receive->switch_value & DCMotor2_Mask != 0)
+            ctr.DCMotorCtr.dat = 3600;
         xQueueSend(DCMotor_CmdQueue[1], &ctr.DCMotorCtr, 2);
         //云台
         ctr.StreetMotorCtr.type = 1;

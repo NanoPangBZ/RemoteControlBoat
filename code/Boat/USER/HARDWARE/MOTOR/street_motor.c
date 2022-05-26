@@ -6,7 +6,12 @@
 void StreetMotor_Set(streetMotor_Type*motor,float angle)
 {
     if(angle>0 && angle<180)
-        PWM_Out_Port(motor->pwm_ch,AngleToWidth(angle));
+    {
+        if(motor->dir)
+            PWM_Out_Port(motor->pwm_ch,180 - AngleToWidth(angle));
+        else
+            PWM_Out_Port(motor->pwm_ch,AngleToWidth(angle));
+    }
 }
 
 void StreetMotor_SetWidth(streetMotor_Type*motor,uint16_t width)

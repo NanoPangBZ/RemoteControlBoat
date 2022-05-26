@@ -90,6 +90,12 @@ typedef union
 
 
 /**************************系统状态*****************************************/
+typedef struct
+{
+    short DCMotor1_F;
+    short DCMotor2_F;
+}User_Set;
+
 //系统状态
 typedef struct
 {
