@@ -14,12 +14,12 @@ uint8_t HMI_Fre = 20;	//串口屏幕刷新频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
-TaskHandle_t Main_TaskHandle = NULL;
 TaskHandle_t RemoteControl_TaskHandle = NULL;
 TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t User_FeedBack_TaskHandle = NULL;
 TaskHandle_t Rocker_TaskHandle = NULL;
 TaskHandle_t HMI_TaskHandle = NULL;
+TaskHandle_t HMI_UpDataHandle = NULL;
 
 //队列句柄
 SemaphoreHandle_t	nRF24_ISRFlag = NULL;		//nrf24硬件中断标志
@@ -146,6 +146,17 @@ void RTOS_CreatTask_Task(void*ptr)
 		&HMI_Fre,
 		9,
 		&HMI_TaskHandle
+	);
+	#endif
+	//串口屏升级
+	#if 1
+	xTaskCreate(
+		HMI_UpData,
+		"HMI task",
+		64,
+		&HMI_Fre,
+		13,
+		&HMI_UpDataHandle
 	);
 	#endif
 	HMI_ClearMsg();

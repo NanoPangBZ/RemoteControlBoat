@@ -266,35 +266,28 @@ int fputc (int c, FILE *fp)
 }
 
 /******************************ISR**************************************/
+uint8_t U1U2Link = 0;
 void USART1_IRQHandler(void)
 {
     if(USART_GetITStatus(USART1,USART_IT_RXNE) == SET)
     {
-        //是否使用串口传透
-        #if 1
-            Rx_SbufferInput(1,USART_ReceiveData(USART1));
-        #else
-            while(Usart_BusyCheck(2));
-            USART_SendData(USART2,USART_ReceiveData(USART1));
-            while(USART_GetFlagStatus(USART2,USART_FLAG_TXE) == RESET);
-        #endif
+
+        //while(Usart_BusyCheck(2));
+        //USART_SendData(USART2,USART_ReceiveData(USART1));
+        //while(USART_GetFlagStatus(USART2,USART_FLAG_TXE) == RESET);
+        Rx_SbufferInput(1,USART_ReceiveData(USART1));
         USART_ClearITPendingBit(USART1,USART_IT_RXNE);
     }
 }
-
 
 void USART2_IRQHandler(void)
 {
     if(USART_GetITStatus(USART2,USART_IT_RXNE) == SET)
     {
-        //是否使用串口传透
-        #if 1
-            Rx_SbufferInput(2,USART_ReceiveData(USART2));
-        #else
-            while(Usart_BusyCheck(1));
-            USART_SendData(USART1,USART_ReceiveData(USART2));
-            while(USART_GetFlagStatus(USART1,USART_FLAG_TXE) == RESET);
-        #endif
+        //while(Usart_BusyCheck(1));
+        //USART_SendData(USART1,USART_ReceiveData(USART2));
+        //while(USART_GetFlagStatus(USART1,USART_FLAG_TXE) == RESET);
+        Rx_SbufferInput(2,USART_ReceiveData(USART2));
         USART_ClearITPendingBit(USART2,USART_IT_RXNE);
     }
 }

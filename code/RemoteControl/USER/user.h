@@ -29,6 +29,7 @@ void nRF24L01_Intterrupt_Task(void*ptr);
 void User_FeedBack_Task(void*ptr);
 void Rocker_Task(void*ptr);
 void HMI_Task(void*ptr);
+void HMI_UpData(void*ptr);
 
 #endif //_USER_H_
 

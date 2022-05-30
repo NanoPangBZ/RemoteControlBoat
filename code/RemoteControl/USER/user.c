@@ -148,10 +148,6 @@ void User_FeedBack_Task(void*ptr)
         Vofa_Input((float)rockerInput[1],4);
         Vofa_Input((float)rockerInput[2],5);
         Vofa_Input((float)rockerInput[3],6);
-        Vofa_Input((float)SendCount,7);
-        Vofa_Input((float)AckCount,8);
-        Vofa_Input((float)HackCount,9);
-        //Vofa_Input(BoatVoltage,9);
         #endif
         Vofa_Send();
     }
@@ -196,3 +192,54 @@ void HMI_Task(void*ptr)
     }
 }
 
+//串口升级
+void HMI_UpData(void*ptr)
+{
+    uint8_t*u1_rxAddr = Usart_Read(1);
+    while(1)
+    {
+        //进入串口屏升级模式
+        if(*u1_rxAddr > 10)
+        {
+            //删除所有任务
+            vTaskDelete(RemoteControl_TaskHandle);
+            vTaskDelete(nRF24L01_Intterrupt_TaskHandle);
+            vTaskDelete(User_FeedBack_TaskHandle);
+            vTaskDelete(Rocker_TaskHandle);
+            vTaskDelete(HMI_TaskHandle);
+            HMI_ClearMsg();
+            HMI_Msg("进入串口升级模式");
+            soft_delay_ms(500);
+            //关闭串口外设
+            USART_Cmd(USART1,DISABLE);
+            USART_Cmd(USART2,DISABLE);
+            //进入临界区段
+            portENTER_CRITICAL();
+            //信号中转初始化
+            GPIO_InitTypeDef    GPIO_InitStruct;
+
+            GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+            GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+            GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2 | GPIO_Pin_9;
+            GPIO_Init(GPIOA,&GPIO_InitStruct);
+            GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+            GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_10;
+            GPIO_Init(GPIOA,&GPIO_InitStruct);
+            //信号中转
+            while(1)
+            {
+                //U1Rx -> U2Tx
+                if( (GPIOA->IDR) & GPIO_Pin_10 )
+                    GPIOA->ODR |= GPIO_Pin_2;
+                else
+                    GPIOA->ODR &= ~GPIO_Pin_2;
+                //U2Rx -> U1Tx
+                if( (GPIOA->IDR) & GPIO_Pin_3 )
+                    GPIOA->ODR |= GPIO_Pin_9;
+                else
+                    GPIOA->ODR &= ~GPIO_Pin_9;
+            }
+        }
+        vTaskDelay(50/portTICK_RATE_MS);
+    }
+}
