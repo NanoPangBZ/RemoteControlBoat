@@ -22,16 +22,7 @@
  * 备注:在移植时注意数据类型的依赖!
 **************************************************************************************/
 
-//外部函数
-#include "self_stm32f10x.h"
-#include "BSP/bsp_spi.h"
-#define OLED12864_delay_ms(ms)                  soft_delay_ms(ms)
-#define OLED12864_SPI_Send_Byte(dat)            SPI_Send_Byte(3,dat)
-#define OLED12864_Set_Bit(pin_Num)              Pin_Set(OLED_Pin[pin_Num])
-#define OLED12864_Reset_Bit(pin_Num)            Pin_Reset(OLED_Pin[pin_Num])
-
-
-//硬件相关宏定义,定义物理引脚名字
+//硬件相关宏定义,定义物理引脚名字 - 适用stm32f10x
 #define OLED_RES_Pin    GPIO_Pin_4
 #define OLED_RES_GPIO   GPIOB
 #define OLED_DC_Pin     GPIO_Pin_6
@@ -43,17 +34,14 @@
 #define page_MAX        8
 
 //OLED模式
-#define USE_POINT_CRT       0   //不使用像素点级别操作
+#define USE_POINT_CRT       1   //使用像素点级别操作
+#define oled_printf         0   //printf重定向到oled屏幕
+#define oled_printf_line    0   //printf重定向到oled第一行
 
 //引脚编号
 #define OLED_RES    0
 #define OLED_DC     1
 #define OLED_CS     2
-static const Pin OLED_Pin[3] = {
-    {OLED_RES_Pin,OLED_RES_GPIO},
-    {OLED_DC_Pin,OLED_DC_GPIO},
-    {OLED_CS_Pin,OLED_CS_GPIO}
-};
 
 #define OLED_CMD    0
 #define OLED_DATA   1
@@ -64,7 +52,7 @@ void OLED12864_GPIO_Init(void);
 void OLED12864_Hard_Reset(void);
 
 void OLED12864_Send_Byte(uint8_t dat,uint8_t cmd);
-void OLED12864_Send_NumByte(const uint8_t*dat,uint8_t len,uint8_t cmd);
+void OLED12864_Send_NumByte(const uint8_t*dat,uint16_t len,uint8_t cmd);
 
 void OLED12864_Refresh(void);
 void OLED12864_Set_Position(uint8_t page,uint8_t x);

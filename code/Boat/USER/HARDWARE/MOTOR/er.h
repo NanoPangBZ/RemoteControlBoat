@@ -16,9 +16,11 @@ typedef struct
     uint8_t pwm_ch;     //pwm管道标号
     uint8_t dir;        //方向  0:默认 1:反向
     uint16_t median;    //中位
+    //short offset;       //油门偏移
 }er_Type;
 
 void ER_Out(er_Type*er,int width);
+void ER_UndirOut(er_Type*er,int out);
 int ER_ReadOut(er_Type*er);
 
 #endif  //_ER_H_

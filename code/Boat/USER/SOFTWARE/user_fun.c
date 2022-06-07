@@ -12,27 +12,19 @@ void OS_ResponesReceive(RemoteControl_Type *receive)
         int ER_Base;
         int ER_sc;
         ER_Base = (receive->rocker[0] - 50) * 10;
-        if (ER_Base != 0)
-        {
-            ER_sc = (receive->rocker[1] - 50) * 0.02 * ER_Base;
-        }
-        else
-        {
-            ER_sc = (receive->rocker[1] - 50) * 8;
-        }
+        ER_sc = (receive->rocker[1] - 50) * 10;
         ctr.ERctr.type = 1;
         //左
-        ctr.ERctr.dat = ER_Base + ER_sc;
+        ctr.ERctr.dat = ER_Base + ER_sc*0.3;
         xQueueSend(ER_CmdQueue[0], &ctr.ERctr, 0);
         //右
-        ctr.ERctr.dat = ER_Base - ER_sc;
+        ctr.ERctr.dat = ER_Base - ER_sc*0.3;
         xQueueSend(ER_CmdQueue[1], &ctr.ERctr, 0);
         //副电调油门配置
-        ER_Base = ER_Base / 2;
-        ER_sc = ER_sc / 2;
-        ctr.ERctr.dat = ER_Base + ER_sc;
+        ER_sc = ER_sc;
+        ctr.ERctr.dat = ER_sc;
         xQueueSend(ER_CmdQueue[2], &ctr.ERctr, 0);
-        ctr.ERctr.dat = ER_Base - ER_sc;
+        ctr.ERctr.dat = - ER_sc;
         xQueueSend(ER_CmdQueue[3], &ctr.ERctr, 0);
         //直流电机
         ctr.DCMotorCtr.type = 1;

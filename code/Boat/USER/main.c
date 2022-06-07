@@ -56,6 +56,7 @@ PID_Handle	Yaw_pid_Handle;		//航向角pid
 #define YAW_MIN	-100
 
 void RTOSCreateTask_Task(void*ptr);		//初始化任务
+void Er_Cal(void);	//油门行程校准
 
 int main(void)
 {
@@ -80,6 +81,8 @@ int main(void)
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
 	OLED12864_Refresh();
+
+	Er_Cal();
 
 	//MPU初始化	-> 需要IIC
 	mpu_err = MPU_Init();
@@ -278,4 +281,36 @@ void RTOSCreateTask_Task(void*ptr)
 	Beep_OFF();
 	//删除自身
     vTaskDelete(NULL);
+}
+
+//油门校准
+void Er_Cal(void)
+{
+	//油门行程校准
+	if(Key_Read(0) == Key_Press)
+	{
+		OLED12864_Show_String(0,0,"calibration",1);
+		OLED12864_Refresh();
+		soft_delay_ms(2000);
+		ER_UndirOut(&er[0],0);
+		ER_UndirOut(&er[1],0);
+		ER_UndirOut(&er[2],0);
+		ER_UndirOut(&er[3],0);
+		while(Key_Read(0) != Key_Press);
+		OLED12864_Show_String(1,0,"Set Max",1);
+		OLED12864_Refresh();
+		ER_UndirOut(&er[0],500);
+		ER_UndirOut(&er[1],500);
+		ER_UndirOut(&er[2],500);
+		ER_UndirOut(&er[3],500);
+		soft_delay_ms(300);
+		while(Key_Read(0) != Key_Press);
+		OLED12864_Show_String(1,0,"Set Med",1);
+		OLED12864_Refresh();
+		ER_UndirOut(&er[0],0);
+		ER_UndirOut(&er[1],0);
+		ER_UndirOut(&er[2],0);
+		ER_UndirOut(&er[3],0);
+		soft_delay_ms(300);
+	}
 }

@@ -1,6 +1,23 @@
 #include "oled12864.h"
 #include "font_lib.h"
 
+#if oled_printf == 1
+#include "stdio.h"
+#endif
+
+//外部函数
+#include "self_stm32f10x.h"
+#include "BSP/bsp_spi.h"
+#define OLED12864_delay_ms(ms)                  soft_delay_ms(ms)
+#define OLED12864_SPI_Send_Byte(dat)            SPI_Send_Byte(3,dat)
+#define OLED12864_Set_Bit(pin_Num)              Pin_Set(OLED_Pin[pin_Num])
+#define OLED12864_Reset_Bit(pin_Num)            Pin_Reset(OLED_Pin[pin_Num])
+static const Pin OLED_Pin[3] = {
+    {OLED_RES_Pin,OLED_RES_GPIO},
+    {OLED_DC_Pin,OLED_DC_GPIO},
+    {OLED_CS_Pin,OLED_CS_GPIO}
+};
+
 /************************************************
  * OLED12864缓存
  * [paeg][x]
@@ -9,11 +26,11 @@
 ************************************************/
 static uint8_t OLED12864_Sbuffer[8][128];
 //OLED_初始化指令
-static const uint8_t OLED12864_InitCmd[28] = {
+static unsigned char OLED12864_InitCmd[28] = {
     0xae,0x00,0x10,0x40,0x81,0xcf,
     0xa1,0xc8,0xa6,0xa8,0x3f,0xd3,
     0x00,0xd5,0x80,0xd9,0xf1,0xda,
-    0x12,0xdb,0x40,0x20,0x02,0x8d,
+    0x12,0xdb,0x40,0x20,0x00,0x8d,
     0x14,0xa4,0xa6,0xaf
 };
 
@@ -24,6 +41,26 @@ void OLED12864_Init(void)
     OLED12864_GPIO_Init();
     spi_init();
     OLED12864_Hard_Reset();
+    OLED12864_Set_Position(0,0);
+    OLED12864_Set_Bit(OLED_DC);
+    DMA_Cmd(DMA2_Channel2,ENABLE);
+    SPI_I2S_DMACmd(SPI3,SPI_I2S_DMAReq_Tx,ENABLE);
+}
+
+void OLED12864_GPIO_Init(void)
+{
+    GPIO_InitTypeDef    GPIO_InitStruct;
+
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
+
+    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+
+    for(uint8_t temp=0;temp<3;temp++)
+    {
+        GPIO_InitStruct.GPIO_Pin = OLED_Pin[temp].Pin;
+        GPIO_Init(OLED_Pin[temp].GPIO,&GPIO_InitStruct);
+    }
 }
 
 void spi_init(void) //内部函数
@@ -56,24 +93,26 @@ void spi_init(void) //内部函数
 
     SPI_Cmd(SPI3,ENABLE);
     SPI_Replace_Byte(3,0xff);
+
+    //DMA
+    DMA_InitTypeDef DMA_InitStruct;
+
+    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA2,ENABLE);
+
+    DMA_InitStruct.DMA_BufferSize = 1024;
+    DMA_InitStruct.DMA_DIR = DMA_DIR_PeripheralDST;
+    DMA_InitStruct.DMA_M2M = DMA_M2M_Disable;
+    DMA_InitStruct.DMA_MemoryBaseAddr = (uint32_t)&OLED12864_Sbuffer[0][0];
+    DMA_InitStruct.DMA_MemoryDataSize = DMA_MemoryDataSize_Byte;
+    DMA_InitStruct.DMA_MemoryInc = DMA_MemoryInc_Enable;
+    DMA_InitStruct.DMA_Mode = DMA_Mode_Circular;
+    DMA_InitStruct.DMA_PeripheralBaseAddr = (uint32_t)&SPI3->DR;
+    DMA_InitStruct.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Word;
+    DMA_InitStruct.DMA_PeripheralInc = DMA_PeripheralInc_Disable;
+    DMA_InitStruct.DMA_Priority = DMA_Priority_Low;
+    DMA_Init(DMA2_Channel2,&DMA_InitStruct);
 }
 
-void OLED12864_GPIO_Init(void)
-{
-    GPIO_InitTypeDef    GPIO_InitStruct;
-
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB,ENABLE);
-
-    GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
-    GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
-
-    for(uint8_t temp=0;temp<3;temp++)
-    {
-        GPIO_InitStruct.GPIO_Pin = OLED_Pin[temp].Pin;
-        GPIO_Init(OLED_Pin[temp].GPIO,&GPIO_InitStruct);
-        GPIO_SetBits(OLED_Pin[temp].GPIO,OLED_Pin[temp].Pin);
-    }
-}
 
 void OLED12864_Hard_Reset(void)
 {
@@ -105,13 +144,10 @@ void OLED12864_Clear(void)
 
 void OLED12864_Refresh(void)
 {
-    uint8_t page;
-    for(page=0;page<8;page++)
-    {
-        OLED12864_Set_Position(page,0);
-        //for(uint8_t temp = 5;temp;temp--);     //等待最后一个字节发送完成,因为中途需要改变DC脚电平
-        OLED12864_Send_NumByte(OLED12864_Sbuffer[page],128,OLED_DATA);
-    }
+    #if 0
+    OLED12864_Set_Position(0,0);
+    OLED12864_Send_NumByte(OLED12864_Sbuffer[0],1024,OLED_DATA);
+    #endif
 }
 
 void OLED12864_Set_Position(uint8_t page,uint8_t x)
@@ -123,14 +159,14 @@ void OLED12864_Set_Position(uint8_t page,uint8_t x)
     OLED12864_Send_NumByte(dat,3,OLED_CMD);
 }
 
-void OLED12864_Send_NumByte(const uint8_t*dat,uint8_t len,uint8_t cmd)
+void OLED12864_Send_NumByte(const uint8_t*dat,uint16_t len,uint8_t cmd)
 {
     if(cmd)
         OLED12864_Set_Bit(OLED_DC);
     else
         OLED12864_Reset_Bit(OLED_DC);
 
-    for(uint8_t temp=0;temp<len;temp++)
+    for(uint16_t temp=0;temp<len;temp++)
     {
         OLED12864_SPI_Send_Byte(*dat);
         dat++;
