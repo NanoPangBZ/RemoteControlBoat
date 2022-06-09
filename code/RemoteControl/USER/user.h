@@ -4,16 +4,11 @@
 #include "BSP\bsp_adc.h"
 #include "BSP\bsp_spi.h"
 #include "BSP\bsp_usart.h"
+#include "BSP\bsp_led.h"
+#include "BSP\bsp_key.h"
 
 #include "HARDWARE\nrf24l01.h"
 #include "HARDWARE\usart_hmi.h"
-
-#include "BSP\bsp_usart.h"
-#include "BSP\bsp_spi.h"
-#include "BSP\bsp_adc.h"
-
-#include "HARDWARE\usart_hmi.h"
-#include "HARDWARE\nrf24l01.h"
 #include "HARDWARE\rocker.h"
 
 #include "SOFTWARE\vofa_p.h"

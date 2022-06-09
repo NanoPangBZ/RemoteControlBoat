@@ -49,6 +49,8 @@ int main(void)
 	//串口初始化
 	BSP_Usart_Init();
 	BSP_ADC_Init();	//ADC初始化
+	BSP_LED_Init();
+	BSP_Key_Init();
 
 	//串口屏初始化
 	soft_delay_ms(500);
