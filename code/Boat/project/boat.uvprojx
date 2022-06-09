@@ -559,6 +559,11 @@
               <FilePath>..\USER\HARDWARE\MOTOR\er.c</FilePath>
             </File>
             <File>
+              <FileName>water_sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\HARDWARE\WaterSensor\water_sensor.c</FilePath>
+            </File>
+            <File>
               <FileName>hardware_def.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\USER\HARDWARE\hardware_def.h</FilePath>
@@ -574,14 +579,19 @@
               <FilePath>..\USER\SOFTWARE\vofa_p.c</FilePath>
             </File>
             <File>
-              <FileName>self_portable.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\self_portable\self_portable.c</FilePath>
-            </File>
-            <File>
               <FileName>user_fun.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\user_fun.c</FilePath>
+            </File>
+            <File>
+              <FileName>pid.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\pid.c</FilePath>
+            </File>
+            <File>
+              <FileName>auto_sail.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\auto_sail.c</FilePath>
             </File>
           </Files>
         </Group>

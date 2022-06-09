@@ -20,6 +20,7 @@ typedef struct
 {
     uint8_t pwm1_ch;        //a4950 PWM1的通道标号 见 BSP\bsp_pwm.c PWM_Channel[]数组
     uint8_t pwm2_ch;        //a4950 PWM2的通道标号 见 BSP\bsp_pwm.c PWM_Channel[]数组
+    uint8_t dir;            //方向性
     uint16_t half_max;      //PWM通道的最大脉宽的一半
 }a4950_Type;
 

@@ -52,7 +52,7 @@
           <OutputName>RemoteControl</OutputName>
           <CreateExecutable>1</CreateExecutable>
           <CreateLib>0</CreateLib>
-          <CreateHexFile>0</CreateHexFile>
+          <CreateHexFile>1</CreateHexFile>
           <DebugInformation>1</DebugInformation>
           <BrowseInformation>1</BrowseInformation>
           <ListingPath>.\Listings\</ListingPath>
@@ -462,11 +462,6 @@
               <FileName>vofa_p.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\vofa_p.c</FilePath>
-            </File>
-            <File>
-              <FileName>self_portable.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\self_portable\self_portable.c</FilePath>
             </File>
           </Files>
         </Group>

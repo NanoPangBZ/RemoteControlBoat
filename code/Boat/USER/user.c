@@ -1,6 +1,5 @@
-#include "user.h"
+#include "user.h"   
 #include "main.h"
-#include "self_stm32f10x.h"
 #include <stdio.h>
 
 uint8_t statis_receive = 0;
@@ -54,7 +53,7 @@ void ReplyMaster_Task(void*ptr)
 
         //响应从遥控器接收到的命令和数据
         OS_ResponesReceive(&nrf_receive);
-
+        
         //判断是否需要系统状态标志
         //能运行到这里说明信号没有丢失
         if(signal == 1)
@@ -72,21 +71,25 @@ void ReplyMaster_Task(void*ptr)
     }
 }
 
-//处理遥控器接收任务
-void ReceiveHandle_Task(void*ptr)
+void AutoRun_Task(void*ptr)
 {
+    #if 0
+    AutoSail_Type handle = *(AutoSail_Type*)ptr;
+    Route_Type that_node = *handle.list;
     while(1)
     {
-
     }
+    #endif
 }
 
 void Voltage_Task(void*ptr)
 {
     TickType_t  time = xTaskGetTickCount();
+    BatVol = Read_BatVol();
     while(1)
     {
-        BatVol = Read_BatVol() * 4.01; //读取电池电压
+        //49:1 权重比
+        BatVol = BatVol * 0.98f + Read_BatVol() * 0.02f;
         vTaskDelayUntil(&time,50);  //0.05s更新一次电池电压
     }
 }

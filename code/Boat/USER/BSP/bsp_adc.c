@@ -70,7 +70,7 @@ float ADC_ReadVoltage(uint8_t channel_num)
     //等待转换结束
     while(!ADC_GetFlagStatus(ADC1,ADC_FLAG_EOC));
 
-    return (float)ADC_GetConversionValue(ADC1)*3.3/4096;
+    return (float)ADC_GetConversionValue(ADC1)*3.3f/4096;
     //return (float)ADC_GetConversionValue(ADC1)*3.3/4096;
 }
 

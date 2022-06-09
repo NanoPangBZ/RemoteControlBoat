@@ -64,6 +64,12 @@ void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len)
         buf[temp] = content[temp];
 }
 
+void MemFill(uint8_t*buf,uint8_t fillDat,uint8_t len)
+{
+    for(uint8_t temp=0;temp<len;temp++)
+        buf[temp] = fillDat;
+}
+
 /****************************************************************************/
 #if 0
 

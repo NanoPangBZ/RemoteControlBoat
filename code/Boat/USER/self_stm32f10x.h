@@ -32,6 +32,7 @@ void Pin_Reversal(Pin pin);
 void soft_delay_ms(uint16_t ms);
 void soft_delay_us(uint16_t us);
 void MemCopy(const uint8_t*content,uint8_t*buf,uint8_t len);
+void MemFill(uint8_t*buf,uint8_t fillDat,uint8_t len);
 
 #if 0
 void startDebugTiming(void);         //开始计时

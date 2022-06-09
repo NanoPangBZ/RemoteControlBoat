@@ -10,7 +10,6 @@ extern nRF24L01_Cfg nRF24_Cfg;
 
 //任务句柄
 extern  TaskHandle_t RTOS_CreatTask_TaskHandle;
-extern  TaskHandle_t Main_TaskHandle;
 extern  TaskHandle_t RemoteControl_TaskHandle;
 extern  TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
 extern  TaskHandle_t User_FeedBack_TaskHandle;

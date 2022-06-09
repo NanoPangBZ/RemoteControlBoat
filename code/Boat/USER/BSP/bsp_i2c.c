@@ -8,7 +8,7 @@ typedef struct
 }i2c_busType;
 
 static i2c_busType i2c_Bus[1] = {
-    {5,{MPU6050_IIC_SDA_Pin,MPU6050_IIC_SDA_GPIO} , {MPU6050_IIC_SCL_Pin,MPU6050_IIC_SCL_GPIO} }
+    {4,{MPU6050_IIC_SDA_Pin,MPU6050_IIC_SDA_GPIO} , {MPU6050_IIC_SCL_Pin,MPU6050_IIC_SCL_GPIO} }
 };
 
 #define SDA_H(device)   Pin_Set(i2c_Bus[device].SDA)

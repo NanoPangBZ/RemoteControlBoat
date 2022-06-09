@@ -9,7 +9,7 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t main_fre = 50;				//主任务频率
-uint8_t oled_fre = 12;				//OLED刷新频率
+uint8_t oled_fre = 24;				//OLED刷新频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
 ER_Type	ER_is[4];					//电调任务参数
@@ -20,7 +20,6 @@ StreetMotor_Type STMotor_is[3];		//舵机任务参数
 TaskHandle_t	RTOSCreateTask_TaskHandle = NULL;	//创建任务句柄
 TaskHandle_t	ReplyMaster_TaskHandle = NULL;		//主机回复任务句柄
 TaskHandle_t	OLED_TaskHandle = NULL;				//oled刷新任务句柄
-TaskHandle_t	SignalStatis_TaskHandle = NULL;		//信号统计任务
 TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;	//nrf中断任务句柄
 TaskHandle_t	MPU_TaskHandle = NULL;				//陀螺仪刷新任务句柄
 TaskHandle_t	KeyInput_TaskHandle = NULL;			//按键任务句柄
@@ -46,8 +45,18 @@ SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互
 float mpu_data[3] = {0,0,0};    //姿态 -> mpuDat_occFlag保护
 float BatVol = 0.0f;			//电池电压
 sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
+PID_Handle	Yaw_pid_Handle;		//航向角pid
 
-void RTOSCreateTask_Task(void*ptr);
+//PID参数以及限位
+#define YAW_P	1.0f
+#define YAW_I	0.0f
+#define YAW_D	0.0f
+#define YAW_ZOOM	2.0f
+#define YAW_MAX	100
+#define YAW_MIN	-100
+
+void RTOSCreateTask_Task(void*ptr);		//初始化任务
+void Er_Cal(void);	//油门行程校准
 
 int main(void)
 {
@@ -72,6 +81,8 @@ int main(void)
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
 	OLED12864_Refresh();
+
+	Er_Cal();
 
 	//MPU初始化	-> 需要IIC
 	mpu_err = MPU_Init();
@@ -133,6 +144,15 @@ int main(void)
 void RTOSCreateTask_Task(void*ptr)
 {
 	//全局变量赋值
+	//航向角pid
+	MemFill((uint8_t*)&Yaw_pid_Handle,0,sizeof(Yaw_pid_Handle));
+	Yaw_pid_Handle.P = YAW_P;
+	Yaw_pid_Handle.I = YAW_I;
+	Yaw_pid_Handle.D = YAW_D;
+	Yaw_pid_Handle.out_zoom = YAW_ZOOM;
+	Yaw_pid_Handle.OutputMax = YAW_MAX;
+	Yaw_pid_Handle.OutputMin = YAW_MIN;
+	//系统状态sysStatus
     sysStatus.nrf_signal = 0;
 	//建立 队列 信号量
     nRF24_ISRFlag = xSemaphoreCreateBinary();		//nrf外部中断标志,由isr给出
@@ -152,7 +172,7 @@ void RTOSCreateTask_Task(void*ptr)
 		xTaskCreate(
 			StreetMotor_Task,
 			"SM",
-			64, 
+			64,
 			(void*)&STMotor_is[temp],
 			5,
 			&StreetMotor_TaskHandle[temp]
@@ -261,4 +281,36 @@ void RTOSCreateTask_Task(void*ptr)
 	Beep_OFF();
 	//删除自身
     vTaskDelete(NULL);
+}
+
+//油门校准
+void Er_Cal(void)
+{
+	//油门行程校准
+	if(Key_Read(0) == Key_Press)
+	{
+		OLED12864_Show_String(0,0,"calibration",1);
+		OLED12864_Refresh();
+		soft_delay_ms(2000);
+		ER_UndirOut(&er[0],0);
+		ER_UndirOut(&er[1],0);
+		ER_UndirOut(&er[2],0);
+		ER_UndirOut(&er[3],0);
+		while(Key_Read(0) != Key_Press);
+		OLED12864_Show_String(1,0,"Set Max",1);
+		OLED12864_Refresh();
+		ER_UndirOut(&er[0],500);
+		ER_UndirOut(&er[1],500);
+		ER_UndirOut(&er[2],500);
+		ER_UndirOut(&er[3],500);
+		soft_delay_ms(300);
+		while(Key_Read(0) != Key_Press);
+		OLED12864_Show_String(1,0,"Set Med",1);
+		OLED12864_Refresh();
+		ER_UndirOut(&er[0],0);
+		ER_UndirOut(&er[1],0);
+		ER_UndirOut(&er[2],0);
+		ER_UndirOut(&er[3],0);
+		soft_delay_ms(300);
+	}
 }

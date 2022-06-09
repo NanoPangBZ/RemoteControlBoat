@@ -22,6 +22,7 @@ typedef struct
 {
     uint8_t pwm_ch;     //PWM的通道标号 见 BSP\bsp_pwm.c PWM_Channel[]数组
     uint8_t max_angle;
+    uint8_t dir;        //方向性
 }streetMotor_Type;
 
 void StreetMotor_Set(streetMotor_Type*motor,float angle);

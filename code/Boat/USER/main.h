@@ -5,7 +5,7 @@
 
 //对外声明main.c中的全局变量
 
-//其它参数
+//参数
 extern nRF24L01_Cfg nRF24_Cfg;
 
 //任务句柄

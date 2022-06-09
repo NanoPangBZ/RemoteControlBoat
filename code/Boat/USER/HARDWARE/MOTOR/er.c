@@ -21,6 +21,19 @@ void ER_Out(er_Type*er,int out)
     port_PWMOut(er->pwm_ch,pwmout);
 }
 
+//不考虑软件方向的电调输出
+void ER_UndirOut(er_Type*er,int out)
+{
+    uint16_t pwmout;
+     pwmout = er->median + out;
+    //pwm脉宽限位
+    if(pwmout > 2000)
+        pwmout = 2000;
+    if(pwmout < 1000)
+        pwmout = 1000;
+    port_PWMOut(er->pwm_ch,pwmout);
+}
+
 //获取当前电调输出 -500 ~ +500
 int ER_ReadOut(er_Type*er)
 {

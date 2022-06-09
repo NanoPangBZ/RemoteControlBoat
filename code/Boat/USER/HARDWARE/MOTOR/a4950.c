@@ -33,8 +33,15 @@ void A4950_Out(a4950_Type*a4950,int out)
     else if(out < -a4950->half_max)
         out = -a4950->half_max;
     //计算输出
-    pwm_width[0] = a4950->half_max + out;
-    pwm_width[1] = a4950->half_max - out;
+    if(a4950->dir)
+    {
+        pwm_width[0] = a4950->half_max - out;
+        pwm_width[1] = a4950->half_max + out;
+    }else
+    {
+        pwm_width[0] = a4950->half_max + out;
+        pwm_width[1] = a4950->half_max - out;
+    }
     //输出
     port_PWMOut(a4950->pwm1_ch,pwm_width[0]);
     port_PWMOut(a4950->pwm2_ch,pwm_width[1]);
@@ -49,7 +56,10 @@ void A4950_Out(a4950_Type*a4950,int out)
  *******************************************************************/
 int A4950_ReadOut(a4950_Type*a4950)
 {
-    return port_PWMRead(a4950->pwm1_ch) - a4950->half_max;
+    if(a4950->dir)
+        return -(port_PWMRead(a4950->pwm1_ch) - a4950->half_max);
+    else
+        return port_PWMRead(a4950->pwm1_ch) - a4950->half_max;
 }
 
 /*******************************************************************
