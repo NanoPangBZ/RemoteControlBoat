@@ -9,7 +9,8 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t main_fre = 50;				//主任务频率
-uint8_t oled_fre = 24;				//OLED刷新频率
+uint8_t oled_fre = 16;				//OLED刷新频率
+uint8_t WaterLine_fre = 50;			//水位测量频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率
 ER_Type	ER_is[4];					//电调任务参数
@@ -24,6 +25,7 @@ TaskHandle_t	nRF24L01_Intterrupt_TaskHandle = NULL;	//nrf中断任务句柄
 TaskHandle_t	MPU_TaskHandle = NULL;				//陀螺仪刷新任务句柄
 TaskHandle_t	KeyInput_TaskHandle = NULL;			//按键任务句柄
 TaskHandle_t	Voltage_TaskHandle = NULL;			//电池电压检测任务句柄
+TaskHandle_t	DepthSensor_TaskHandle = NULL;		//水位深度检测任务句柄
 TaskHandle_t	Beep_TaskHandle = NULL;				//蜂鸣器任务句柄
 TaskHandle_t	ER_TaskHandle[4] = {NULL,NULL,NULL,NULL};	//电调任务句柄
 TaskHandle_t	DCMotor_TaskHandle[2] = {NULL,NULL};		//直流电机控制任务句柄
@@ -44,6 +46,7 @@ SemaphoreHandle_t	sysStatus_occFlag = NULL;	//系统状态变量占用标志(互
 //全局变量
 float mpu_data[3] = {0,0,0};    //姿态 -> mpuDat_occFlag保护
 float BatVol = 0.0f;			//电池电压
+float Depth = 0.0f;				//吃水深度
 sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 PID_Handle	Yaw_pid_Handle;		//航向角pid
 
@@ -82,7 +85,7 @@ int main(void)
 	OLED12864_Show_String(0,0,"hardware init",1);
 	OLED12864_Refresh();
 
-	Er_Cal();
+	Er_Cal();	//油门行程校准
 
 	//MPU初始化	-> 需要IIC
 	mpu_err = MPU_Init();
@@ -236,7 +239,7 @@ void RTOSCreateTask_Task(void*ptr)
         "oled",
         256,
         (void*)&oled_fre,
-        9,
+        8,
         &OLED_TaskHandle
     );
 	//建立nrf中断处理任务
@@ -247,6 +250,15 @@ void RTOSCreateTask_Task(void*ptr)
         NULL,
         14,
         &nRF24L01_Intterrupt_TaskHandle
+    );
+	//建立水位检测任务
+    xTaskCreate(
+        DepthSensor_Task,
+        "depth",
+        48,
+        &WaterLine_fre,
+        9,
+        &Voltage_TaskHandle
     );
 	//建立电池电压检测任务
     xTaskCreate(
@@ -263,7 +275,7 @@ void RTOSCreateTask_Task(void*ptr)
         "key",
         64,
         NULL,
-        8,
+        7,
         &KeyInput_TaskHandle
     );
 	//建立蜂鸣器任务

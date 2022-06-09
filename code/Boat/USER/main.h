@@ -25,6 +25,7 @@ extern QueueHandle_t     STMotor_CmdQueue[4];
 //全局变量
 extern float mpu_data[3];               //姿态 -> mpuDat_occFlag保护
 extern float BatVol;
+extern float Depth;
 extern sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 
 #endif

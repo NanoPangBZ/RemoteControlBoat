@@ -3,13 +3,15 @@
 static void ADC_GPIO_Init(void);
 static void ADC_Config(void);
 
-const static Pin ADC_Pin[1] = {
-    {GPIO_Pin_0,GPIOC}
+const static Pin ADC_Pin[2] = {
+    {GPIO_Pin_0,GPIOC},
+    {GPIO_Pin_3,GPIOC}
 };
 
-const static uint8_t ADC_Channel[1] = 
+const static uint8_t ADC_Channel[2] = 
 {
-    ADC_Channel_10
+    ADC_Channel_10,
+    ADC_Channel_13
 };
 
 void BSP_ADC_Init(void)
@@ -25,7 +27,7 @@ void ADC_GPIO_Init(void)
     ADC_GPIO_CLK();
 
     GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AIN;
-    for(uint8_t temp=0;temp<1;temp++)
+    for(uint8_t temp=0;temp<2;temp++)
     {
         GPIO_InitStruct.GPIO_Pin = ADC_Pin[temp].Pin;
         GPIO_Init(ADC_Pin[temp].GPIO,&GPIO_InitStruct);
@@ -56,21 +58,27 @@ void ADC_Config(void)
     ADC_StartCalibration(ADC1);
     while(ADC_GetResetCalibrationStatus(ADC1));
 
-    //ADC_SoftwareStartConvCmd(ADC1, ENABLE);     //开启ADC1的软件触发转换
+    ADC_Init(ADC2,&ADC_InitStruct);      //初始化ADC2
+    ADC_Cmd(ADC2,ENABLE);               //启动ADC2
+
+    //等待校准
+    ADC_ResetCalibration(ADC2);
+    while(ADC_GetResetCalibrationStatus(ADC2));
+    ADC_StartCalibration(ADC2);
+    while(ADC_GetResetCalibrationStatus(ADC2));
 }
 
-float ADC_ReadVoltage(uint8_t channel_num)
+float ADC_ReadVoltage(ADC_TypeDef*ADC,uint8_t channel_num)
 {
     //开始转换
-    ADC_SoftwareStartConvCmd(ADC1,DISABLE);
+    ADC_SoftwareStartConvCmd(ADC,DISABLE);
     //给规则通道1绑定ADC捕获口
-    ADC_RegularChannelConfig(ADC1,ADC_Channel[channel_num],1,ADC_SampleTime_239Cycles5);
+    ADC_RegularChannelConfig(ADC,ADC_Channel[channel_num],1,ADC_SampleTime_55Cycles5);
     //开始转换
-    ADC_SoftwareStartConvCmd(ADC1,ENABLE);
+    ADC_SoftwareStartConvCmd(ADC,ENABLE);
     //等待转换结束
-    while(!ADC_GetFlagStatus(ADC1,ADC_FLAG_EOC));
+    while(!ADC_GetFlagStatus(ADC,ADC_FLAG_EOC));
 
-    return (float)ADC_GetConversionValue(ADC1)*3.3f/4096;
-    //return (float)ADC_GetConversionValue(ADC1)*3.3/4096;
+    return (float)ADC_GetConversionValue(ADC)*3.3f/4096;
 }
 

@@ -103,17 +103,19 @@ typedef struct
     uint16_t RunMode;    //运行模式
 }sysStatus_Type;
 
-void MPU_Task(void*ptr);
-void ReplyMaster_Task(void*ptr);
+void MPU_Task(void*ptr);                    //陀螺仪刷新任务
+void ReplyMaster_Task(void*ptr);            //主机回复任务
+void nRF24L01_Intterrupt_Task(void*ptr);    //nrf中断任务
+void Voltage_Task(void*ptr);                //电池电压检测任务
+void DepthSensor_Task(void*ptr);            //水位深度检测任务
+void OLED_Task(void*ptr);                   //oled刷新任务
+void KeyInput_Task(void*ptr);               //按键任务
+void ER_Task(void*ptr);                     //电调任务
+void Motor_Task(void*ptr);                  //直流电机控制任务
+void StreetMotor_Task(void*ptr);            //舵机任务
+void Beep_Task(void*ptr);                   //蜂鸣器任务
+
 void AutoRun_Task(void*ptr);
-void nRF24L01_Intterrupt_Task(void*ptr);
-void Voltage_Task(void*ptr);
-void OLED_Task(void*ptr);
-void KeyInput_Task(void*ptr);
-void ER_Task(void*ptr);
-void Motor_Task(void*ptr);
-void StreetMotor_Task(void*ptr);
-void Beep_Task(void*ptr);
 
 #endif  //_USER_H_
 

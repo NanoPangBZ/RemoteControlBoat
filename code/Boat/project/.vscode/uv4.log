@@ -1,3 +1,7 @@
-Load "e:\\UnderwayProject\\Machine_contest\\code\\Boat\\project\\Objects\\boat.axf" 
-Erase Done.Programming Done.Verify OK.Application running ...
-Flash Load finished at 00:04:27
+*** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
+Build target 'Target 1'
+compiling water_sensor.c...
+linking...
+Program Size: Code=40048 RO-data=5992 RW-data=828 ZI-data=39796  
+".\Objects\boat.axf" - 0 Error(s), 0 Warning(s).
+Build Time Elapsed:  00:00:02

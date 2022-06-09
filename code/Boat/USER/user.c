@@ -88,9 +88,21 @@ void Voltage_Task(void*ptr)
     BatVol = Read_BatVol();
     while(1)
     {
-        //49:1 权重比
-        BatVol = BatVol * 0.98f + Read_BatVol() * 0.02f;
+        //9:1 权重比
+        BatVol = BatVol * 0.90f + Read_BatVol() * 0.10f;
         vTaskDelayUntil(&time,50);  //0.05s更新一次电池电压
+    }
+}
+
+void DepthSensor_Task(void*ptr)
+{
+    uint8_t Cycle = (1000 / *(uint8_t*)ptr) / portTICK_RATE_MS; //频率换算成心跳周期
+    TickType_t  time = xTaskGetTickCount();
+    Depth = Get_WaterLine();
+    while(1)
+    {
+        Depth = Depth*0.9 + Get_WaterLine()*0.1;
+        vTaskDelayUntil(&time,Cycle);
     }
 }
 
@@ -359,13 +371,9 @@ void OLED_Task(void*ptr)
         //显示电压
         sprintf((char*)sbuf,"Vol:%.1fV",BatVol);
         OLED12864_Show_String(2,55,sbuf,2);
-        //数据反馈 er->电调油门  MT->直流电机油门
-        sprintf((char*)sbuf,"er:%d",ER_ReadOut(&er[0]));
-        OLED12864_Clear_Page(4);
-        OLED12864_Show_String(4,0,sbuf,1);
-        sprintf((char*)sbuf,"MT:%d",A4950_ReadOut(&a4950[1]));
-        OLED12864_Clear_Page(5);
-        OLED12864_Show_String(5,0,sbuf,1);
+        //显示吃水深度
+        sprintf((char*)sbuf,"Dep:%.1fcm",Depth);
+        OLED12864_Show_String(4,45,sbuf,2);
         
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
