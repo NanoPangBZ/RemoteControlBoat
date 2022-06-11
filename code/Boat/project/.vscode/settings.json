@@ -23,6 +23,7 @@
         "a4950.h": "c",
         "bsp.h": "c",
         "auto_sail.h": "c",
-        "oled12864.h": "c"
+        "oled12864.h": "c",
+        "battery_calculation.h": "c"
     }
 }

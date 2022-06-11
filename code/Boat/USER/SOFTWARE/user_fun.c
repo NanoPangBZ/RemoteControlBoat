@@ -93,3 +93,27 @@ void OS_nrf_Restart(void)
     taskEXIT_CRITICAL();
     vTaskResume(nRF24L01_Intterrupt_TaskHandle); //解挂
 }
+
+//开启或关闭oled任务 节约时序
+void OS_Switch_OLED(void)
+{
+    taskENTER_CRITICAL();
+    if(OLED_TaskHandle == NULL)
+    {
+        xTaskCreate(
+            OLED_Task,
+            "oled",
+            256,
+            (void*)&oled_fre,
+            8,
+            &OLED_TaskHandle
+        );
+    }else
+    {
+        for(uint8_t temp=0;temp<8;temp++)
+            OLED12864_Clear_Page(temp);
+        vTaskDelete(OLED_TaskHandle);
+        OLED_TaskHandle = NULL;
+    }
+    taskEXIT_CRITICAL();
+}

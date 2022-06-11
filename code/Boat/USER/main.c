@@ -9,7 +9,7 @@ static uint8_t TxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t main_fre = 50;				//主任务频率
-uint8_t oled_fre = 16;				//OLED刷新频率
+uint8_t oled_fre = 20;				//OLED刷新频率
 uint8_t WaterLine_fre = 50;			//水位测量频率
 uint8_t nrf_maxDelay = 200;			//nrf最大超时时间
 uint8_t mpu_fre = DEFAULT_MPU_HZ;	//mpu更新频率

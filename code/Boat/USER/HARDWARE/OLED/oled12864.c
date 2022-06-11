@@ -79,7 +79,7 @@ void spi_init(void) //内部函数
     GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3 | GPIO_Pin_5;
     GPIO_Init(GPIOB,&GPIO_InitStruct);
 
-    SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16;
+    SPI_InitStruct.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_32;
     SPI_InitStruct.SPI_CPHA = SPI_CPHA_2Edge;
     SPI_InitStruct.SPI_CPOL = SPI_CPOL_High;
     SPI_InitStruct.SPI_CRCPolynomial = 7;

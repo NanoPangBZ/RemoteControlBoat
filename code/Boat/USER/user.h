@@ -13,6 +13,7 @@
 #include "SOFTWARE\user_fun.h"
 #include "SOFTWARE\auto_sail.h"
 #include "SOFTWARE\vofa_p.h"
+#include "SOFTWARE\battery_calculation.h"
 
 #include "self_portable\self_portable.h"
 

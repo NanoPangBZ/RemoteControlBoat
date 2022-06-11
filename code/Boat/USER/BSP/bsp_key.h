@@ -11,6 +11,7 @@
 #define Key3    3
 
 void BSP_Key_Init(void);
+uint8_t Key_Read_All(void);
 uint8_t Key_Read(uint8_t key);
 
 #endif  //_BSP_KEY_H_

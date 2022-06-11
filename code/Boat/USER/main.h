@@ -7,9 +7,11 @@
 
 //参数
 extern nRF24L01_Cfg nRF24_Cfg;
+extern uint8_t oled_fre;
 
 //任务句柄
 extern TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
+extern TaskHandle_t OLED_TaskHandle;
 
 //队列 信号
 extern SemaphoreHandle_t nRF24_ISRFlag;         //nRF外部中断标志

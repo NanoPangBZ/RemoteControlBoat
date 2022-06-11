@@ -96,6 +96,7 @@ typedef struct      //20B
 typedef struct
 {
     float Voltage;
+    float Depth;
     float Gyroscope[3];
 }BoatReply_Type;
 

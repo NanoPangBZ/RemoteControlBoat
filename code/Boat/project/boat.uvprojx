@@ -593,6 +593,11 @@
               <FileType>1</FileType>
               <FilePath>..\USER\SOFTWARE\auto_sail.c</FilePath>
             </File>
+            <File>
+              <FileName>battery_calculation.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\USER\SOFTWARE\battery_calculation.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

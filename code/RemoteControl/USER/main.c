@@ -9,8 +9,8 @@ static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 
 //任务参数
 uint8_t SendFre = 50;	//nrf24通讯频率
-uint8_t RockerFre = 50;	//摇杆采样频率
-uint8_t HMI_Fre = 20;	//串口屏幕刷新频率
+uint8_t RockerFre = 25;	//摇杆采样频率
+uint8_t HMI_Fre = 24;	//串口屏幕刷新频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;

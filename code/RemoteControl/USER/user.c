@@ -30,6 +30,7 @@ void RemoteControl_Task(void*ptr)
         //等待nrf24中断(发送完成中断 或 未应答中断)
         while(xQueueReceive(nRF24_SendResult,&sendResault,delay_cycle) == pdFALSE)
         {
+            #if 0
             //可能是nrf出现未知错误
             vTaskSuspend(nRF24L01_Intterrupt_TaskHandle);   //挂起中断任务
             nRF24L01_Write_Reg(0x07,0xE0);    //清除nrf24所有中断
@@ -41,17 +42,18 @@ void RemoteControl_Task(void*ptr)
             time = xTaskGetTickCount();  //重新获取当前系统时间
             statis_sendCount = statis_sfAckCount = 0;
             nrf_signal = 0;
+            #endif
         }
         statis_sendCount++;
         SendCount++;
-        //nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
+        nRF24L01_Rx_Mode();     //发送中断处理函数会使nrf24自动进入接收模式   
         if(sendResault)
         {
             HackCount++;
             //接收到硬件ACK 说明从机的nrf24已经接收到
             //等待从机回复(这里等待不是nrf24硬件上的ACk信号,是从机上软件的回复)
-            //等待时长 1/2 任务周期
-            if(xSemaphoreTake(nRF24_RecieveFlag,delay_cycle) == pdFALSE)
+            //等待时长 50ms
+            if(xSemaphoreTake(nRF24_RecieveFlag,50/portTICK_RATE_MS) == pdFALSE)
             {
                 //未接收到从机软件回复 从机软件出现错误
             }else
@@ -72,6 +74,7 @@ void RemoteControl_Task(void*ptr)
                 }
                 //更新电池电压到全局
                 BoatVoltage = receive.Voltage;
+                LED_Re();
             }
         }else
         {

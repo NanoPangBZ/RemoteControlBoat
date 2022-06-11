@@ -47,6 +47,7 @@ void ReplyMaster_Task(void*ptr)
             xSemaphoreGive(mpuDat_occFlag);     //释放资源
         }
         nrf_send.Voltage = BatVol;
+        nrf_send.Depth = Depth;
         nRF24L01_Send((uint8_t*)&nrf_send,32);
 
         xQueueReceive(nRF24_SendResult,&resualt,MaxWait);   //等待回复结果 -> nRF24L01_Send()
@@ -88,9 +89,9 @@ void Voltage_Task(void*ptr)
     BatVol = Read_BatVol();
     while(1)
     {
-        //9:1 权重比
-        BatVol = BatVol * 0.90f + Read_BatVol() * 0.10f;
-        vTaskDelayUntil(&time,50);  //0.05s更新一次电池电压
+        //49:1 权重比
+        BatVol = BatVol * 0.98f +  Read_BatVol() * 0.02f;
+        vTaskDelayUntil(&time,100);  //0.1s更新一次电池电压
     }
 }
 
@@ -142,43 +143,22 @@ void MPU_Task(void*ptr)
 void KeyInput_Task(void*ptr)
 {
     TickType_t time = xTaskGetTickCount();
-    ERctr_Type  e_ctr[2];
-    DCMotorCtr_Type d_ctr;
-    d_ctr.type = 4;
-    d_ctr.dat = 1;
-    e_ctr[0].type = 1;
-    e_ctr[1].type = 1;
-    e_ctr[0].dat = 0;
-    e_ctr[1].dat = 0;
     while(1)
     {
-        if(Key_Read(0) == Key_Press)
+        switch(Key_Read_All())
         {
-            d_ctr.dat = 50;
-            xQueueSend(DCMotor_CmdQueue[0],&d_ctr,0);
-            xQueueSend(DCMotor_CmdQueue[1],&d_ctr,0);
-        }else
-        if(Key_Read(1) == Key_Press)
-        {
-            d_ctr.dat = -50;
-            xQueueSend(DCMotor_CmdQueue[0],&d_ctr,0);
-            xQueueSend(DCMotor_CmdQueue[1],&d_ctr,0);
-        }else
-        if(Key_Read(2) == Key_Press)
-        {
-            e_ctr[0].dat += 10;
-            e_ctr[1].dat += 10;
-            xQueueSend(ER_CmdQueue[0],&e_ctr[1],0);
-            xQueueSend(ER_CmdQueue[1],&e_ctr[1],0);
-        }else
-        if(Key_Read(3) == Key_Press)
-        {
-            e_ctr[0].dat -= 10;
-            e_ctr[1].dat -= 10;
-            xQueueSend(ER_CmdQueue[0],&e_ctr[1],0);
-            xQueueSend(ER_CmdQueue[1],&e_ctr[1],0);
+        case 0:
+            OS_Switch_OLED();
+            break;
+        case 1:
+            WaterLine_ZeroOffset_Reset();
+            break;
+        case 2:
+        break;
+        case 3:
+        break;
         }
-        vTaskDelayUntil(&time,40/portTICK_PERIOD_MS);
+        vTaskDelayUntil(&time,100/portTICK_PERIOD_MS);
     }
 }
 
@@ -370,10 +350,12 @@ void OLED_Task(void*ptr)
         OLED12864_Show_String(0,0,sbuf,1);
         //显示电压
         sprintf((char*)sbuf,"Vol:%.1fV",BatVol);
-        OLED12864_Show_String(2,55,sbuf,2);
+        OLED12864_Show_String(1,55,sbuf,2);
         //显示吃水深度
-        sprintf((char*)sbuf,"Dep:%.1fcm",Depth);
-        OLED12864_Show_String(4,45,sbuf,2);
+        OLED12864_Clear_PageBlock(3,48,128);
+        OLED12864_Clear_PageBlock(4,48,128);
+        sprintf((char*)sbuf,"Dep:%.0fCM",Depth);
+        OLED12864_Show_String(3,48,sbuf,2);
         
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);
