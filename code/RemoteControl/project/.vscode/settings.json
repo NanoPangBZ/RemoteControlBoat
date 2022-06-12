@@ -9,6 +9,16 @@
         "rocker.h": "c",
         "user.h": "c",
         "string.h": "c",
-        "main.h": "c"
+        "main.h": "c",
+        "istream": "c",
+        "limits": "c",
+        "memory": "c",
+        "streambuf": "c",
+        "cstddef": "c",
+        "system_error": "c",
+        "xiosbase": "c",
+        "xlocale": "c",
+        "xstring": "c",
+        "xutility": "c"
     }
 }

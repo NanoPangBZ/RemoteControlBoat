@@ -1,6 +1,10 @@
 #include "user.h"
 #include "main.h"
 
+Send_Msg MsgSbuffer[6];
+uint8_t MsgSbuffer_Head = 0;
+uint8_t MsgSbuffer_Len = 0;
+
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
  * 参数:(uint8_t*) 通讯频率 单位(hz)
@@ -23,9 +27,16 @@ void RemoteControl_Task(void*ptr)
     TickType_t time = xTaskGetTickCount();  //获取当前系统时间
     while(1)
     {
-        send.cmd = 1;
         MemCopy(rockerInput,send.rocker,4);     //将摇杆值载入发送
         send.switch_value = HMI_SwitchValue;    //载入8个开关量
+        if( MsgSbuffer_Len != 0)
+        {
+            send.msg = MsgSbuffer[MsgSbuffer_Head];
+            MsgSbuffer_Len -- ;
+            MsgSbuffer_Head ++;
+            if(MsgSbuffer_Head > 5)
+                MsgSbuffer_Head = 0;
+        }
         nRF24L01_Send((uint8_t*)&send,32);      //发送
         //等待nrf24中断(发送完成中断 或 未应答中断)
         while(xQueueReceive(nRF24_SendResult,&sendResault,delay_cycle) == pdFALSE)
@@ -72,8 +83,9 @@ void RemoteControl_Task(void*ptr)
                     MemCopy( (uint8_t*)receive.Gyroscope , (uint8_t*)BoatGyroscope , 12 );
                     xSemaphoreGive(boatGyroscope_occFlag);
                 }
-                //更新电池电压到全局
+                //更新电池电压和深度到全局
                 BoatVoltage = receive.Voltage;
+                Depth = receive.Depth;
                 LED_Re();
             }
         }else
@@ -171,6 +183,7 @@ void HMI_Task(void*ptr)
         HMI_SetNum((short)rockerInput[0] - 50,0);
         HMI_SetNum((short)rockerInput[1] - 50,1);
         HMI_SetNum((short)(nrf_signal)*2,2);
+        HMI_SetNum((short)Depth,3);
         for(uint8_t temp=0;temp<3;temp++)
             HMI_SetFloat(BoatGyroscope[temp],temp);
         HMI_SetFloat(BoatVoltage,3);
@@ -188,6 +201,10 @@ void HMI_Task(void*ptr)
                 break;
             case 4:
                 HMI_SwitchValue &= ~0x02;
+                break;
+            case 5:
+                MsgSbuffer_Len++;
+                MsgSbuffer[MsgSbuffer_Head+MsgSbuffer_Len].type = ZeroWaterLine_Set;
                 break;
         }
         //处理串口屏返回

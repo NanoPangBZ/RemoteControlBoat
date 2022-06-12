@@ -12,7 +12,7 @@ const char* txt = "txt";
 const char* Msg = "msg";
 const char* val_y = "val_y";
 const char* val = "val";
-const char* num_boxName[] = {"msp","ssp","si"};
+const char* num_boxName[] = {"msp","ssp","si","dep"};
 const char* float_boxName[] = {"fx","fy","fz","vo"};
 
 uint16_t MsgHight = 0;   //当前串口屏消息框高度
@@ -89,8 +89,6 @@ void HMI_Msg(char*msg)
 
 /*************************************************
  * 功能:更改HMI数字框显示的数据
- * 参数:
- * channle 0:主油门数字框 1:副油门数字框
  * 返回值:无
 *************************************************/
 void HMI_SetNum(int num,uint8_t channel)

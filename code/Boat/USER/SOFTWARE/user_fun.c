@@ -6,43 +6,40 @@
 void OS_ResponesReceive(RemoteControl_Type *receive)
 {
     Ctr_Type ctr;
-    if (receive->cmd == 1)
-    {
-        //主电调油门配置
-        int ER_Base;
-        int ER_sc;
-        ER_Base = (receive->rocker[0] - 50) * 10;
-        ER_sc = (receive->rocker[1] - 50) * 10;
-        ctr.ERctr.type = 1;
-        //左
-        ctr.ERctr.dat = ER_Base + ER_sc*0.3;
-        xQueueSend(ER_CmdQueue[0], &ctr.ERctr, 0);
-        //右
-        ctr.ERctr.dat = ER_Base - ER_sc*0.3;
-        xQueueSend(ER_CmdQueue[1], &ctr.ERctr, 0);
-        //副电调油门配置
-        ER_sc = ER_sc;
-        ctr.ERctr.dat = ER_sc;
-        xQueueSend(ER_CmdQueue[2], &ctr.ERctr, 0);
-        ctr.ERctr.dat = - ER_sc;
-        xQueueSend(ER_CmdQueue[3], &ctr.ERctr, 0);
-        //直流电机
-        ctr.DCMotorCtr.type = 1;
-        if (receive->switch_value & DCMotor1_Mask != 0)
-            ctr.DCMotorCtr.dat = 3600;
-        else
-            ctr.DCMotorCtr.dat = 0;
-        xQueueSend(DCMotor_CmdQueue[0], &ctr.DCMotorCtr, 2);
-        if(receive->switch_value & DCMotor2_Mask != 0)
-            ctr.DCMotorCtr.dat = 3600;
-        xQueueSend(DCMotor_CmdQueue[1], &ctr.DCMotorCtr, 2);
-        //云台
-        ctr.StreetMotorCtr.type = 1;
-        ctr.StreetMotorCtr.dat = (float)(receive->rocker[2] - 50) * 0.06f;
-        xQueueSend(STMotor_CmdQueue[0], &ctr.StreetMotorCtr, 0);
-        ctr.StreetMotorCtr.dat = (float)(receive->rocker[3] - 50) * 0.06f;
-        xQueueSend(STMotor_CmdQueue[1], &ctr.StreetMotorCtr, 0);
-    }
+    //主电调油门配置
+    int ER_Base;
+    int ER_sc;
+    ER_Base = (receive->rocker[0] - 50) * 10;
+    ER_sc = (receive->rocker[1] - 50) * 10;
+    ctr.ERctr.type = 1;
+    //左
+    ctr.ERctr.dat = ER_Base + ER_sc*0.3;
+    xQueueSend(ER_CmdQueue[0], &ctr.ERctr, 0);
+    //右
+    ctr.ERctr.dat = ER_Base - ER_sc*0.3;
+    xQueueSend(ER_CmdQueue[1], &ctr.ERctr, 0);
+    //副电调油门配置
+    ER_sc = ER_sc;
+    ctr.ERctr.dat = ER_sc;
+    xQueueSend(ER_CmdQueue[2], &ctr.ERctr, 0);
+    ctr.ERctr.dat = - ER_sc;
+    xQueueSend(ER_CmdQueue[3], &ctr.ERctr, 0);
+    //直流电机
+    ctr.DCMotorCtr.type = 1;
+    if (receive->switch_value & DCMotor1_Mask != 0)
+        ctr.DCMotorCtr.dat = 3600;
+    else
+        ctr.DCMotorCtr.dat = 0;
+    xQueueSend(DCMotor_CmdQueue[0], &ctr.DCMotorCtr, 2);
+    if(receive->switch_value & DCMotor2_Mask != 0)
+        ctr.DCMotorCtr.dat = 3600;
+    xQueueSend(DCMotor_CmdQueue[1], &ctr.DCMotorCtr, 2);
+    //云台
+    ctr.StreetMotorCtr.type = 1;
+    ctr.StreetMotorCtr.dat = (float)(receive->rocker[2] - 50) * 0.06f;
+    xQueueSend(STMotor_CmdQueue[0], &ctr.StreetMotorCtr, 0);
+    ctr.StreetMotorCtr.dat = (float)(receive->rocker[3] - 50) * 0.06f;
+    xQueueSend(STMotor_CmdQueue[1], &ctr.StreetMotorCtr, 0);
 }
 
 void OS_AutoRun(void)
