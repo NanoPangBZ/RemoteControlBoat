@@ -4,14 +4,12 @@
 
 uint8_t statis_receive = 0;
 
-RemoteControl_Type  nrf_receive;    //接收到的数据
-
 //回复主机
 void ReplyMaster_Task(void*ptr)
 {
     uint8_t MaxWait = *(uint8_t*)ptr / portTICK_RATE_MS;    //换算成心跳周期
     uint8_t*sbuf = nRF24L01_Get_RxBufAddr();    //nrf缓存地址
-    //RemoteControl_Type  nrf_receive;    //接收到的数据
+    RemoteControl_Type  nrf_receive;    //接收到的数据
     BoatReply_Type      nrf_send;       //准备发送回去的数据
     uint8_t resualt;        //发射结果接收
     uint8_t signal = 1;     //信号丢失标志 1:丢失
@@ -358,8 +356,6 @@ void OLED_Task(void*ptr)
         OLED12864_Clear_PageBlock(4,48,128);
         sprintf((char*)sbuf,"Dep:%.0fCM",Depth);
         OLED12864_Show_String(3,48,sbuf,2);
-        
-        //OLED12864_Show_Num(6,0,nrf_receive.switch_value,1);
 
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);

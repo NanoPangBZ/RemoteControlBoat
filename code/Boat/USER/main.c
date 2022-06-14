@@ -50,14 +50,6 @@ float Depth = 0.0f;				//吃水深度
 sysStatus_Type sysStatus;       //系统状态 -> sysStatus_occFlag保护
 PID_Handle	Yaw_pid_Handle;		//航向角pid
 
-//PID参数以及限位
-#define YAW_P	1.0f
-#define YAW_I	0.0f
-#define YAW_D	0.0f
-#define YAW_ZOOM	2.0f
-#define YAW_MAX	100
-#define YAW_MIN	-100
-
 void RTOSCreateTask_Task(void*ptr);		//初始化任务
 void Er_Cal(void);	//油门行程校准
 
@@ -80,10 +72,14 @@ int main(void)
 	BSP_ADC_Init();
 	BSP_i2c_Init();
 
+	StreetMotor_Set(&streetMotor[0],35.0f);
+	StreetMotor_Set(&streetMotor[1],115.0f);
+
 	//OLED初始化 -> 需要SPI
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
 	OLED12864_Refresh();
+
 
 	Er_Cal();	//油门行程校准
 
@@ -146,15 +142,6 @@ int main(void)
 
 void RTOSCreateTask_Task(void*ptr)
 {
-	//全局变量赋值
-	//航向角pid
-	MemFill((uint8_t*)&Yaw_pid_Handle,0,sizeof(Yaw_pid_Handle));
-	Yaw_pid_Handle.P = YAW_P;
-	Yaw_pid_Handle.I = YAW_I;
-	Yaw_pid_Handle.D = YAW_D;
-	Yaw_pid_Handle.out_zoom = YAW_ZOOM;
-	Yaw_pid_Handle.OutputMax = YAW_MAX;
-	Yaw_pid_Handle.OutputMin = YAW_MIN;
 	//系统状态sysStatus
     sysStatus.nrf_signal = 0;
 	//建立 队列 信号量
@@ -165,29 +152,39 @@ void RTOSCreateTask_Task(void*ptr)
     sysStatus_occFlag = xSemaphoreCreateMutex();	//sysStatus 保护
 	Beep_CmdQueue = xQueueCreate(3,sizeof(BeepCtr_Type));
 	//建立2个舵机控制任务
-	for(uint8_t temp=0;temp<2;temp++)
-	{
-		STMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
-		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
-		STMotor_is[temp].streetMotor = streetMotor[temp];	//见hardware_def.h
-		STMotor_is[temp].cycle = 40;	//25Hz执行频率
-		STMotor_is[temp].angle_inc = 5.0f;
-		xTaskCreate(
-			StreetMotor_Task,
-			"SM",
-			64,
-			(void*)&STMotor_is[temp],
-			5,
-			&StreetMotor_TaskHandle[temp]
-		);
-	}
+	STMotor_CmdQueue[0] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
+	STMotor_is[0].queueAddr = &STMotor_CmdQueue[0];
+	STMotor_is[0].streetMotor = streetMotor[0];	//见hardware_def.h
+	STMotor_is[0].cycle = 40;	//25Hz执行频率
+	STMotor_is[0].angle_inc = 0.5f;
+	xTaskCreate(
+		StreetMotor_Task,
+		"SM",
+		72,
+		(void*)&STMotor_is[0],
+		6,
+		&StreetMotor_TaskHandle[0]
+	);
+	STMotor_CmdQueue[1] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
+	STMotor_is[1].queueAddr = &STMotor_CmdQueue[1];
+	STMotor_is[1].streetMotor = streetMotor[1];	//见hardware_def.h
+	STMotor_is[1].cycle = 40;	//25Hz执行频率
+	STMotor_is[1].angle_inc = 0.5f;
+	xTaskCreate(
+		StreetMotor_Task,
+		"SM",
+		72,
+		(void*)&STMotor_is[1],
+		6,
+		&StreetMotor_TaskHandle[1]
+	);
 	//建立2个直流电机控制任务
 	for(uint8_t temp=0;temp<2;temp++)
 	{
 		DCMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(DCMotorCtr_Type));	//创建命令接收队列
 		DCMotor_is[temp].queueAddr = &DCMotor_CmdQueue[temp];				//设置命令接收队列地址
 		DCMotor_is[temp].cycle = 20;	//50Hz执行频率
-		DCMotor_is[temp].max_inc = 50;
+		DCMotor_is[temp].max_inc = 10;
 		DCMotor_is[temp].a4950 = a4950[temp];	//见hardware_def.h
 		xTaskCreate(
 			Motor_Task,
@@ -235,6 +232,7 @@ void RTOSCreateTask_Task(void*ptr)
         10,
         &MPU_TaskHandle
     );
+	#if 1
 	//建立oled显示任务
     xTaskCreate(
         OLED_Task,
@@ -244,6 +242,7 @@ void RTOSCreateTask_Task(void*ptr)
         8,
         &OLED_TaskHandle
     );
+	#endif
 	//建立nrf中断处理任务
     xTaskCreate(
         nRF24L01_Intterrupt_Task,

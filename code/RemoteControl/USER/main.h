@@ -14,7 +14,9 @@ extern  TaskHandle_t RemoteControl_TaskHandle;
 extern  TaskHandle_t nRF24L01_Intterrupt_TaskHandle;
 extern  TaskHandle_t User_FeedBack_TaskHandle;
 extern  TaskHandle_t Rocker_TaskHandle;
+extern  TaskHandle_t KeyInput_TaskHandle;
 extern  TaskHandle_t HMI_TaskHandle;
+extern  TaskHandle_t HMI_UpDataHandle;
 
 //队列句柄
 extern SemaphoreHandle_t	nRF24_ISRFlag;		//nrf24硬件中断标志
@@ -28,7 +30,7 @@ extern uint8_t rockerInput[4];			//摇杆输入
 extern float Depth;
 extern float BoatVoltage;
 extern uint8_t nrf_signal;
-extern uint8_t HMI_SwitchValue;
+extern uint8_t SwitchValue;
 
 #endif
 

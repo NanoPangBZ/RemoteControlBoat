@@ -6,16 +6,9 @@
 #define Key_Release 0
 #define Key_Press   1
 
-typedef enum
-{
-    EMG = 0,
-    SIG,
-    Updat,
-    SRST
-}Key;
-
 void BSP_Key_Init(void);
-uint8_t Key_Read(Key key);
+uint8_t Key_Read(uint8_t key);
+uint8_t Key_Read_All(void);
 
 #endif  //_BSP_KEY_H_
 

@@ -19,7 +19,17 @@ void BSP_Key_Init(void)
     GPIO_Init(GPIOB,&GPIO_InitStruct);
 }
 
-uint8_t Key_Read(Key key)
+uint8_t Key_Read_All(void)
+{
+    for(uint8_t temp=0;temp<4;temp++)
+    {
+        if(Key_Read(temp) == Key_Press)
+            return temp;
+    }
+    return 0xff;
+}
+
+uint8_t Key_Read(uint8_t key)
 {
     if(Pin_Read(KEY_Pin[key]))
         return 0;

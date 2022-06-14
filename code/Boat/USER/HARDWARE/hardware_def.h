@@ -20,12 +20,15 @@ static __IO uint16_t* PWM_Channel[12] = {
 };
 *****************************/
 
+#define L_DC    1
+#define R_DC    0
+
 //a4950直流电机驱动芯片 X 2
 static a4950_Type a4950[2] = { {0,1,0,3600} , {2,3,0,3600} };
 //舵机 X 2
 static streetMotor_Type streetMotor[2] = {{T4C2,180,0},{T4C3,180,0}};
 //电调 X 4
-static er_Type er[4] = {{8,0,1400},{9,1,1400},{10,0,1500},{11,0,1500}};
+static er_Type er[4] = {{8,0,1400},{9,1,1400},{10,0,1500},{11,1,1500}};
 
 #endif
 

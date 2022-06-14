@@ -2,6 +2,16 @@
 #include "main.h"
 #include "user.h"
 
+extern int DC_Out;
+extern float angle;
+
+#define UPDC_SPEED  2800
+#define OPDC_SPEED  -2800
+#define L_ST_C      115.0f  //110
+#define L_ST_O      7.0f
+#define R_ST_C      35.0f
+#define R_ST_O      170.0f
+
 //执行从遥控器接收到的命令
 void OS_ResponesReceive(RemoteControl_Type *receive)
 {
@@ -12,38 +22,45 @@ void OS_ResponesReceive(RemoteControl_Type *receive)
     ER_Base = (receive->rocker[0] - 50) * 10;
     ER_sc = (receive->rocker[1] - 50) * 10;
     ctr.ERctr.type = 1;
-    //左
-    ctr.ERctr.dat = ER_Base + ER_sc*0.3;
+    //主电调
+    ctr.ERctr.dat = ER_Base;
     xQueueSend(ER_CmdQueue[0], &ctr.ERctr, 0);
-    //右
-    ctr.ERctr.dat = ER_Base - ER_sc*0.3;
     xQueueSend(ER_CmdQueue[1], &ctr.ERctr, 0);
     //副电调油门配置
-    ER_sc = ER_sc;
     ctr.ERctr.dat = ER_sc;
     xQueueSend(ER_CmdQueue[2], &ctr.ERctr, 0);
-    ctr.ERctr.dat = - ER_sc;
     xQueueSend(ER_CmdQueue[3], &ctr.ERctr, 0);
     //直流电机
-    #if 1
     ctr.DCMotorCtr.type = 1;
-    if( ( receive->switch_value & 0x01 ) != 0)
-        ctr.DCMotorCtr.dat = 3600;
+    if( ( receive->switch_value & DCMotor1_Mask ) != 0)
+        ctr.DCMotorCtr.dat = UPDC_SPEED;
     else
         ctr.DCMotorCtr.dat = 0;
     xQueueSend(DCMotor_CmdQueue[0],&ctr.DCMotorCtr,2);
-    if( ( receive->switch_value  & 0x02 ) != 0)
-        ctr.DCMotorCtr.dat = 3600;
+    if( ( receive->switch_value  & DCMotor2_Mask ) != 0)
+        ctr.DCMotorCtr.dat = OPDC_SPEED;
     else
         ctr.DCMotorCtr.dat = 0;
     xQueueSend(DCMotor_CmdQueue[1],&ctr.DCMotorCtr,2);
-    #endif
-    //云台
-    ctr.StreetMotorCtr.type = 1;
-    ctr.StreetMotorCtr.dat = (float)(receive->rocker[2] - 50) * 0.06f;
-    xQueueSend(STMotor_CmdQueue[0], &ctr.StreetMotorCtr, 0);
-    ctr.StreetMotorCtr.dat = (float)(receive->rocker[3] - 50) * 0.06f;
-    xQueueSend(STMotor_CmdQueue[1], &ctr.StreetMotorCtr, 0);
+    //气压计归零
+    if( (receive->switch_value & ZeroWaterLine_Mask) !=0 )
+        WaterLine_ZeroOffset_Reset();
+    OLED12864_Show_Num(6,0,receive->switch_value,1);
+    //前爪控制
+    ctr.StreetMotorCtr.type = 3;
+    if( (receive->switch_value &= Grab_Mask) != 0)
+    {
+        ctr.StreetMotorCtr.dat = R_ST_O;
+        xQueueSend(STMotor_CmdQueue[0],&ctr.StreetMotorCtr,2);
+        ctr.StreetMotorCtr.dat = L_ST_O;
+        xQueueSend(STMotor_CmdQueue[1],&ctr.StreetMotorCtr,2);
+    }else
+    {
+        ctr.StreetMotorCtr.dat = R_ST_C;
+        xQueueSend(STMotor_CmdQueue[0],&ctr.StreetMotorCtr,2);
+        ctr.StreetMotorCtr.dat = L_ST_C;
+        xQueueSend(STMotor_CmdQueue[1],&ctr.StreetMotorCtr,2);
+    }
 }
 
 void OS_AutoRun(void)

@@ -1,9 +1,6 @@
 #include "user.h"
 #include "main.h"
 
-Send_Msg MsgSbuffer[6];
-uint8_t MsgSbuffer_Head = 0;
-uint8_t MsgSbuffer_Len = 0;
 
 /*******************************************************************
  * 功能:freeRTOS下的nrf24通讯任务
@@ -28,15 +25,7 @@ void RemoteControl_Task(void*ptr)
     while(1)
     {
         MemCopy(rockerInput,send.rocker,4);     //将摇杆值载入发送
-        send.switch_value = HMI_SwitchValue;    //载入8个开关量
-        if( MsgSbuffer_Len != 0)
-        {
-            send.msg = MsgSbuffer[MsgSbuffer_Head];
-            MsgSbuffer_Len -- ;
-            MsgSbuffer_Head ++;
-            if(MsgSbuffer_Head > 5)
-                MsgSbuffer_Head = 0;
-        }
+        send.switch_value = SwitchValue;        //载入8个开关量
         nRF24L01_Send((uint8_t*)&send,32);      //发送
         //等待nrf24中断(发送完成中断 或 未应答中断)
         while(xQueueReceive(nRF24_SendResult,&sendResault,delay_cycle) == pdFALSE)
@@ -98,6 +87,8 @@ void RemoteControl_Task(void*ptr)
             nrf_signal = statis_sfAckCount;
             statis_sendCount = statis_sfAckCount = 0;
         }
+        if( (SwitchValue & ZeroWaterLine_Mask) != 0)
+            SwitchValue &= ~ZeroWaterLine_Mask;
         xTaskDelayUntil(&time,delay_cycle); 
     }
 }
@@ -191,23 +182,51 @@ void HMI_Task(void*ptr)
         switch(HMI_Decode())
         {
             case 1: 
-                HMI_SwitchValue |= 0x01;
+                SwitchValue |= DCMotor1_Mask;
                 break;
             case 2:
-                HMI_SwitchValue &= ~0x01;
+                SwitchValue &= ~DCMotor1_Mask;
                 break;
             case 3:
-                HMI_SwitchValue |= 0x02;
+                SwitchValue |= DCMotor2_Mask;
                 break;
             case 4:
-                HMI_SwitchValue &= ~0x02;
+                SwitchValue &= ~DCMotor2_Mask;
                 break;
             case 5:
-                MsgSbuffer_Len++;
-                MsgSbuffer[MsgSbuffer_Head+MsgSbuffer_Len].type = ZeroWaterLine_Set;
+                SwitchValue |= Grab_Mask;
                 break;
+            case 6:
+                SwitchValue &= ~Grab_Mask;
         }
         //处理串口屏返回
+        vTaskDelayUntil(&time,cycle);
+    }
+}
+
+//按键输入响应
+void KeyInput_Task(void*ptr)
+{
+    uint16_t cycle = 1000/ *(uint8_t*)ptr / portTICK_PERIOD_MS;
+    TickType_t time = xTaskGetTickCount();
+    while(1)
+    {
+        switch(Key_Read_All())
+        {
+        case 0: 
+            //HMI_Msg("0");
+            break;
+        case 1:
+            //HMI_Msg("1");
+            break;
+        case 2:
+            //HMI_Msg("2");
+            break;
+        case 3:
+            //HMI_Msg("3");
+            SwitchValue |= ZeroWaterLine_Mask;
+            break;
+        }
         vTaskDelayUntil(&time,cycle);
     }
 }

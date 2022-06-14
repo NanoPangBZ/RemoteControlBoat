@@ -11,6 +11,7 @@ static uint8_t RxAddr[5] = {0x43,0x16,'B','T',0xFF};	//船地址
 uint8_t SendFre = 50;	//nrf24通讯频率
 uint8_t RockerFre = 25;	//摇杆采样频率
 uint8_t HMI_Fre = 24;	//串口屏幕刷新频率
+uint8_t Key_Fre = 10;	//按钮扫描频率
 
 //任务句柄
 TaskHandle_t RTOS_CreatTask_TaskHandle = NULL;
@@ -19,6 +20,7 @@ TaskHandle_t nRF24L01_Intterrupt_TaskHandle = NULL;
 TaskHandle_t User_FeedBack_TaskHandle = NULL;
 TaskHandle_t Rocker_TaskHandle = NULL;
 TaskHandle_t HMI_TaskHandle = NULL;
+TaskHandle_t KeyInput_TaskHandle = NULL;
 TaskHandle_t HMI_UpDataHandle = NULL;
 
 //队列句柄
@@ -33,7 +35,7 @@ float Depth = 0.0f;			//深度 单位cm
 float BoatGyroscope[3];			//船只返回的姿态 boatGyroscope_occFlag保护
 float BoatVoltage;
 uint8_t rockerInput[4];			//摇杆输入
-uint8_t HMI_SwitchValue = 0;	//串口屏开关量 8开关
+uint8_t SwitchValue = 0;	//开关量 8开关
 
 void RTOS_CreatTask_Task(void*ptr);
 
@@ -129,6 +131,23 @@ void RTOS_CreatTask_Task(void*ptr)
 		13,
 		&nRF24L01_Intterrupt_TaskHandle
 	);
+	//建立键盘扫描任务
+	xTaskCreate(
+		KeyInput_Task,
+		"key task",
+		64,
+		&Key_Fre,
+		8,
+		&KeyInput_TaskHandle
+	);
+	xTaskCreate(
+		HMI_UpData,
+		"HMI task",
+		64,
+		&HMI_Fre,
+		13,
+		&HMI_UpDataHandle
+	);
 	#if 1
 	//建立串口反馈任务 -> 串口1
 	xTaskCreate(
@@ -140,7 +159,6 @@ void RTOS_CreatTask_Task(void*ptr)
 		&User_FeedBack_TaskHandle
 	);
 	#endif
-	#if 1
 	//建立串口屏任务 -> 串口2
 	xTaskCreate(
 		HMI_Task,
@@ -150,18 +168,6 @@ void RTOS_CreatTask_Task(void*ptr)
 		9,
 		&HMI_TaskHandle
 	);
-	#endif
-	//串口屏升级
-	#if 1
-	xTaskCreate(
-		HMI_UpData,
-		"HMI task",
-		64,
-		&HMI_Fre,
-		13,
-		&HMI_UpDataHandle
-	);
-	#endif
 	HMI_ClearMsg();
 	HMI_Msg("系统成功启动");
 	USART_Clear(1);

@@ -117,27 +117,11 @@ uint8_t HMI_Decode(void)
 {
     uint8_t len = port_Recive_Len;
     uint8_t*dat = port_Recive();
-    uint8_t ed_pos = 0xff;  //帧头 ED位置 -> 相对dat
-    //寻找帧头
-    for(uint8_t temp=0;temp<len;temp++)
+    if(len != 0)
     {
-        if(dat[temp] == 0xed)
-        {
-            ed_pos = temp;
-            break;
-        }
-    }
-    if(ed_pos == 0xff)
-        return 0;
-    //删除帧头前的字节
-    port_PushSbuffer(ed_pos);
-    //查看是否接收到了完整的帧
-    if( dat[1] + 1 >= port_Recive_Len)
-    {
-        uint8_t re;
-        re = dat[2];
-        port_PushSbuffer(dat[1]); //删除本帧
-        return re;
+        uint8_t temp = *dat;
+        port_PushSbuffer(1);
+        return temp;
     }
     return 0;
 }
