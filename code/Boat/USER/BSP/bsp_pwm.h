@@ -8,6 +8,11 @@
  * 2021/5   作者:庞碧璋
 **************************************/
 
+#define T4C1    4
+#define T4C2    5
+#define T4C3    6
+#define T4C4    7
+
 void BSP_PWM_Init(void);
 void PWM_Out(uint8_t Channel,uint16_t CCR);
 uint16_t PWM_Read(uint8_t Channel);

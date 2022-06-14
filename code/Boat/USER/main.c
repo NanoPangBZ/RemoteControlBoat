@@ -170,7 +170,7 @@ void RTOSCreateTask_Task(void*ptr)
 		STMotor_CmdQueue[temp] = xQueueCreate(3,sizeof(StreetMotorCtr_Type));
 		STMotor_is[temp].queueAddr = &STMotor_CmdQueue[temp];
 		STMotor_is[temp].streetMotor = streetMotor[temp];	//见hardware_def.h
-		STMotor_is[temp].cycle = 20;	//50Hz执行频率
+		STMotor_is[temp].cycle = 40;	//25Hz执行频率
 		STMotor_is[temp].angle_inc = 5.0f;
 		xTaskCreate(
 			StreetMotor_Task,
@@ -215,6 +215,7 @@ void RTOSCreateTask_Task(void*ptr)
         	&ER_TaskHandle[temp]
     	);
 	}
+	#if 1
 	//建立nrf回复主机任务
     xTaskCreate(
         ReplyMaster_Task,
@@ -224,6 +225,7 @@ void RTOSCreateTask_Task(void*ptr)
         11,
         &ReplyMaster_TaskHandle
     );
+	#endif
 	//建立陀螺仪任务
     xTaskCreate(
         MPU_Task,

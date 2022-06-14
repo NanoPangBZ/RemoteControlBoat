@@ -1,6 +1,8 @@
 #ifndef _HARDWARE_DEF_H_
 #define _HARDWARE_DEF_H_
 
+#include "BSP\bsp_pwm.h"
+
 #include "HARDWARE\MOTOR\a4950.h"
 #include "HARDWARE\MOTOR\street_motor.h"
 #include "HARDWARE\MOTOR\er.h"
@@ -21,7 +23,7 @@ static __IO uint16_t* PWM_Channel[12] = {
 //a4950直流电机驱动芯片 X 2
 static a4950_Type a4950[2] = { {0,1,0,3600} , {2,3,0,3600} };
 //舵机 X 2
-static streetMotor_Type streetMotor[2] = {{5,180,0},{6,180,0}};
+static streetMotor_Type streetMotor[2] = {{T4C2,180,0},{T4C3,180,0}};
 //电调 X 4
 static er_Type er[4] = {{8,0,1400},{9,1,1400},{10,0,1500},{11,0,1500}};
 

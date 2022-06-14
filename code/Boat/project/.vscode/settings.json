@@ -24,6 +24,7 @@
         "bsp.h": "c",
         "auto_sail.h": "c",
         "oled12864.h": "c",
-        "battery_calculation.h": "c"
+        "battery_calculation.h": "c",
+        "bsp_pwm.h": "c"
     }
 }
