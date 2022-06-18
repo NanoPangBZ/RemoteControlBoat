@@ -139,6 +139,9 @@ void MPU_Task(void*ptr)
     }
 }
 
+float angle = 0.0f;
+uint8_t StreetSW = 0;
+
 //按键输入响应
 void KeyInput_Task(void*ptr)
 {
@@ -148,16 +151,26 @@ void KeyInput_Task(void*ptr)
         switch(Key_Read_All())
         {
         case 0:
+            if(StreetSW)
+            {
+                StreetSW = 0;
+            }else
+            {
+                StreetSW = 1;
+            }
             OS_Switch_OLED();
             break;
         case 1:
             WaterLine_ZeroOffset_Reset();
             break;
         case 2:
+            angle += 1.0f;
         break;
         case 3:
+            angle -= 1.0f;
         break;
         }
+        //StreetMotor_Set(&streetMotor[StreetSW],angle);
         vTaskDelayUntil(&time,100/portTICK_PERIOD_MS);
     }
 }
@@ -277,13 +290,13 @@ void StreetMotor_Task(void*ptr)
             angle += SMT.angle_inc;
             if(angle > target_angle)
                 angle = target_angle;
-            StreetMotor_Set(&SMT.streetMotor,target_angle);
+            StreetMotor_Set(&SMT.streetMotor,angle);
         }else if(angle > target_angle)
         {
             angle -= SMT.angle_inc;
             if(angle < target_angle)
                 angle = target_angle;
-            StreetMotor_Set(&SMT.streetMotor,target_angle);
+            StreetMotor_Set(&SMT.streetMotor,angle);
         }
         vTaskDelayUntil(&time,SMT.cycle/portTICK_PERIOD_MS);
     }
@@ -356,6 +369,10 @@ void OLED_Task(void*ptr)
         OLED12864_Clear_PageBlock(4,48,128);
         sprintf((char*)sbuf,"Dep:%.0fCM",Depth);
         OLED12864_Show_String(3,48,sbuf,2);
+
+        OLED12864_Clear_Page(5);
+        sprintf((char*)sbuf,"%.0f",angle);
+        OLED12864_Show_String(5,0,sbuf,1);
 
         OLED12864_Refresh();
         vTaskDelayUntil(&time,Cycle);

@@ -72,9 +72,6 @@ int main(void)
 	BSP_ADC_Init();
 	BSP_i2c_Init();
 
-	StreetMotor_Set(&streetMotor[0],35.0f);
-	StreetMotor_Set(&streetMotor[1],115.0f);
-
 	//OLED初始化 -> 需要SPI
 	OLED12864_Init();
 	OLED12864_Show_String(0,0,"hardware init",1);
@@ -156,7 +153,7 @@ void RTOSCreateTask_Task(void*ptr)
 	STMotor_is[0].queueAddr = &STMotor_CmdQueue[0];
 	STMotor_is[0].streetMotor = streetMotor[0];	//见hardware_def.h
 	STMotor_is[0].cycle = 40;	//25Hz执行频率
-	STMotor_is[0].angle_inc = 0.5f;
+	STMotor_is[0].angle_inc = 4.7f;
 	xTaskCreate(
 		StreetMotor_Task,
 		"SM",
@@ -169,7 +166,7 @@ void RTOSCreateTask_Task(void*ptr)
 	STMotor_is[1].queueAddr = &STMotor_CmdQueue[1];
 	STMotor_is[1].streetMotor = streetMotor[1];	//见hardware_def.h
 	STMotor_is[1].cycle = 40;	//25Hz执行频率
-	STMotor_is[1].angle_inc = 0.5f;
+	STMotor_is[1].angle_inc = 7.0;
 	xTaskCreate(
 		StreetMotor_Task,
 		"SM",

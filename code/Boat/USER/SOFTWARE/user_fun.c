@@ -6,11 +6,11 @@ extern int DC_Out;
 extern float angle;
 
 #define UPDC_SPEED  2800
-#define OPDC_SPEED  -2800
-#define L_ST_C      115.0f  //110
-#define L_ST_O      7.0f
-#define R_ST_C      35.0f
-#define R_ST_O      170.0f
+#define OPDC_SPEED  -3600
+#define R_ST_C      65.0f  
+#define R_ST_O      160.0f
+#define L_ST_O      70.0f   //
+#define L_ST_C      145.0f
 
 //执行从遥控器接收到的命令
 void OS_ResponesReceive(RemoteControl_Type *receive)
@@ -47,6 +47,7 @@ void OS_ResponesReceive(RemoteControl_Type *receive)
         WaterLine_ZeroOffset_Reset();
     OLED12864_Show_Num(6,0,receive->switch_value,1);
     //前爪控制
+    #if 1
     ctr.StreetMotorCtr.type = 3;
     if( (receive->switch_value &= Grab_Mask) != 0)
     {
@@ -61,6 +62,7 @@ void OS_ResponesReceive(RemoteControl_Type *receive)
         ctr.StreetMotorCtr.dat = L_ST_C;
         xQueueSend(STMotor_CmdQueue[1],&ctr.StreetMotorCtr,2);
     }
+    #endif
 }
 
 void OS_AutoRun(void)
