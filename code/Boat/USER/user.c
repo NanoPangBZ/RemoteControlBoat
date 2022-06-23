@@ -133,13 +133,14 @@ void MPU_Task(void*ptr)
         if(xSemaphoreTake(mpuDat_occFlag,1) == pdPASS)
         {
             MemCopy((uint8_t*)fsbuf,(uint8_t*)mpu_data,12);
+            //[0]偏航角 [1]翻滚角 [2]俯仰角
             xSemaphoreGive(mpuDat_occFlag); //释放资源
         }
         vTaskDelayUntil(&time,Cycle);
     }
 }
 
-float angle = 0.0f;
+float angle = 90.0f;
 uint8_t StreetSW = 0;
 
 //按键输入响应

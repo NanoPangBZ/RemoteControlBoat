@@ -170,6 +170,7 @@ void RTOSCreateTask_Task(void*ptr)
 	xTaskCreate(
 		StreetMotor_Task,
 		"SM",
+		
 		72,
 		(void*)&STMotor_is[1],
 		6,

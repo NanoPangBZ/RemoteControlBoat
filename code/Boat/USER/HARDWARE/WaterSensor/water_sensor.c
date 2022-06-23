@@ -19,7 +19,7 @@ float Get_WaterLine(void)
     float temp = WaterLine;
     if(temp < 0)
     {
-        if(temp < -1.5f)
+        if(temp < -12.0f)
             WaterLine_ZeroOffset_Reset();
         return 0;
     }
